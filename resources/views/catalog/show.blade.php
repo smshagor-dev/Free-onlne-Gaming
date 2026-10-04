@@ -3,164 +3,17 @@
 @section('content')
 @php
     $heroCandidate = $game->backgroundImage ?? $game->image;
-    $heroUrl = filter_var($heroCandidate, FILTER_VALIDATE_URL)
-        && in_array(parse_url($heroCandidate, PHP_URL_SCHEME), ['http', 'https'], true)
-            ? $heroCandidate
-            : null;
-    $websiteUrl = filter_var($game->website, FILTER_VALIDATE_URL)
-        && in_array(parse_url($game->website, PHP_URL_SCHEME), ['http', 'https'], true)
-            ? $game->website
-            : null;
-    $dealUrl = filter_var($game->dealUrl, FILTER_VALIDATE_URL)
-        && in_array(parse_url($game->dealUrl, PHP_URL_SCHEME), ['http', 'https'], true)
-            ? $game->dealUrl
-            : null;
-    $providerLabel = match ($game->provider) {
-        'rawg' => 'RAWG',
-        'freetogame' => 'FreeToGame',
-        'gamerpower' => 'GamerPower',
-        'cheapshark' => 'CheapShark',
-        default => ucfirst($game->provider),
-    };
+    $heroUrl = filter_var($heroCandidate, FILTER_VALIDATE_URL) && in_array(parse_url($heroCandidate, PHP_URL_SCHEME), ['http', 'https'], true) ? $heroCandidate : null;
+    $websiteUrl = filter_var($game->website, FILTER_VALIDATE_URL) && in_array(parse_url($game->website, PHP_URL_SCHEME), ['http', 'https'], true) ? $game->website : null;
+    $dealUrl = filter_var($game->dealUrl, FILTER_VALIDATE_URL) && in_array(parse_url($game->dealUrl, PHP_URL_SCHEME), ['http', 'https'], true) ? $game->dealUrl : null;
+    $providerLabel = match ($game->provider) { 'rawg' => 'RAWG', 'freetogame' => 'FreeToGame', 'gamerpower' => 'GamerPower', 'cheapshark' => 'CheapShark', default => ucfirst($game->provider) };
     $plainDescription = trim(strip_tags($game->description ?? ''));
 @endphp
-
 <div class="game-detail">
-    <section class="game-detail-hero">
-        <div class="game-detail-hero__backdrop">
-            @if($heroUrl)
-                <img src="{{ $heroUrl }}" alt="" aria-hidden="true" decoding="async">
-            @endif
-        </div>
-        <div class="catalog-shell game-detail-hero__inner">
-            <div class="game-detail-hero__content">
-                <div class="game-detail-hero__badges">
-                    <x-catalog.badge tone="accent">Source: {{ $providerLabel }}</x-catalog.badge>
-                    @if($game->isFree)
-                        <x-catalog.badge tone="free">Free</x-catalog.badge>
-                    @endif
-                    @if($game->discount !== null && $game->discount > 0)
-                        <x-catalog.badge tone="deal">{{ (int) round($game->discount) }}% off</x-catalog.badge>
-                    @endif
-                </div>
-
-                <h1>{{ $game->title }}</h1>
-
-                <div class="game-detail-hero__facts">
-                    @if($game->rating !== null)
-                        <span>★ {{ number_format($game->rating, 1) }} rating</span>
-                    @endif
-                    @if($game->releaseDate)
-                        <span>Released {{ $game->releaseDate }}</span>
-                    @endif
-                    @if($game->platforms)
-                        <span>{{ implode(' · ', array_slice($game->platforms, 0, 4)) }}</span>
-                    @endif
-                </div>
-
-                <div class="game-detail-hero__actions">
-                    @if($dealUrl)
-                        <a class="catalog-button" href="{{ $dealUrl }}" target="_blank" rel="noopener noreferrer nofollow">
-                            {{ $game->giveaway ? 'Claim offer' : 'View deal' }}
-                        </a>
-                    @endif
-                    @if($websiteUrl)
-                        <a class="catalog-button catalog-button--secondary" href="{{ $websiteUrl }}" target="_blank" rel="noopener noreferrer nofollow">
-                            Official website
-                        </a>
-                    @endif
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <div class="catalog-shell game-detail__layout">
-        <article class="game-detail__main">
-            <section class="game-detail__section">
-                <h2>About this game</h2>
-                @if($plainDescription !== '')
-                    <p class="game-detail__description">{{ $plainDescription }}</p>
-                @else
-                    <p class="catalog-muted">A full description is not available from this provider.</p>
-                @endif
-            </section>
-
-            @if($game->screenshots)
-                <section class="game-detail__section">
-                    <h2>Screenshots</h2>
-                    <div class="screenshot-grid">
-                        @foreach(array_slice($game->screenshots, 0, 6) as $screenshot)
-                            @if(filter_var($screenshot, FILTER_VALIDATE_URL) && in_array(parse_url($screenshot, PHP_URL_SCHEME), ['http', 'https'], true))
-                                <img src="{{ $screenshot }}" alt="{{ $game->title }} screenshot {{ $loop->iteration }}" loading="lazy" decoding="async" onerror="this.hidden=true">
-                            @endif
-                        @endforeach
-                    </div>
-                </section>
-            @endif
-
-            @if($game->giveaway)
-                <section class="game-detail__section">
-                    <h2>Giveaway information</h2>
-                    <div class="detail-info-grid">
-                        @if(!empty($game->giveaway['status']))
-                            <div><span>Status</span><strong>{{ $game->giveaway['status'] }}</strong></div>
-                        @endif
-                        @if(!empty($game->giveaway['type']))
-                            <div><span>Type</span><strong>{{ $game->giveaway['type'] }}</strong></div>
-                        @endif
-                        @if(!empty($game->giveaway['end_date']))
-                            <div><span>Ends</span><strong>{{ $game->giveaway['end_date'] }}</strong></div>
-                        @endif
-                    </div>
-                    @if(!empty($game->giveaway['instructions']))
-                        <p class="game-detail__description">{{ strip_tags($game->giveaway['instructions']) }}</p>
-                    @endif
-                </section>
-            @endif
-        </article>
-
-        <aside class="game-detail__sidebar" aria-label="Game information">
-            @if($game->price !== null || $game->normalPrice !== null)
-                <section class="game-detail-card">
-                    <h2>Price</h2>
-                    <div class="detail-price">
-                        @if($game->price !== null)
-                            <strong>{{ $game->price <= 0 ? 'Free' : '$'.number_format($game->price, 2) }}</strong>
-                        @endif
-                        @if($game->normalPrice !== null && $game->normalPrice > ($game->price ?? -1))
-                            <del>${{ number_format($game->normalPrice, 2) }}</del>
-                        @endif
-                    </div>
-                </section>
-            @endif
-
-            <section class="game-detail-card">
-                <h2>Game info</h2>
-                <dl class="game-detail-list">
-                    @if($game->genres)
-                        <div><dt>Genres</dt><dd>{{ implode(', ', $game->genres) }}</dd></div>
-                    @endif
-                    @if($game->platforms)
-                        <div><dt>Platforms</dt><dd>{{ implode(', ', $game->platforms) }}</dd></div>
-                    @endif
-                    @if($game->developers)
-                        <div><dt>Developer</dt><dd>{{ implode(', ', $game->developers) }}</dd></div>
-                    @endif
-                    @if($game->publishers)
-                        <div><dt>Publisher</dt><dd>{{ implode(', ', $game->publishers) }}</dd></div>
-                    @endif
-                    @if($game->stores)
-                        <div><dt>Stores</dt><dd>{{ implode(', ', $game->stores) }}</dd></div>
-                    @endif
-                    @if($game->releaseDate)
-                        <div><dt>Release date</dt><dd>{{ $game->releaseDate }}</dd></div>
-                    @endif
-                    <div><dt>Source</dt><dd>{{ $providerLabel }}</dd></div>
-                </dl>
-            </section>
-
-            <a class="catalog-text-link" href="{{ route('catalog.index') }}">← Back to game catalog</a>
-        </aside>
-    </div>
+    <section class="game-detail-hero"><div class="game-detail-hero__backdrop">@if($heroUrl)<img src="{{ $heroUrl }}" alt="" aria-hidden="true" decoding="async">@endif</div><div class="catalog-shell game-detail-hero__inner"><div class="game-detail-hero__content"><div class="game-detail-hero__badges"><x-catalog.badge tone="accent">Source: {{ $providerLabel }}</x-catalog.badge>@if($game->isFree)<x-catalog.badge tone="free">Free</x-catalog.badge>@endif @if($game->discount !== null && $game->discount > 0)<x-catalog.badge tone="deal">{{ (int) round($game->discount) }}% off</x-catalog.badge>@endif</div><h1>{{ $game->title }}</h1><div class="game-detail-hero__facts">@if($game->rating !== null)<span>★ {{ number_format($game->rating, 1) }} rating</span>@endif @if($game->releaseDate)<span>Released {{ $game->releaseDate }}</span>@endif @if($game->platforms)<span>{{ implode(' · ', array_slice($game->platforms, 0, 4)) }}</span>@endif</div><div class="game-detail-hero__actions">@if($dealUrl)<a class="catalog-button" href="{{ $dealUrl }}" target="_blank" rel="noopener noreferrer nofollow">{{ $game->giveaway ? 'Claim offer' : 'View deal' }}</a>@endif @if($websiteUrl)<a class="catalog-button catalog-button--secondary" href="{{ $websiteUrl }}" target="_blank" rel="noopener noreferrer nofollow">Official website</a>@endif <x-catalog.save-control :game="$game" /></div></div></div></section>
+    <div class="catalog-shell game-detail__layout"><article class="game-detail__main"><section class="game-detail__section"><h2>About this game</h2>@if($plainDescription !== '')<p class="game-detail__description">{{ $plainDescription }}</p>@else<p class="catalog-muted">A full description is not available from this provider.</p>@endif</section>
+    @if($game->screenshots)<section class="game-detail__section"><h2>Screenshots</h2><div class="screenshot-grid">@foreach(array_slice($game->screenshots,0,6) as $screenshot)@if(filter_var($screenshot,FILTER_VALIDATE_URL) && in_array(parse_url($screenshot,PHP_URL_SCHEME),['http','https'],true))<img src="{{ $screenshot }}" alt="{{ $game->title }} screenshot {{ $loop->iteration }}" loading="lazy" decoding="async" onerror="this.hidden=true">@endif @endforeach</div></section>@endif
+    @if($game->giveaway)<section class="game-detail__section"><h2>Giveaway information</h2><div class="detail-info-grid">@if(!empty($game->giveaway['status']))<div><span>Status</span><strong>{{ $game->giveaway['status'] }}</strong></div>@endif @if(!empty($game->giveaway['type']))<div><span>Type</span><strong>{{ $game->giveaway['type'] }}</strong></div>@endif @if(!empty($game->giveaway['end_date']))<div><span>Ends</span><strong>{{ $game->giveaway['end_date'] }}</strong></div>@endif</div>@if(!empty($game->giveaway['instructions']))<p class="game-detail__description">{{ strip_tags($game->giveaway['instructions']) }}</p>@endif</section>@endif</article>
+    <aside class="game-detail__sidebar" aria-label="Game information">@if($game->price !== null || $game->normalPrice !== null)<section class="game-detail-card"><h2>Price</h2><div class="detail-price">@if($game->price !== null)<strong>{{ $game->price <= 0 ? 'Free' : '$'.number_format($game->price,2) }}</strong>@endif @if($game->normalPrice !== null && $game->normalPrice > ($game->price ?? -1))<del>${{ number_format($game->normalPrice,2) }}</del>@endif</div></section>@endif<section class="game-detail-card"><h2>Game info</h2><dl class="game-detail-list">@if($game->genres)<div><dt>Genres</dt><dd>{{ implode(', ',$game->genres) }}</dd></div>@endif @if($game->platforms)<div><dt>Platforms</dt><dd>{{ implode(', ',$game->platforms) }}</dd></div>@endif @if($game->developers)<div><dt>Developer</dt><dd>{{ implode(', ',$game->developers) }}</dd></div>@endif @if($game->publishers)<div><dt>Publisher</dt><dd>{{ implode(', ',$game->publishers) }}</dd></div>@endif @if($game->stores)<div><dt>Stores</dt><dd>{{ implode(', ',$game->stores) }}</dd></div>@endif @if($game->releaseDate)<div><dt>Release date</dt><dd>{{ $game->releaseDate }}</dd></div>@endif<div><dt>Source</dt><dd>{{ $providerLabel }}</dd></div></dl></section><a class="catalog-text-link" href="{{ route('catalog.index') }}">← Back to game catalog</a></aside></div>
 </div>
 @endsection
