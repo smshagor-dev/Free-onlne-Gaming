@@ -73,6 +73,7 @@ class CatalogPersonalizationTest extends TestCase
         $this->assertSame('demo', $user->registration_type);
         $this->assertSame(0.0, (float) $user->balance);
         $this->post('/user/bonus/claim/welcome')->assertForbidden();
+        $this->get('/casino/play')->assertForbidden();
     }
 
     public function test_demo_sessions_are_isolated(): void
