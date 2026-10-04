@@ -1,0 +1,59 @@
+name: Backend validation
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          tools: composer:v2
+          coverage: none
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Prepare application
+        run: |
+          cp .env.example .env
+          php artisan key:generate --force
+
+      - name: Run PHP tests
+        run: php artisan test
+
+      - name: Validate routes
+        run: php artisan route:list
+
+      - name: Audit Composer dependencies
+        run: composer audit
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Audit npm dependencies
+        run: npm audit
+
+      - name: Build frontend assets
+        run: npm run build
+
+      - name: PHP lint
+        run: find app bootstrap config database routes tests -name '*.php' -print0 | xargs -0 -n1 php -l
