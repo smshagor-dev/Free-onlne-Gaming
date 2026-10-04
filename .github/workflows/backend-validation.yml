@@ -32,10 +32,16 @@ jobs:
       - name: Install PHP dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
 
+      - name: Install frontend dependencies
+        run: npm ci
+
       - name: Prepare application
         run: |
           cp .env.example .env
           php artisan key:generate --force
+
+      - name: Build frontend assets
+        run: npm run build
 
       - name: Run PHP tests
         run: php artisan test
@@ -46,14 +52,8 @@ jobs:
       - name: Audit Composer dependencies
         run: composer audit
 
-      - name: Install frontend dependencies
-        run: npm ci
-
       - name: Audit npm dependencies
         run: npm audit
-
-      - name: Build frontend assets
-        run: npm run build
 
       - name: PHP lint
         run: find app bootstrap config database routes tests -name '*.php' -print0 | xargs -0 -n1 php -l
