@@ -6,6 +6,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use App\Http\Middleware\TwoFactorMiddleware;
 use App\Http\Middleware\CheckAccountStatus;
+use App\Http\Middleware\RestrictDemoFinancialActions;
 
 $webRoutes = __DIR__.'/../routes/web.php';
 $apiRoutes = __DIR__.'/../routes/api.php';
@@ -24,7 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 ? route('admin.login')
                 : route('login.form');
         });
-
+        $middleware->appendToGroup('web', RestrictDemoFinancialActions::class);
         $middleware->alias([
             '2fa' => TwoFactorMiddleware::class,
             'ban' => CheckAccountStatus::class,
