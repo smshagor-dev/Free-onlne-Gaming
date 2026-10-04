@@ -1,0 +1,16 @@
+{
+    "name": "Free Games",
+    "short_name": "FreeGames",
+    "background_color": "#0b141d",
+    "display": "fullscreen",
+    "description": "Online platform for free games with real money prizes. Play skill-based games and win cash rewards without any deposits.",
+    "theme_color": "#0b141d",
+    "start_url": "/",
+    "icons": [
+        {
+            "src": "logo.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}

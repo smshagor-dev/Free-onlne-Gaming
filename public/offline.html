@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#111827" />
+  <title>You’re Offline</title>
+  <style>
+    :root{
+      --bg:#0b1220; --card:#111827; --muted:#9ca3af; --text:#e5e7eb; --accent:#3b82f6; --accent-2:#60a5fa; --ok:#10b981;
+    }
+    @media (prefers-color-scheme: light) {
+      :root{ --bg:#f3f4f6; --card:#ffffff; --muted:#6b7280; --text:#111827; --accent:#2563eb; --accent-2:#3b82f6; }
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; background:radial-gradient(1200px 800px at 10% -10%, rgba(59,130,246,.15), transparent 60%),
+               radial-gradient(1200px 800px at 110% 110%, rgba(16,185,129,.10), transparent 60%), var(--bg);
+      color:var(--text); font: 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji";
+      display:grid; place-items:center; padding:24px;
+    }
+    .card{
+      width:100%; max-width:680px; background:var(--card); border-radius:20px; padding:28px;
+      box-shadow:0 10px 30px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.02);
+      border:1px solid rgba(255,255,255,.06);
+    }
+    .header{display:flex; align-items:center; gap:14px; margin-bottom:18px}
+    .badge{font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted)}
+    h1{margin:0; font-size:clamp(22px, 3vw, 28px)}
+    p{margin:.4rem 0; color:var(--muted)}
+    .hero{
+      display:grid; grid-template-columns: 1fr; gap:18px; align-items:center; margin:18px 0 6px;
+    }
+    .svg-wrap{display:grid; place-items:center}
+    svg{max-width:280px; width:100%; height:auto}
+    .actions{display:flex; flex-wrap:wrap; gap:10px; margin-top:16px}
+    .btn{
+      appearance:none; border:0; padding:12px 16px; border-radius:12px; cursor:pointer; font-weight:600;
+      background:linear-gradient(180deg, var(--accent), var(--accent-2)); color:white;
+      box-shadow:0 8px 20px rgba(59,130,246,.35);
+    }
+    .btn:active{transform:translateY(1px)}
+    .btn-outline{
+      background:transparent; color:var(--text); border:1px solid rgba(255,255,255,.15);
+    }
+    .tips{display:grid; gap:10px; margin-top:18px}
+    .tip{display:flex; gap:10px; align-items:flex-start; color:var(--muted); font-size:14px}
+    .dot{width:8px; height:8px; border-radius:999px; background:var(--ok); margin-top:7px}
+    .footer{margin-top:22px; border-top:1px solid rgba(255,255,255,.08); padding-top:14px; display:flex; justify-content:space-between; gap:12px; color:var(--muted); font-size:13px}
+    code{background:rgba(255,255,255,.06); padding:2px 6px; border-radius:6px}
+    @media (min-width: 720px){
+      .hero{grid-template-columns: 1.1fr .9fr}
+      svg{max-width:320px}
+    }
+  </style>
+</head>
+<body>
+  <main class="card" role="main" aria-labelledby="title">
+    <div class="header">
+      <span class="badge">Free Games</span>
+      <span class="badge">Offline Mode</span>
+    </div>
+
+    <h1 id="title">You’re offline</h1>
+    <p>It looks like your device lost connection. Don’t worry — you can still browse cached pages. We’ll reconnect as soon as the network is back.</p>
+
+    <section class="hero" aria-label="Offline illustration and actions">
+      <div class="svg-wrap" aria-hidden="true">
+        <!-- Inline SVG illustration -->
+        <svg viewBox="0 0 420 320" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#60a5fa" stop-opacity="1"/>
+              <stop offset="1" stop-color="#3b82f6" stop-opacity="1"/>
+            </linearGradient>
+            <linearGradient id="g2" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#10b981" stop-opacity=".95"/>
+              <stop offset="1" stop-color="#34d399" stop-opacity=".95"/>
+            </linearGradient>
+          </defs>
+
+          <!-- Cloud -->
+          <g transform="translate(30,40)">
+            <path d="M72,120c-22,0-40-18-40-40s18-40,40-40c4,0,8,.6,11.7,1.7C94,18,112,6,133,6c28,0,51,22,52,50
+                     c22,2,39,21,39,44 0,25-20,45-45,45H72z"
+                  fill="url(#g1)" opacity=".9"/>
+            <!-- Plugged cable -->
+            <path d="M200,120 h65 a14,14 0 0 1 0,28 h-65 a14,14 0 0 1 0-28z" fill="#0ea5e9" opacity=".6"/>
+            <rect x="258" y="112" rx="6" ry="6" width="18" height="44" fill="#0ea5e9"/>
+            <rect x="282" y="112" rx="6" ry="6" width="18" height="44" fill="#0ea5e9"/>
+            <!-- Unplug hint -->
+            <path d="M315,134c18,0,33,15,33,33 0,18-15,33-33,33s-33-15-33-33 15-33 33-33z" fill="url(#g2)" opacity=".85"/>
+            <path d="M300,167 h30" stroke="#fff" stroke-width="6" stroke-linecap="round"/>
+          </g>
+
+          <!-- Ground line -->
+          <path d="M30,270 Q210,300 390,270" stroke="rgba(255,255,255,.15)" stroke-width="6" fill="none"/>
+          <!-- Small sparkles -->
+          <circle cx="55" cy="70" r="3" fill="#93c5fd"/>
+          <circle cx="375" cy="95" r="3" fill="#86efac"/>
+          <circle cx="340" cy="55" r="2.5" fill="#93c5fd"/>
+          <circle cx="90" cy="210" r="2.5" fill="#86efac"/>
+        </svg>
+      </div>
+
+      <div>
+        <p><strong>What you can do now</strong></p>
+        <div class="tips">
+          <div class="tip"><span class="dot"></span>Try reconnecting to Wi-Fi or mobile data.</div>
+          <div class="tip"><span class="dot"></span>Use the button below to retry the page.</div>
+          <div class="tip"><span class="dot"></span>Return to the home page – it may be cached.</div>
+        </div>
+
+        <div class="actions">
+          <button class="btn" id="retryBtn" type="button" aria-label="Retry loading the page">Retry</button>
+          <a href="/" class="btn btn-outline" aria-label="Go to home page">Go Home</a>
+        </div>
+
+        <p style="margin-top:12px; font-size:13px; color:var(--muted)">
+          If this is a mistake, clear storage for this site and reload:
+          <code>Settings → Site Settings → Storage</code>
+        </p>
+      </div>
+    </section>
+
+    <div class="footer">
+      <span>App is in offline mode</span>
+      <span id="statusDot">•</span>
+    </div>
+  </main>
+
+  <script>
+    // Retry logic: try to refetch current page
+    document.getElementById('retryBtn').addEventListener('click', function () {
+      // If back online, reload the original URL; otherwise attempt anyway
+      location.reload();
+    });
+
+    // Auto-reload when connection returns
+    window.addEventListener('online', () => {
+      // Small delay to let network settle
+      setTimeout(() => location.reload(), 300);
+    });
+
+    // Update footer dot color by connectivity
+    function paintStatus() {
+      const dot = document.getElementById('statusDot');
+      const online = navigator.onLine;
+      dot.style.color = online ? 'var(--ok)' : '#ef4444';
+      dot.textContent = online ? 'Online' : 'Offline';
+    }
+    paintStatus();
+    window.addEventListener('online', paintStatus);
+    window.addEventListener('offline', paintStatus);
+  </script>
+</body>
+</html>
