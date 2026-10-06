@@ -49,7 +49,13 @@ final class GameBrowseController extends Controller
     {
         $query = trim(Str::limit((string) $request->query('q', ''), 120, ''));
         $results = $query === '' ? [] : $this->catalog->search($query, ['page_size' => 40]);
-        return view('catalog.search', ['query' => $query, 'games' => $this->paginate($results, $request, 24), 'pageTitle' => $query === '' ? 'Search Games | '.config('app.name') : 'Search: '.$query.' | '.config('app.name'), 'metaDescription' => $query === '' ? 'Search games across multiple game providers.' : 'Search results for '.$query.' across multiple game providers.']);
+        return view('catalog.search', [
+            'query' => $query,
+            'games' => $this->paginate($results, $request, 24),
+            'pageTitle' => $query === '' ? 'Search Games | '.config('app.name') : 'Search: '.$query.' | '.config('app.name'),
+            'metaDescription' => $query === '' ? 'Search games across multiple game providers.' : 'Search results for '.$query.' across multiple game providers.',
+            'robots' => 'noindex,follow',
+        ]);
     }
 
     public function free(Request $request): View
@@ -76,9 +82,31 @@ final class GameBrowseController extends Controller
         $game = $this->catalog->details($provider, $id);
         if (! $game instanceof GameData) throw new NotFoundHttpException('Game not found.');
         if ($request->user()) $this->personalization->recordRecent($request->user(), $game);
+
         $plainDescription = trim(preg_replace('/\s+/', ' ', strip_tags($game->description ?? '')) ?? '');
         $metaDescription = $plainDescription !== '' ? Str::limit($plainDescription, 160) : 'View details for '.$game->title.', including platforms, release information and available offers.';
-        return view('catalog.show', ['game' => $game, 'pageTitle' => $game->title.' | '.config('app.name'), 'metaDescription' => $metaDescription, 'ogImage' => $game->backgroundImage ?? $game->image]);
+        $image = $this->safeUrl($game->backgroundImage ?? $game->image);
+
+        $structuredData = array_filter([
+            '@context' => 'https://schema.org',
+            '@type' => 'VideoGame',
+            'name' => $game->title,
+            'url' => route('catalog.show', ['provider' => $game->provider, 'id' => $game->providerId]),
+            'description' => $metaDescription,
+            'image' => $image,
+            'genre' => $game->genres ?: null,
+            'gamePlatform' => $game->platforms ?: null,
+            'datePublished' => $game->releaseDate ?: null,
+            'publisher' => $game->publishers ? array_map(fn (string $name) => ['@type' => 'Organization', 'name' => $name], $game->publishers) : null,
+        ], fn ($value) => $value !== null && $value !== [] && $value !== '');
+
+        return view('catalog.show', [
+            'game' => $game,
+            'pageTitle' => $game->title.' | '.config('app.name'),
+            'metaDescription' => $metaDescription,
+            'ogImage' => $image,
+            'structuredData' => $structuredData,
+        ]);
     }
 
     private function paginate(array $items, Request $request, int $perPage): LengthAwarePaginator
@@ -88,4 +116,10 @@ final class GameBrowseController extends Controller
     }
 
     private function take(array $items, int $limit): array { return array_slice(array_values($items), 0, $limit); }
+
+    private function safeUrl(?string $value): ?string
+    {
+        if (! $value || ! filter_var($value, FILTER_VALIDATE_URL)) return null;
+        return in_array(parse_url($value, PHP_URL_SCHEME), ['http', 'https'], true) ? $value : null;
+    }
 }

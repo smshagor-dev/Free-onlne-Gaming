@@ -4,8 +4,11 @@ use App\Http\Controllers\CatalogLibraryController;
 use App\Http\Controllers\DemoController;
 use App\Http\Controllers\GameBrowseController;
 use App\Http\Controllers\GamingPreferenceController;
+use App\Http\Controllers\SeoController;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('seo.sitemap');
+Route::get('/robots.txt', [SeoController::class, 'robots'])->name('seo.robots');
 Route::post('/demo', [DemoController::class, 'login'])->middleware('guest')->name('demo.login');
 
 Route::controller(GameBrowseController::class)->group(function (): void {
