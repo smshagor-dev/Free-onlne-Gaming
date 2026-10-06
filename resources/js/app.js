@@ -1,4 +1,5 @@
 import './bootstrap';
+import '../css/site.css';
 
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
