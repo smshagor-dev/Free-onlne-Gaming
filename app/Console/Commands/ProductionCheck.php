@@ -13,7 +13,7 @@ final class ProductionCheck extends Command
     public function handle(): int
     {
         $checks = [
-            ['APP_ENV is production', app()->environment('production')],
+            ['APP_ENV is production', (string) config('app.env') === 'production'],
             ['APP_DEBUG is disabled', config('app.debug') === false],
             ['APP_URL uses HTTPS', str_starts_with((string) config('app.url'), 'https://')],
             ['APP_KEY is configured', trim((string) config('app.key')) !== ''],
