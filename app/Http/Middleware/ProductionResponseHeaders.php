@@ -13,6 +13,10 @@ final class ProductionResponseHeaders
 
     public function handle(Request $request, Closure $next): Response
     {
+        if (app()->environment('production') && $request->is('test-broadcast')) {
+            abort(404);
+        }
+
         $response = $next($request);
 
         $response->headers->set('X-Content-Type-Options', 'nosniff');
