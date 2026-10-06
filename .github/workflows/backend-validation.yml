@@ -16,6 +16,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Ensure private env file is not tracked
+        run: |
+          if git ls-files --error-unmatch .env >/dev/null 2>&1; then
+            echo '.env must never be committed'
+            exit 1
+          fi
+
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -46,8 +53,27 @@ jobs:
       - name: Run PHP tests
         run: php artisan test
 
-      - name: Validate routes
-        run: php artisan route:list
+      - name: Validate routes and scheduler
+        run: |
+          php artisan route:list
+          php artisan schedule:list
+
+      - name: Validate production configuration contract
+        run: |
+          APP_ENV=production \
+          APP_DEBUG=false \
+          APP_URL=https://example.test \
+          SESSION_SECURE_COOKIE=true \
+          SESSION_ENCRYPT=true \
+          FORCE_HTTPS=true \
+          TRUSTED_HOSTS='^example\.test$' \
+          php artisan app:production-check
+
+      - name: Validate production caches
+        run: |
+          php artisan config:cache
+          php artisan view:cache
+          php artisan optimize:clear
 
       - name: Audit Composer dependencies
         run: composer audit
