@@ -2,34 +2,33 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
-use App\Models\UserLogin;
 use App\Models\GameOpen;
-use App\Models\Setting;
-use App\Models\Page;
-use App\Models\LastPlay;
 use App\Models\GamesCategory;
-use Illuminate\Support\Facades\View;
+use App\Models\LastPlay;
+use App\Models\Page;
+use App\Models\Setting;
+use App\Models\UserLogin;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Request;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\View;
+use Illuminate\Support\ServiceProvider;
 use Throwable;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
         //
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
-        // Load global settings from DB
+        if ($this->app->environment('production') && config('security.force_https')) {
+            URL::forceScheme('https');
+        }
+
         try {
             $setting = Setting::first();
         } catch (Throwable) {
@@ -51,10 +50,8 @@ class AppServiceProvider extends ServiceProvider
         ];
 
         if ($setting instanceof Setting) {
-            // Override app name
             config(['app.name' => $setting->name ?? config('app.name')]);
 
-            // Override mail configuration dynamically
             config([
                 'mail.mailer' => $setting->MAIL_MAILER ?? config('mail.mailer'),
                 'mail.host' => $setting->MAIL_HOST ?? config('mail.host'),
@@ -67,31 +64,53 @@ class AppServiceProvider extends ServiceProvider
             ]);
         }
 
-        // Share variables with views
-        View::composer(['layouts.app', 'layouts.admin'], function ($view) use ($setting) {
+        View::composer(['layouts.app', 'layouts.admin'], function ($view) use ($setting): void {
             $user = Auth::user();
 
             $lastLogin = $user
                 ? UserLogin::where('user_id', $user->id)->latest('created_at')->first()
                 : null;
 
-            $gameCategories = GamesCategory::get();
-            $pages = Page::where('status', 1)->get();
-            $currentSlug = Request::segment(1);
+            try {
+                $gameCategories = Cache::remember('layout.game_categories', 300, fn () => GamesCategory::get());
+                $pages = Cache::remember('layout.active_pages', 300, fn () => Page::where('status', 1)->get());
+            } catch (Throwable) {
+                $gameCategories = GamesCategory::get();
+                $pages = Page::where('status', 1)->get();
+            }
+
+            $gameStats = null;
+            $casinoStats = null;
+
+            if ($user) {
+                $gameStats = GameOpen::query()
+                    ->where('user_id', $user->id)
+                    ->selectRaw('COUNT(CASE WHEN game_id > 0 THEN 1 END) AS last_played_count')
+                    ->selectRaw('COUNT(CASE WHEN `like` = 1 THEN 1 END) AS favorites_count')
+                    ->selectRaw('COUNT(CASE WHEN bookmark = 1 THEN 1 END) AS bookmarks_count')
+                    ->first();
+
+                $casinoStats = LastPlay::query()
+                    ->where('user_id', $user->id)
+                    ->selectRaw('COUNT(CASE WHEN last_play = 1 THEN 1 END) AS last_played_count')
+                    ->selectRaw('COUNT(CASE WHEN is_favourite = 1 THEN 1 END) AS favorites_count')
+                    ->selectRaw('COUNT(CASE WHEN is_bookmark = 1 THEN 1 END) AS bookmarks_count')
+                    ->first();
+            }
 
             $view->with([
                 'user' => $user,
                 'lastLogin' => $lastLogin,
                 'setting' => $setting,
                 'gameCategories' => $gameCategories,
-                'lastPlayedCount' => $user ? GameOpen::where('user_id', $user->id)->where('game_id', '>', 0)->count() : 0,
-                'favoritesCount'  => $user ? GameOpen::where('user_id', $user->id)->where('like', 1)->count() : 0,
-                'bookmarksCount'  => $user ? GameOpen::where('user_id', $user->id)->where('bookmark', 1)->count() : 0,
-                'casinolastPlayedCount' => $user ? LastPlay::where('user_id', $user->id)->where('last_play', 1)->count() : 0,
-                'casinofavoritesCount'  => $user ? LastPlay::where('user_id', $user->id)->where('is_favourite', 1)->count() : 0,
-                'casinobookmarksCount'  => $user ? LastPlay::where('user_id', $user->id)->where('is_bookmark', 1)->count() : 0,
+                'lastPlayedCount' => (int) ($gameStats?->last_played_count ?? 0),
+                'favoritesCount' => (int) ($gameStats?->favorites_count ?? 0),
+                'bookmarksCount' => (int) ($gameStats?->bookmarks_count ?? 0),
+                'casinolastPlayedCount' => (int) ($casinoStats?->last_played_count ?? 0),
+                'casinofavoritesCount' => (int) ($casinoStats?->favorites_count ?? 0),
+                'casinobookmarksCount' => (int) ($casinoStats?->bookmarks_count ?? 0),
                 'pages' => $pages,
-                'currentSlug' => $currentSlug,
+                'currentSlug' => Request::segment(1),
             ]);
         });
     }
