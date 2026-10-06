@@ -21,6 +21,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // The callback is evaluated by TrustHosts after Laravel's config repository is available.
+        $middleware->trustHosts(at: fn (): array => config('security.trusted_hosts', []), subdomains: false);
+
         $middleware->redirectGuestsTo(function (Request $request): string {
             return $request->is('sm-shagor/free-games/admin-main/control-back-office/*')
                 ? route('admin.login')
