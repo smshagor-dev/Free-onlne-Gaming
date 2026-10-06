@@ -1,12 +1,13 @@
 <?php
 
+use App\Http\Middleware\CheckAccountStatus;
+use App\Http\Middleware\ProductionResponseHeaders;
+use App\Http\Middleware\RestrictDemoFinancialActions;
+use App\Http\Middleware\TwoFactorMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
-use App\Http\Middleware\TwoFactorMiddleware;
-use App\Http\Middleware\CheckAccountStatus;
-use App\Http\Middleware\RestrictDemoFinancialActions;
 
 $webRoutes = __DIR__.'/../routes/web.php';
 $apiRoutes = __DIR__.'/../routes/api.php';
@@ -20,12 +21,32 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $trustedProxies = config('security.trusted_proxies', []);
+        if ($trustedProxies !== []) {
+            $middleware->trustProxies(
+                at: $trustedProxies === ['*'] ? '*' : $trustedProxies,
+                headers: Request::HEADER_X_FORWARDED_FOR
+                    | Request::HEADER_X_FORWARDED_HOST
+                    | Request::HEADER_X_FORWARDED_PORT
+                    | Request::HEADER_X_FORWARDED_PROTO
+                    | Request::HEADER_X_FORWARDED_PREFIX
+            );
+        }
+
+        $trustedHosts = config('security.trusted_hosts', []);
+        if ($trustedHosts !== []) {
+            $middleware->trustHosts(at: fn (): array => config('security.trusted_hosts', []), subdomains: false);
+        }
+
         $middleware->redirectGuestsTo(function (Request $request): string {
             return $request->is('sm-shagor/free-games/admin-main/control-back-office/*')
                 ? route('admin.login')
                 : route('login.form');
         });
+
         $middleware->appendToGroup('web', RestrictDemoFinancialActions::class);
+        $middleware->appendToGroup('web', ProductionResponseHeaders::class);
+
         $middleware->alias([
             '2fa' => TwoFactorMiddleware::class,
             'ban' => CheckAccountStatus::class,
@@ -34,5 +55,5 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->dontReportDuplicates();
     })->create();
