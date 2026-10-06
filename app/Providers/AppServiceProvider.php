@@ -8,6 +8,8 @@ use App\Models\LastPlay;
 use App\Models\Page;
 use App\Models\Setting;
 use App\Models\UserLogin;
+use Illuminate\Http\Middleware\TrustProxies;
+use Illuminate\Http\Request as HttpRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Request;
@@ -25,6 +27,18 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        $trustedProxies = config('security.trusted_proxies', []);
+        if ($trustedProxies !== []) {
+            TrustProxies::at($trustedProxies === ['*'] ? '*' : $trustedProxies);
+            TrustProxies::withHeaders(
+                HttpRequest::HEADER_X_FORWARDED_FOR
+                | HttpRequest::HEADER_X_FORWARDED_HOST
+                | HttpRequest::HEADER_X_FORWARDED_PORT
+                | HttpRequest::HEADER_X_FORWARDED_PROTO
+                | HttpRequest::HEADER_X_FORWARDED_PREFIX
+            );
+        }
+
         if ($this->app->environment('production') && config('security.force_https')) {
             URL::forceScheme('https');
         }
