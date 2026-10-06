@@ -14,12 +14,7 @@ class Kernel extends ConsoleKernel
 
     protected function schedule(Schedule $schedule): void
     {
-        // Run the lottery draw command daily at 00:00
-        $schedule->command('lottery:draw-winners')->dailyAt('00:01');
-
-        $schedule->command('bonus:check')->hourly();
-
-        $schedule->command('bonus:birthday')->dailyAt('00:01');
+        // Laravel 12 schedules are registered in routes/console.php.
     }
 
     protected function commands(): void

@@ -78,7 +78,7 @@
         @forelse($games as $game)
         <div class="game-card bg-[#1a2938] rounded-lg overflow-hidden shadow-lg transition-transform duration-300 hover:scale-105 relative group cursor-pointer">
             <div class="relative overflow-hidden">
-                <img src="{{ $game['img'] ?? '' }}" alt="{{ $game['name'] }}" class="w-full h-40 object-cover">
+                <img src="{{ $game['img'] ?? '' }}" alt="{{ $game['name'] }}" class="w-full h-40 object-cover" loading="lazy" decoding="async">
                 
                 @auth
                     <!-- Favourite Icon -->

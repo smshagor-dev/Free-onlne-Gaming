@@ -1,0 +1,5 @@
+@extends('errors.layout')
+@section('title', 'Page not found')
+@section('code', '404')
+@section('heading', 'We could not find that page.')
+@section('message', 'The link may be outdated, the game may no longer be available, or the address may have been typed incorrectly.')

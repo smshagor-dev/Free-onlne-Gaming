@@ -116,7 +116,13 @@ class CasinoVipBonusController extends Controller
      */
     public function getCasinoData()
     {
-        $url = $this->host;
+        $url = $this->casinoApiUrl($this->host);
+
+        if ($url === null) {
+            Log::warning('Casino API host is not configured.', ['provider' => $this->providerName]);
+
+            return null;
+        }
 
         $raw = [
             "cmd" => "gamesList",
@@ -145,6 +151,10 @@ class CasinoVipBonusController extends Controller
     public function cacheCasinoData()
     {
         $responseData = $this->getCasinoData();
+
+        if (!$responseData) {
+            return redirect()->back()->with('error', 'Casino API host is not configured. Set CASINO_API_HOST before refreshing casino data.');
+        }
 
         // Store in cache for 24 hours (86400 seconds)
         Cache::put('casino_vip_response', $responseData, 86400);
@@ -279,8 +289,13 @@ class CasinoVipBonusController extends Controller
 
         try {
             $client = new \GuzzleHttp\Client();
+            $url = $this->casinoApiUrl($this->host, 'openGame/');
 
-            $response = $client->post($this->host . 'openGame/', [
+            if ($url === null) {
+                return back()->with('error', 'Casino API host is not configured.');
+            }
+
+            $response = $client->post($url, [
                 'headers' => ['Content-Type' => 'application/json'],
                 'body' => json_encode($payload)
             ]);
@@ -350,7 +365,12 @@ class CasinoVipBonusController extends Controller
     {
         try {
             $pageTitle = "Casino $session Hisotry";
-            $url = $this->host;
+            $url = $this->casinoApiUrl($this->host);
+
+            if ($url === null) {
+                return back()->with('error', 'Casino API host is not configured.');
+            }
+
             $raw = [
                 "cmd" => "gameSessionsLog",
                 "hall" => $this->hall,

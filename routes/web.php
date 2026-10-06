@@ -46,21 +46,20 @@ use App\Http\Controllers\Admin\CashbackSettingController;
 use App\Http\Controllers\CasinoCashbackController;
 use App\Http\Controllers\Admin\VipBonusController;
 use App\Http\Controllers\CasinoVipBonusController;
-use App\Events\TestEvent;
 use Illuminate\Support\Facades\Broadcast;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\SecureFileController;
+use App\Http\Controllers\SeoController;
+use App\Http\Controllers\UtilityController;
 
 Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
     return (int) $user->id === (int) $id;
 });
 
-Route::get('/test-broadcast', function () {
-    event(new TestEvent('Hello from Laravel!'));
-    return "Event has been sent!";
-});
+Route::get('/test-broadcast', [UtilityController::class, 'testBroadcast']);
 
-Route::get('/home', function () {return redirect('/');});
+Route::redirect('/home', '/');
+Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('seo.sitemap');
 Route::get('/private-files/{path}', [SecureFileController::class, 'show'])
     ->where('path', '.*')
     ->name('files.private');
@@ -72,7 +71,7 @@ Route::get('/free-games', [GameController::class, 'viewfreegames'])->name('free.
 
 Route::get('/bonus', [BonusController::class, 'bonus'])->name('bonus.page')->middleware('auth', '2fa', 'ban');
 Route::get('/my-bonus', [BonusDepositSettingController::class, 'showBonus'])->name('my.bonus')->middleware('auth', '2fa', 'ban');
-Route::post('/bonus-popup-seen', function () {session()->forget('show_bonus_popup');return response()->json(['status' => 'ok']);});
+Route::post('/bonus-popup-seen', [UtilityController::class, 'bonusPopupSeen']);
 
 
 // Google Authentication
@@ -146,7 +145,7 @@ Route::post('/resend-verification', [VerificationController::class, 'resendCode'
 Route::post('/quick-register', [RegisterController::class, 'quickRegistration'])->name('quick.register');
 
 // Reset Password Routes
-Route::get('forgot-password', function () {return view('auth.forgot-password');})->name('auth.forgotPasswordForm');
+Route::view('forgot-password', 'auth.forgot-password')->name('auth.forgotPasswordForm');
 Route::post('search-user', [ForgotPasswordController::class, 'searchUser'])->name('auth.searchUser');
 
 

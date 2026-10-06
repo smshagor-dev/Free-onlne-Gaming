@@ -20,6 +20,29 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->trustProxies(
+            at: env('TRUSTED_PROXIES'),
+            headers: Request::HEADER_X_FORWARDED_FOR
+                | Request::HEADER_X_FORWARDED_HOST
+                | Request::HEADER_X_FORWARDED_PORT
+                | Request::HEADER_X_FORWARDED_PROTO
+                | Request::HEADER_X_FORWARDED_PREFIX
+                | Request::HEADER_X_FORWARDED_AWS_ELB,
+        );
+
+        $trustedHosts = array_filter(array_map('trim', explode(',', (string) env('TRUSTED_HOSTS', ''))));
+        if ($trustedHosts !== []) {
+            $middleware->trustHosts(
+                at: fn (): array => array_map(
+                    fn (string $host): string => str_starts_with($host, '^') ? $host : '^'.preg_quote($host).'$',
+                    $trustedHosts,
+                ),
+                subdomains: false,
+            );
+        } else {
+            $middleware->trustHosts();
+        }
+
         $middleware->redirectGuestsTo(function (Request $request): string {
             return $request->is('sm-shagor/free-games/admin-main/control-back-office/*')
                 ? route('admin.login')

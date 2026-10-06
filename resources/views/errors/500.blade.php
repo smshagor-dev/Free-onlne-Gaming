@@ -1,0 +1,5 @@
+@extends('errors.layout')
+@section('title', 'Server error')
+@section('code', '500')
+@section('heading', 'Something went wrong.')
+@section('message', 'The issue has been logged. Please try again later while we keep provider and account details private.')

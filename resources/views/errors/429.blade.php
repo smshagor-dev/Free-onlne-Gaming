@@ -1,0 +1,5 @@
+@extends('errors.layout')
+@section('title', 'Too many requests')
+@section('code', '429')
+@section('heading', 'Please slow down for a moment.')
+@section('message', 'Too many requests were sent in a short time. Wait briefly, then try the action again.')

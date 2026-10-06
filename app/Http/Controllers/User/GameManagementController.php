@@ -463,4 +463,9 @@ class GameManagementController extends Controller
 
         return response()->json(['success' => true]);
     }
+
+    private function getCasinoData(): ?string
+    {
+        return app(\App\Http\Controllers\CasinoController::class)->getCasinoData();
+    }
 }

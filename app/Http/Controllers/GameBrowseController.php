@@ -78,7 +78,20 @@ final class GameBrowseController extends Controller
         if ($request->user()) $this->personalization->recordRecent($request->user(), $game);
         $plainDescription = trim(preg_replace('/\s+/', ' ', strip_tags($game->description ?? '')) ?? '');
         $metaDescription = $plainDescription !== '' ? Str::limit($plainDescription, 160) : 'View details for '.$game->title.', including platforms, release information and available offers.';
-        return view('catalog.show', ['game' => $game, 'pageTitle' => $game->title.' | '.config('app.name'), 'metaDescription' => $metaDescription, 'ogImage' => $game->backgroundImage ?? $game->image]);
+        $structuredData = array_filter([
+            '@context' => 'https://schema.org',
+            '@type' => 'VideoGame',
+            'name' => $game->title,
+            'description' => $metaDescription,
+            'image' => $game->backgroundImage ?? $game->image,
+            'url' => route('catalog.show', ['provider' => $game->provider, 'id' => $game->providerId]),
+            'datePublished' => $game->releaseDate,
+            'applicationCategory' => 'Game',
+            'gamePlatform' => $game->platforms,
+            'genre' => $game->genres,
+        ]);
+
+        return view('catalog.show', ['game' => $game, 'pageTitle' => $game->title.' | '.config('app.name'), 'metaDescription' => $metaDescription, 'ogImage' => $game->backgroundImage ?? $game->image, 'structuredData' => $structuredData]);
     }
 
     private function paginate(array $items, Request $request, int $perPage): LengthAwarePaginator

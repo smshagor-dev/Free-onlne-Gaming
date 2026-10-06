@@ -78,7 +78,7 @@
         @forelse($games as $game)
         <div class="game-card bg-[#1a2938] rounded-lg overflow-hidden shadow-lg transition-transform duration-300 hover:scale-105 relative group">
             <div class="relative overflow-hidden">
-                <img src="{{ $game['img'] ?? '' }}" alt="{{ $game['name'] }}" class="w-full h-40 object-cover">
+                <img src="{{ $game['img'] ?? '' }}" alt="{{ $game['name'] }}" class="w-full h-40 object-cover" loading="lazy" decoding="async">
                 <div class="absolute inset-0 bg-black bg-opacity-70 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-center items-center p-2">
                     <h3 class="text-sm font-bold text-white text-center mb-2">{{ $game['name'] }}</h3>
                     @if(auth()->check())

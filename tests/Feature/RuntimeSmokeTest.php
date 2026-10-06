@@ -59,6 +59,19 @@ class RuntimeSmokeTest extends TestCase
         }
     }
 
+    public function test_games_page_does_not_crash_when_casino_api_host_is_missing(): void
+    {
+        config(['casino.host' => null]);
+        Cache::forget('casino_raw_response');
+
+        $this->get(route('games.viewIndex'))
+            ->assertStatus(404)
+            ->assertJson([
+                'status' => 'error',
+                'message' => 'No cached casino data found. Please refresh first.',
+            ]);
+    }
+
     public function test_user_routes_require_authentication_and_notifications_are_owner_scoped(): void
     {
         foreach ([
