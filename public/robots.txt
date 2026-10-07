@@ -1,2 +1,11 @@
 User-agent: *
-Disallow:
+Disallow: /user/
+Disallow: /admin/
+Disallow: /sm-shagor/free-games/admin-main/control-back-office/
+Disallow: /casino/play
+Disallow: /bonus-play/play
+Disallow: /casino-cashback/play
+Disallow: /vip-bonus-play/play
+Disallow: /api/
+
+Sitemap: /sitemap.xml

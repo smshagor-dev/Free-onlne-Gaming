@@ -13,7 +13,11 @@
     <meta name="keywords" content="{{ $setting->meta_tag ?? '' }}">
     <meta name="author" content="{{ $setting->name ?? config('app.name') }}">
     <link rel="canonical" href="{{ url()->current() }}">
+    <link rel="manifest" href="{{ asset('manifest.json') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    @if(auth()->check() || request()->is('user/*'))
+    <meta name="robots" content="noindex, nofollow">
+    @endif
 
     {{-- Open Graph / Facebook --}}
     <meta property="og:type" content="website">
@@ -52,6 +56,7 @@
     <script src="https://js.pusher.com/7.2/pusher.min.js"></script>
 
     @vite('resources/js/app.js')
+    @stack('head')
 
     {{-- Google Adsense --}}
     @if(!empty($setting->adsense_code))
@@ -986,6 +991,11 @@ window.yaContextCb.push(() => {
         "platform": "desktop"
     })
 })
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+}
 </script>
 </body>
 

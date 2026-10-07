@@ -1,0 +1,5 @@
+@extends('errors.layout')
+@section('title', 'Service unavailable')
+@section('code', '503')
+@section('heading', 'The site is temporarily unavailable.')
+@section('message', 'Maintenance or an upstream provider issue may be in progress. Please check back shortly.')

@@ -1,0 +1,5 @@
+@extends('errors.layout')
+@section('title', 'Access denied')
+@section('code', '403')
+@section('heading', 'This page is not available to your account.')
+@section('message', 'The request was blocked by the application access rules. Sign in with the correct account or return to a public page.')

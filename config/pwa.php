@@ -26,6 +26,8 @@ return [
         'orientation' => 'any',
         'description' => 'Online platform for free games with real money prizes. Play skill-based games and win cash rewards without any deposits.',
         'theme_color' => '#0b141d',
+        'start_url' => '/games',
+        'scope' => '/',
         'icons' => [
             [
                 'src' => 'logo.png',

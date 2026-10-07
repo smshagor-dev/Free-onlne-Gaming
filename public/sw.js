@@ -2,6 +2,18 @@
 
 const CACHE_NAME = "offline-cache-v1";
 const OFFLINE_URL = '/offline.html';
+const PRIVATE_PATH_PREFIXES = [
+    '/user/',
+    '/admin/',
+    '/sm-shagor/free-games/admin-main/control-back-office/',
+    '/api/',
+    '/casino/play',
+    '/bonus-play/play',
+    '/casino-cashback/play',
+    '/vip-bonus-play/play',
+    '/user/transactions',
+    '/private-files/'
+];
 
 const filesToCache = [
     OFFLINE_URL
@@ -15,6 +27,14 @@ self.addEventListener("install", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
+    const url = new URL(event.request.url);
+    const isPrivatePath = url.origin === self.location.origin && PRIVATE_PATH_PREFIXES.some((prefix) => url.pathname.startsWith(prefix));
+
+    if (isPrivatePath) {
+        event.respondWith(fetch(event.request));
+        return;
+    }
+
     if (event.request.mode === 'navigate') {
         event.respondWith(
             fetch(event.request)
