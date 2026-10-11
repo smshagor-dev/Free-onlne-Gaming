@@ -8,12 +8,56 @@ use App\Models\Admin;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
 class RuntimeSmokeTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Http::preventStrayRequests();
+    }
+
+    public function test_home_and_player_use_embeddable_games_when_local_games_are_empty(): void
+    {
+        config(['cache.default' => 'array']);
+        Cache::flush();
+        $games = [];
+        for ($number = 1; $number <= 65; $number++) {
+            $games[] = [
+                'title' => 'Browser Game '.$number,
+                'category' => 'Puzzle',
+                'url' => 'https://html5.gamemonetize.co/game'.$number.'/',
+                'thumb' => 'https://images.test/game'.$number.'.jpg',
+            ];
+        }
+        $games[] = ['title' => 'Unsafe Game', 'url' => 'https://example.com/redirect'];
+        Http::fake(['gamemonetize.com/rssfeed.php*' => Http::response($games, 200)]);
+
+        $this->get(route('games.viewIndex'))
+            ->assertOk()
+            ->assertSee('Browser Game 1')
+            ->assertSee(route('playable.play', 'game1'), false)
+            ->assertDontSee('Browser Game 31')
+            ->assertDontSee('Unsafe Game');
+
+        $this->get(route('playable.load', ['page' => 2]))
+            ->assertOk()->assertJsonPath('has_more', true)
+            ->assertSee('Browser Game 31')->assertDontSee('Browser Game 61');
+        $this->get(route('playable.load', ['page' => 3]))
+            ->assertOk()->assertJsonPath('has_more', false)
+            ->assertSee('Browser Game 65');
+
+        $this->get(route('playable.index'))->assertOk()->assertSee('Browser Game 1');
+        $this->get(route('playable.play', 'game1'))
+            ->assertOk()
+            ->assertSee('src="https://html5.gamemonetize.co/game1/"', false);
+        $this->get(route('playable.play', 'MissingGame'))->assertNotFound();
+    }
 
     public function test_every_controller_route_has_a_resolvable_target(): void
     {
@@ -65,11 +109,9 @@ class RuntimeSmokeTest extends TestCase
         Cache::forget('casino_raw_response');
 
         $this->get(route('games.viewIndex'))
-            ->assertStatus(404)
-            ->assertJson([
-                'status' => 'error',
-                'message' => 'No cached casino data found. Please refresh first.',
-            ]);
+            ->assertOk()
+            ->assertSee('Explore Games')
+            ->assertSee('Free Games');
     }
 
     public function test_user_routes_require_authentication_and_notifications_are_owner_scoped(): void

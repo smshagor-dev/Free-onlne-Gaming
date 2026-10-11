@@ -1,1014 +1,886 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+    $localGames = collect($categories ?? [])->pluck('games')->flatten()->filter()->values();
+    $primaryGames = collect($playableGames ?? [])->filter(fn ($game) => !empty($game['image']))->values();
+    $trendingGames = $primaryGames->take(6);
+    $newGames = $primaryGames->slice(6, 6)->values();
+
+    if ($trendingGames->count() < 6 && $localGames->isNotEmpty()) {
+        $trendingGames = $trendingGames->concat($localGames->take(6 - $trendingGames->count()))->values();
+    }
+
+    if ($newGames->count() < 6 && $localGames->isNotEmpty()) {
+        $newGames = $newGames->concat($localGames->slice(6, 6 - $newGames->count()))->values();
+    }
+
+    $heroGame = $primaryGames->first() ?: $localGames->first();
+    $heroImage = is_array($heroGame)
+        ? ($heroGame['image'] ?? asset('default.png'))
+        : ($heroGame?->image ? asset($heroGame->image) : asset('default.png'));
+
+    $categoryLinks = collect($categories ?? []);
+    $categoryTiles = [
+        ['name' => 'Action', 'icon' => 'fa-crosshairs', 'class' => 'cat-action'],
+        ['name' => 'Adventure', 'icon' => 'fa-mountain-sun', 'class' => 'cat-adventure'],
+        ['name' => 'Racing', 'icon' => 'fa-car-side', 'class' => 'cat-racing'],
+        ['name' => 'Shooting', 'icon' => 'fa-gun', 'class' => 'cat-shooting'],
+        ['name' => 'Sports', 'icon' => 'fa-futbol', 'class' => 'cat-sports'],
+        ['name' => 'Puzzle', 'icon' => 'fa-puzzle-piece', 'class' => 'cat-puzzle'],
+        ['name' => 'Multiplayer', 'icon' => 'fa-users', 'class' => 'cat-multiplayer'],
+        ['name' => 'Simulation', 'icon' => 'fa-gamepad', 'class' => 'cat-simulation'],
+        ['name' => 'More', 'icon' => 'fa-ellipsis', 'class' => 'cat-more'],
+    ];
+
+    $findCategoryUrl = function (string $name) use ($categoryLinks) {
+        $match = $categoryLinks->first(fn ($category) => str_contains(strtolower($category->name ?? ''), strtolower($name)));
+        return $match ? route('category.view', ['id' => $match->id]) : route('free.games.index');
+    };
+@endphp
+
 <style>
-    /* Common styles for both desktop and mobile */
+    :root {
+        --fg-page: #06111c;
+        --fg-header: #040d16;
+        --fg-panel: #102131;
+        --fg-panel-2: #14293c;
+        --fg-blue: #10a8ff;
+        --fg-blue-hover: #0589db;
+        --fg-text: #ffffff;
+        --fg-muted: #9eb0c3;
+        --fg-border: rgba(255, 255, 255, 0.08);
+        --fg-shadow: 0 22px 45px rgba(0, 0, 0, 0.32);
+    }
+
+    html,
     body {
-        margin: 0;
-        font-family: Arial, sans-serif;
-        background: #f8f8f8;
+        height: auto !important;
+        min-height: 100%;
+        overflow: auto !important;
+        background: var(--fg-page) !important;
+        color: var(--fg-text);
+        font-family: Inter, Manrope, "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
-    .banner-container {
+    body > header,
+    #sidebar,
+    #mobileOverlay,
+    body > .flex.h-screen.overflow-hidden > aside {
+        display: none !important;
+    }
+
+    body > .flex.h-screen.overflow-hidden {
+        display: block !important;
+        height: auto !important;
+        min-height: 100vh;
+        overflow: visible !important;
+    }
+
+    body > .flex.h-screen.overflow-hidden > main {
+        width: 100% !important;
+        height: auto !important;
+        min-height: 100vh;
+        padding: 0 !important;
+        overflow: visible !important;
+        background:
+            radial-gradient(circle at 75% 12%, rgba(16, 168, 255, 0.13), transparent 30rem),
+            linear-gradient(180deg, #06111c 0%, #071521 58%, #050d16 100%);
+    }
+
+    .fg-page,
+    .fg-page * {
+        box-sizing: border-box;
+        letter-spacing: 0;
+    }
+
+    .fg-page {
+        overflow-x: hidden;
+    }
+
+    .fg-page a {
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .fg-shell {
+        width: min(100%, 1500px);
+        margin: 0 auto;
+        padding: 0 38px;
+    }
+
+    .fg-topbar {
+        position: sticky;
+        top: 0;
+        z-index: 40;
+        min-height: 70px;
+        background: rgba(4, 13, 22, 0.96);
+        border-bottom: 1px solid var(--fg-border);
+        backdrop-filter: blur(18px);
+    }
+
+    .fg-nav {
+        min-height: 70px;
+        display: grid;
+        grid-template-columns: auto minmax(420px, 1fr) auto;
+        gap: 28px;
+        align-items: center;
+    }
+
+    .fg-brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 27px;
+        font-weight: 900;
+        line-height: 1;
+        white-space: nowrap;
+    }
+
+    .fg-brand-icon {
+        width: 45px;
+        height: 36px;
+        display: grid;
+        place-items: center;
+        border-radius: 13px;
+        color: #03101b;
+        background: linear-gradient(135deg, #25b8ff, #0879ec);
+        box-shadow: 0 0 24px rgba(16, 168, 255, 0.36);
+    }
+
+    .fg-brand-word {
+        display: inline-flex;
+    }
+
+    .fg-brand-word span:first-child {
+        color: #fff;
+    }
+
+    .fg-brand-word span:last-child {
+        color: var(--fg-blue);
+    }
+
+    .fg-nav-links {
         display: flex;
-        transition: transform 0.5s ease-in-out;
+        align-items: stretch;
+        justify-content: center;
+        gap: 26px;
+        min-height: 70px;
     }
 
-    .banner-slide {
-        flex: 0 0 auto;
+    .fg-nav-link {
         position: relative;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        color: #c9d4e2;
+        font-size: 14px;
+        font-weight: 700;
+        transition: color 0.2s ease;
+        white-space: nowrap;
     }
 
-    /* Smooth hover zoom effect */
-    .banner-slide img {
-        transition: transform 5s ease-out;
+    .fg-nav-link:hover,
+    .fg-nav-link.is-active {
+        color: var(--fg-blue);
     }
 
-    .banner-slide:hover img {
-        transform: scale(1.03);
+    .fg-nav-link.is-active::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 3px;
+        border-radius: 99px 99px 0 0;
+        background: var(--fg-blue);
+        box-shadow: 0 0 14px rgba(16, 168, 255, 0.85);
     }
 
-    /* Ensure proper image display */
-    .banner-slide img {
+    .fg-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 14px;
+    }
+
+    .fg-search {
+        position: relative;
+        width: 292px;
+    }
+
+    .fg-search label {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+    }
+
+    .fg-search input {
+        width: 100%;
+        height: 39px;
+        padding: 0 44px 0 20px;
+        border: 1px solid var(--fg-border);
+        border-radius: 999px;
+        outline: none;
+        background: #162737;
+        color: #fff;
+        font-size: 14px;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .fg-search input::placeholder {
+        color: #8ba1b6;
+    }
+
+    .fg-search input:focus {
+        border-color: rgba(16, 168, 255, 0.65);
+        box-shadow: 0 0 0 3px rgba(16, 168, 255, 0.18);
+    }
+
+    .fg-search button {
+        position: absolute;
+        top: 50%;
+        right: 14px;
+        transform: translateY(-50%);
+        display: grid;
+        place-items: center;
+        border: 0;
+        color: #f2f7ff;
+        cursor: pointer;
+        background: transparent;
+    }
+
+    .fg-auth {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        height: 39px;
+        min-width: 84px;
+        padding: 0 18px;
+        border-radius: 11px;
+        font-size: 14px;
+        font-weight: 800;
+        border: 1px solid transparent;
+        transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+    }
+
+    .fg-auth:hover {
+        transform: translateY(-1px);
+    }
+
+    .fg-auth-primary {
+        background: linear-gradient(135deg, #18adff, #0788ef);
+        color: #fff;
+        box-shadow: 0 10px 22px rgba(16, 168, 255, 0.26);
+    }
+
+    .fg-auth-ghost {
+        border-color: rgba(16, 168, 255, 0.55);
+        color: #d8e9ff;
+        background: rgba(8, 24, 39, 0.72);
+    }
+
+    .fg-hero {
+        position: relative;
+        min-height: 414px;
+        overflow: hidden;
+        border-bottom: 1px solid var(--fg-border);
+        background:
+            linear-gradient(90deg, rgba(6, 17, 28, 0.98) 0%, rgba(6, 17, 28, 0.88) 31%, rgba(6, 17, 28, 0.18) 70%, rgba(6, 17, 28, 0.34) 100%),
+            linear-gradient(180deg, rgba(6, 17, 28, 0.1), var(--fg-page)),
+            url("{{ $heroImage }}") center right / cover no-repeat;
+    }
+
+    .fg-hero::after {
+        content: "";
+        position: absolute;
+        inset: auto 0 0;
+        height: 130px;
+        background: linear-gradient(180deg, transparent, #06111c 88%);
+        pointer-events: none;
+    }
+
+    .fg-hero-layout {
+        position: relative;
+        z-index: 2;
+        display: grid;
+        grid-template-columns: minmax(450px, 0.78fr) minmax(400px, 1fr);
+        min-height: 414px;
+        align-items: center;
+        gap: 28px;
+    }
+
+    .fg-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 18px;
+        padding: 8px 15px;
+        border-radius: 10px;
+        border: 1px solid rgba(27, 227, 117, 0.42);
+        background: rgba(16, 150, 82, 0.24);
+        color: #d8ffe9;
+        box-shadow: 0 0 24px rgba(16, 222, 118, 0.15);
+        font-size: 14px;
+        font-weight: 900;
+    }
+
+    .fg-badge i {
+        color: #72ff8f;
+    }
+
+    .fg-hero h1 {
+        max-width: 620px;
+        margin: 0;
+        color: #fff;
+        font-size: clamp(42px, 5vw, 64px);
+        line-height: 1.02;
+        font-weight: 950;
+    }
+
+    .fg-hero h1 .fg-blue-text {
+        color: var(--fg-blue);
+        text-shadow: 0 0 28px rgba(16, 168, 255, 0.42);
+    }
+
+    .fg-mobile-only {
+        display: none;
+    }
+
+    .fg-desktop-only {
+        display: block;
+    }
+
+    .fg-hero p {
+        max-width: 530px;
+        margin: 14px 0 24px;
+        color: #c6d6e5;
+        font-size: 19px;
+        line-height: 1.34;
+    }
+
+    .fg-hero-actions {
+        display: flex;
+        gap: 20px;
+        align-items: center;
+    }
+
+    .fg-hero-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 11px;
+        min-width: 197px;
+        height: 58px;
+        padding: 0 28px;
+        border-radius: 11px;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        font-size: 18px;
+        font-weight: 900;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+
+    .fg-hero-btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .fg-hero-btn-primary {
+        background: linear-gradient(135deg, #1ab2ff, #068bf0);
+        box-shadow: 0 18px 34px rgba(16, 168, 255, 0.33);
+    }
+
+    .fg-hero-btn-secondary {
+        background: rgba(14, 30, 45, 0.78);
+        border-color: rgba(255, 255, 255, 0.22);
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+    }
+
+    .fg-hero-art {
+        position: relative;
+        height: 360px;
+        align-self: end;
+    }
+
+    .fg-art-card {
+        position: absolute;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: 18px;
+        background: #152538;
+        box-shadow: var(--fg-shadow);
+    }
+
+    .fg-art-card img {
         width: 100%;
         height: 100%;
         object-fit: cover;
     }
 
-    /* Desktop styles */
-    @media (min-width: 768px) {
-        .container {
-            max-width: 100%;
-            margin: 0 auto;
-            padding: 20px;
+    .fg-art-main {
+        right: 14%;
+        bottom: 18px;
+        width: 43%;
+        height: 78%;
+        transform: rotate(-3deg);
+    }
+
+    .fg-art-side {
+        right: 0;
+        top: 24px;
+        width: 35%;
+        height: 60%;
+        transform: rotate(5deg);
+    }
+
+    .fg-art-low {
+        right: 31%;
+        bottom: 0;
+        width: 34%;
+        height: 42%;
+        transform: rotate(4deg);
+    }
+
+    .fg-hero-script {
+        position: absolute;
+        right: 10px;
+        bottom: 34px;
+        max-width: 190px;
+        color: #fff;
+        font-size: 29px;
+        font-weight: 950;
+        line-height: 0.98;
+        text-align: right;
+        text-transform: uppercase;
+        text-shadow: 0 3px 16px #000;
+        transform: rotate(-9deg);
+    }
+
+    .fg-hero-script::after {
+        content: "";
+        display: block;
+        width: 94px;
+        height: 7px;
+        margin: 12px 0 0 auto;
+        border-radius: 99px;
+        background: var(--fg-blue);
+        box-shadow: 0 0 16px rgba(16, 168, 255, 0.75);
+    }
+
+    .fg-dots {
+        position: absolute;
+        z-index: 3;
+        left: 50%;
+        bottom: 18px;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 12px;
+    }
+
+    .fg-dot {
+        width: 12px;
+        height: 12px;
+        border: 0;
+        border-radius: 999px;
+        background: rgba(142, 164, 187, 0.52);
+    }
+
+    .fg-dot.is-active {
+        background: var(--fg-blue);
+        box-shadow: 0 0 16px rgba(16, 168, 255, 0.8);
+    }
+
+    .fg-main {
+        padding: 17px 0 42px;
+    }
+
+    .fg-categories {
+        display: grid;
+        grid-template-columns: repeat(9, minmax(116px, 1fr));
+        gap: 15px;
+        margin-bottom: 24px;
+    }
+
+    .fg-category {
+        min-height: 83px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        border-radius: 8px;
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.11);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .fg-category:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 16px 32px rgba(0, 0, 0, 0.24), 0 0 24px rgba(16, 168, 255, 0.14);
+    }
+
+    .fg-category i {
+        font-size: 25px;
+    }
+
+    .fg-category span {
+        font-size: 14px;
+        font-weight: 900;
+    }
+
+    .cat-action { background: linear-gradient(135deg, #f44343, #c8232f); }
+    .cat-adventure { background: linear-gradient(135deg, #10a852, #057842); }
+    .cat-racing { background: linear-gradient(135deg, #106bff, #0752c8); }
+    .cat-shooting { background: linear-gradient(135deg, #692dff, #4811b7); }
+    .cat-sports { background: linear-gradient(135deg, #f18809, #d34b00); }
+    .cat-puzzle { background: linear-gradient(135deg, #c9940a, #9c6f02); }
+    .cat-multiplayer { background: linear-gradient(135deg, #d8378a, #a91c68); }
+    .cat-simulation { background: linear-gradient(135deg, #0aa9bd, #037483); }
+    .cat-more { background: linear-gradient(135deg, #1d3348, #101c2a); }
+
+    .fg-section {
+        margin-top: 22px;
+    }
+
+    .fg-section-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 14px;
+    }
+
+    .fg-section-title {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        margin: 0;
+        color: #fff;
+        font-size: 26px;
+        font-weight: 950;
+    }
+
+    .fg-section-title i {
+        color: var(--fg-blue);
+        filter: drop-shadow(0 0 10px rgba(16, 168, 255, 0.6));
+    }
+
+    .fg-section-title .star {
+        color: #ffbc2e;
+        filter: drop-shadow(0 0 10px rgba(255, 188, 46, 0.42));
+    }
+
+    .fg-view-all {
+        color: var(--fg-blue);
+        font-size: 15px;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .fg-view-all:hover {
+        color: #66caff;
+    }
+
+    .fg-games-grid {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 15px;
+    }
+
+    .fg-empty {
+        padding: 26px;
+        border-radius: 12px;
+        border: 1px solid var(--fg-border);
+        background: var(--fg-panel);
+        color: var(--fg-muted);
+    }
+
+    @media (max-width: 1320px) {
+        .fg-nav {
+            grid-template-columns: auto 1fr;
+            gap: 14px;
         }
 
-        .tags-container {
-            display: flex;
-            overflow-x: auto;
-            padding: 15px;
-            gap: 12px;
-            scroll-behavior: smooth;
-            margin-bottom: 20px;
+        .fg-actions {
+            grid-column: 1 / -1;
+            padding-bottom: 13px;
+            justify-content: stretch;
         }
 
-        .tags-container::-webkit-scrollbar {
-            height: 8px;
+        .fg-search {
+            flex: 1;
+            width: auto;
         }
 
-        .tags-container::-webkit-scrollbar-thumb {
-            background: #ccc;
-            border-radius: 4px;
+        .fg-categories {
+            grid-template-columns: repeat(5, minmax(128px, 1fr));
         }
 
-        .tag-item {
-            flex: 0 0 auto;
-            width: 80px;
-            text-align: center;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-
-        .tag-item:hover {
-            transform: scale(1.05);
-        }
-
-        .tag-photo {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            object-fit: cover;
-            margin: 0 auto;
-            display: block;
-            border: 2px solid #ddd;
-        }
-
-        .tag-name {
-            margin-top: 5px;
-            font-size: 12px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .tag-item.active .tag-photo {
-            border-color: #4CAF50;
-        }
-
-        .category-row {
-            display: flex;
-            overflow-x: auto;
-            padding: 15px;
-            gap: 12px;
-            scroll-behavior: smooth;
-            margin-bottom: 30px;
-        }
-
-        .category-row::-webkit-scrollbar {
-            height: 8px;
-        }
-
-        .category-row::-webkit-scrollbar-thumb {
-            background: #ccc;
-            border-radius: 4px;
-        }
-
-        /* Big Category Card */
-        .category-card {
-            flex: 0 0 auto;
-            width: 250px;
-            height: 140px;
-            border-radius: 12px;
-            color: white;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            padding: 15px;
-            background-size: cover;
-            background-position: center;
-            position: relative;
-            font-weight: bold;
-        }
-
-        .category-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 12px;
-            pointer-events: none;
-        }
-
-        .category-card .title {
-            font-size: 20px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .category-card .count {
-            font-size: 14px;
-            opacity: 0.9;
-            margin-bottom: 8px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .category-card .explore-btn {
-            padding: 6px 12px;
-            border: none;
-            background: rgba(255, 255, 255, 0.9);
-            color: black;
-            font-size: 14px;
-            border-radius: 20px;
-            cursor: pointer;
-            width: fit-content;
-            position: relative;
-            z-index: 2;
-            text-decoration: none; 
-            display: inline-block; 
-        }
-        .category-card a {
-            position: relative;
-            z-index: 2; 
-        }
-
-        /* Game Thumbnail */
-        .game-thumb {
-            flex: 0 0 auto;
-            width: 150px;
-            height: 100px;
-            border-radius: 10px;
-            overflow: hidden;
-            position: relative;
-            cursor: pointer;
-        }
-
-        .game-thumb img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-            transition: filter 0.3s;
-        }
-
-        .game-thumb:hover img {
-            filter: blur(2px);
-        }
-
-        .game-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            opacity: 0;
-            transition: opacity 0.3s;
-            color: white;
-            text-align: center;
-            padding: 10px;
-        }
-
-        .game-thumb:hover .game-overlay {
-            opacity: 1;
-        }
-
-        .game-name {
-            font-size: 14px;
-            margin-bottom: 8px;
-            font-weight: bold;
-        }
-
-        .play-button {
-            padding: 5px 15px;
-            background: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 12px;
+        .fg-games-grid {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
         }
     }
 
-    /* Mobile styles */
-    @media (max-width: 767px) {
-        /* ... (keep other mobile styles) ... */
-
-        .mobile-category {
-            margin-bottom: 25px;
-            padding: 10px;
-            background: transparent; /* Remove white background */
-            border: none; /* Remove black border */
+    @media (max-width: 1024px) {
+        .fg-shell {
+            padding: 0 22px;
         }
 
-        .mobile-category-header {
+        .fg-nav-links {
+            gap: 15px;
+            justify-content: flex-end;
+        }
+
+        .fg-hero-layout {
+            grid-template-columns: 1fr;
+            min-height: auto;
+            padding: 44px 0 60px;
+        }
+
+        .fg-hero-art {
+            display: none;
+        }
+
+        .fg-hero {
+            min-height: auto;
+        }
+
+        .fg-categories {
             display: flex;
-            justify-content: space-between;
-            align-items: center; /* Keep center alignment vertically */
-            margin-bottom: 10px;
-            font-size: 14px;
-            color: white;
-            text-align: left; /* Add this to align text to left */
+            overflow-x: auto;
+            padding-bottom: 6px;
+            scrollbar-width: thin;
         }
 
-        .mobile-category-header a {
-            text-decoration: none;
-            font-weight: bold;
-            color: #4CAF50; /* Match desktop button color */
+        .fg-category {
+            min-width: 150px;
         }
 
-        .mobile-games-row {
+        .fg-games-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 760px) {
+        .fg-shell {
+            padding: 0 16px;
+        }
+
+        .fg-topbar {
+            position: relative;
+        }
+
+        .fg-nav {
+            min-height: auto;
+            padding: 13px 0;
+            grid-template-columns: 1fr;
+        }
+
+        .fg-brand {
+            font-size: 24px;
+        }
+
+        .fg-nav-links {
+            order: 3;
+            min-height: auto;
+            overflow-x: auto;
+            justify-content: flex-start;
+            padding-bottom: 6px;
+        }
+
+        .fg-nav-link {
+            min-height: 35px;
+        }
+
+        .fg-nav-link.is-active::after {
+            bottom: -6px;
+        }
+
+        .fg-actions {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
         }
 
-        .mobile-game-card {
-            background: rgba(255, 255, 255, 0.1); /* Semi-transparent background */
-            border-radius: 10px; /* Rounded corners */
-            display: flex;
+        .fg-search {
+            grid-column: 1 / -1;
+        }
+
+        .fg-hero-layout {
+            padding: 34px 0 58px;
+        }
+
+        .fg-hero h1 {
+            font-size: clamp(34px, 10.5vw, 42px);
+        }
+
+        .fg-hero h1 .fg-blue-text {
+            display: block;
+        }
+
+        .fg-mobile-only {
+            display: block;
+        }
+
+        .fg-desktop-only {
+            display: none;
+        }
+
+        .fg-hero p {
+            font-size: 16px;
+        }
+
+        .fg-hero-actions {
             flex-direction: column;
-            justify-content: space-between;
-            overflow: hidden; /* For rounded corners */
+            align-items: stretch;
+            gap: 12px;
         }
 
-        .mobile-game-image {
-            position: relative;
-            aspect-ratio: 1 / 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-        }
-
-        .mobile-game-image img {
+        .fg-hero-btn {
             width: 100%;
-            height: 100%;
-            object-fit: cover;
+            min-width: 0;
         }
 
-        .mobile-play-btn {
-            position: absolute;
-            padding: 5px 15px;
-            background: #4CAF50; /* Match desktop button color */
-            color: white;
-            border: none;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 12px;
-            z-index: 2;
+        .fg-categories {
+            margin-bottom: 18px;
         }
 
-        .mobile-game-name {
-            padding: 8px;
-            text-align: center;
-            font-size: 14px;
-            color: white; /* White text */
-            background: transparent; /* Remove white background */
+        .fg-section-title {
+            font-size: 22px;
         }
 
-        /* Add category icon before name */
-        .mobile-category-header::before {
-            content: '';
-            display: inline-block;
-            width: 24px;
-            height: 24px;
-            background-size: cover;
-            background-position: center;
-            border-radius: 50%;
-            margin-right: 8px;
-            vertical-align: middle;
+        .fg-games-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
         }
     }
-    /* Animations - common for both */
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
 
-    @keyframes slideDown {
-        from {
-            opacity: 0;
-            transform: translateY(-50px);
+    @media (max-width: 430px) {
+        .fg-games-grid {
+            grid-template-columns: 1fr;
         }
-        to {
-            opacity: 1;
-            transform: translateY(0);
+
+        .fg-actions {
+            grid-template-columns: 1fr;
         }
     }
 </style>
 
-<div class="container">
-    <!-- Banner Section -->
-    <div class="banner-section w-full h-[250px] sm:h-[300px] lg:h-[400px] xl:h-[400px] relative overflow-hidden group">
-        <div class="banner-container flex h-full w-full" style="width: {{ count($banners) * 100 }}%;">
-            @foreach($banners as $banner)
-            <div class="banner-slide flex-shrink-0 w-full relative rounded-xl overflow-hidden 
-                        aspect-square sm:aspect-auto sm:h-full"
-                 style="width: {{ 100 / count($banners) }}%;">
-                <a href="{{ $banner->link ?? '#' }}" target="_blank" class="block w-full h-full">
-                    <img src="{{ asset('storage/' . $banner->image) }}" alt="{{ $banner->title }}" 
-                        class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
-                    
-                    <!-- Banner Overlay Content -->
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-4 sm:p-6">
-                        <div class="text-white w-full">
-                            <h3 class="text-lg sm:text-2xl font-bold mb-2">{{ $banner->title }}</h3>
-                            @if($banner->description)
-                            <p class="text-xs sm:text-sm opacity-90 mb-3 sm:mb-4">{{ $banner->description }}</p>
-                            @endif
-                            <button class="w-full sm:w-auto bg-white text-black px-4 sm:px-6 py-2 rounded-full font-medium hover:bg-gray-100 transition">
-                                Explore Now
-                            </button>
-                        </div>
-                    </div>
+<div class="fg-page">
+    <header class="fg-topbar">
+        <div class="fg-shell">
+            <nav class="fg-nav" aria-label="Primary navigation">
+                <a class="fg-brand" href="{{ route('games.viewIndex') }}" aria-label="FreeGames home">
+                    <span class="fg-brand-icon" aria-hidden="true"><i class="fa-solid fa-gamepad"></i></span>
+                    <span class="fg-brand-word"><span>Free</span><span>Games</span></span>
                 </a>
-            </div>
-            @endforeach
-        </div>
 
-        <!-- Navigation Arrows - Only show if multiple banners -->
-        @if(count($banners) > 1)
-        <button class="banner-prev left-2 sm:left-4 absolute top-1/2 -translate-y-1/2 bg-white/30 hover:bg-white/50 text-white p-2 sm:p-3 rounded-full backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-            </svg>
-        </button>
-        <button class="banner-next right-2 sm:right-4 absolute top-1/2 -translate-y-1/2 bg-white/30 hover:bg-white/50 text-white p-2 sm:p-3 rounded-full backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-            </svg>
-        </button>
-
-        <!-- Dots Indicator -->
-        <div class="absolute bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2 flex space-x-2">
-            @foreach($banners as $index => $banner)
-            <button class="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full transition dot-indicator {{ $index === 0 ? 'bg-white/80' : 'bg-white/30' }}" data-index="{{ $index }}"></button>
-            @endforeach
-        </div>
-        @endif
-    </div>
-</div>
-
-<!-- Yandex.RTB -->
-<script>window.yaContextCb=window.yaContextCb||[]</script>
-<script src="https://yandex.ru/ads/system/context.js" async></script>
-
-<!-- Yandex.RTB R-A-17125537-4 -->
-<div id="yandex_rtb_R-A-17125537-4"></div>
-<script>
-window.yaContextCb.push(() => {
-    Ya.Context.AdvManager.render({
-        "blockId": "R-A-17125537-4",
-        "renderTo": "yandex_rtb_R-A-17125537-4"
-    })
-})
-</script>
-
-<div class="flex items-center justify-between bg-[#1e293b] px-6 py-4 rounded-xl shadow-md mb-6">
-    <h2 class="text-lg font-medium text-white">Free Games - {{ $categories->sum(fn($cat) => $cat->games->count()) }}</h2>
-    <span class="text-sm font-semibold text-gray-300">
-        <a href="/free-games" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition">
-            View All
-        </a>
-    </span>
-</div>
-
-<!-- Desktop Categories and Games Sections -->
-<div class="desktop-view">
-        @foreach($categories as $category)
-        <div class="category-row">
-            <div class="category-card" style="background-image: url('{{ asset('storage/' . $category->image) }}');">
-                <div class="title">{{ $category->name }}</div>
-                <div class="count">{{ $category->games->count() }} games</div>
-                <a href="{{ route('category.view', ['id' => $category->id]) }}" class="explore-btn">Explore</a>
-            </div>
-
-            @foreach($category->games->take(8) as $game)
-            <div class="game-thumb-wrapper" style="flex: 0 0 auto; width: 150px;">
-                
-                <div class="game-thumb relative group">
-                    <img src="{{ asset($game->image) }}" alt="{{ $game->name }}" class="w-full h-auto">
-
-                    <div style="position: absolute; top: 8px; left: 8px; z-index: 3;">
-                        @auth
-                            <span id="fav-{{ $game->id }}" onclick="toggleFavorite({{ $game->id }})" 
-                                style="cursor: pointer; font-size: 20px; color: {{ auth()->user()->hasFavouriteGame($game->id) ? 'yellow' : 'white' }}">
-                                {{ auth()->user()->hasFavouriteGame($game->id) ? '★' : '☆' }}
-                            </span>
-                        @endauth
-                    </div>
-
-                    <div class="game-overlay absolute inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <div class="game-name text-white text-lg font-bold mb-2">{{ $game->name }}</div>
-
-                        @auth
-                        <a href="{{ route('games.open', ['id' => $game->id]) }}" class="play-button bg-yellow-500 text-black px-4 py-2 rounded inline-block">
-                            Play
-                        </a>
-                        @else
-                        <a href="/login" class="play-button bg-yellow-500 text-black px-4 py-2 rounded inline-block">
-                            Login to play
-                        </a>
-                        @endauth
-                    </div>
+                <div class="fg-nav-links">
+                    <a class="fg-nav-link is-active" href="{{ route('games.viewIndex') }}"><i class="fa-solid fa-house" aria-hidden="true"></i>Home</a>
+                    <a class="fg-nav-link" href="{{ route('playable.index') }}">Games</a>
+                    <a class="fg-nav-link" href="{{ route('free.games.index') }}">Categories</a>
+                    <a class="fg-nav-link" href="{{ route('games.viewNewGames') }}">New</a>
+                    <a class="fg-nav-link" href="{{ route('games.trending') }}"><i class="fa-solid fa-fire-flame-curved" aria-hidden="true"></i>Trending</a>
+                    <a class="fg-nav-link" href="{{ route('contacts.create') }}">About</a>
                 </div>
 
-                <!-- Always visible game name -->
-                <div class="always-visible-name" style="text-align: center; font-size: 13px; font-weight: bold; color: white; margin-top: 5px;">
-                    {{ $game->name }}
+                <div class="fg-actions">
+                    <form class="fg-search" method="GET" action="{{ route('free.games.index') }}">
+                        <label for="fg-search-input">Search games</label>
+                        <input id="fg-search-input" name="search" type="search" placeholder="Search games..." value="{{ $search ?? '' }}">
+                        <button type="submit" aria-label="Search"><i class="fa-solid fa-magnifying-glass"></i></button>
+                    </form>
+
+                    @guest
+                        <a class="fg-auth fg-auth-primary" href="{{ route('login.form') }}">Login</a>
+                        <a class="fg-auth fg-auth-ghost" href="{{ route('register.form') }}">Sign Up</a>
+                    @else
+                        <a class="fg-auth fg-auth-primary" href="{{ route('user.dashboard') }}">Dashboard</a>
+                        <a class="fg-auth fg-auth-ghost" href="{{ route('user.games.viewFavorites') }}">Favorites</a>
+                    @endguest
                 </div>
-            </div>
-            @endforeach
+            </nav>
         </div>
-        @endforeach
-    </div>
+    </header>
 
-    <!-- Mobile Categories and Games Sections -->
-    <div class="mobile-view">
-        @foreach($categories as $category)
-        <div class="mobile-category">
-            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 10px;">
-                <div style="display: flex; align-items: center; flex-grow: 1; overflow: hidden;">
-                    <img src="{{ asset('storage/' . $category->image) }}" 
-                        alt="{{ $category->name }}" 
-                        style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover; margin-right: 8px;">
-                    <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: white; font-size: 14px;">
-                        {{ $category->name }} ({{ $category->games->count() }})
-                    </span>
-                </div>
-                <a href="{{ route('category.view', ['id' => $category->id]) }}" style="color: #4CAF50; font-weight: bold; text-decoration: none; margin-left: 10px; white-space: nowrap;">
-                    <u>View All</u>
-                </a>
-            </div>
-            <div class="mobile-games-row">
-                @foreach($category->games->take(4) as $game)
-                <div class="mobile-game-card relative">
-                    <div class="mobile-game-image relative">
-                        <img src="{{ asset($game->image) }}" alt="{{ $game->name }}">
-                        
-                        <!-- Favourite star for mobile -->
-                        @auth
-                        <span id="fav-{{ $game->id }}" 
-                            onclick="toggleFavorite({{ $game->id }})" 
-                            style="position: absolute; top: 8px; left: 8px; font-size: 20px; cursor: pointer; 
-                                    color: {{ auth()->user()->hasFavouriteGame($game->id) ? 'yellow' : 'white' }}">
-                            {{ auth()->user()->hasFavouriteGame($game->id) ? '★' : '☆' }}
-                        </span>
-                        @endauth
-
-                        @auth
-                        <a href="{{ route('games.open', ['id' => $game->id]) }}" class="mobile-play-btn">Play</a>
-                        @else
-                        <a href="/login" class="mobile-play-btn">Login to Play</a>
-                        @endauth
-                    </div>
-                    <div class="mobile-game-name">{{ $game->name }}</div>
-                </div>
-                @endforeach
-            </div>
-
-        </div>
-        @endforeach
-    </div>
-
-<!-- Yandex.RTB -->
-<script>window.yaContextCb=window.yaContextCb||[]</script>
-<script src="https://yandex.ru/ads/system/context.js" async></script>
-
-<!-- Yandex.RTB R-A-17125537-4 -->
-<div id="yandex_rtb_R-A-17125537-4"></div>
-<script>
-window.yaContextCb.push(() => {
-    Ya.Context.AdvManager.render({
-        "blockId": "R-A-17125537-4",
-        "renderTo": "yandex_rtb_R-A-17125537-4"
-    })
-})
-</script>
-
-<div class="flex items-center justify-between bg-[#1e293b] px-6 py-4 rounded-xl shadow-md mb-6">
-    <h2 class="text-lg font-medium text-white">Casino Games - {{ $totalGames }}</h2>
-    <span class="text-sm font-semibold text-gray-300">
-        <a href="/casino" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition">
-            View All
-        </a>
-    </span>
-</div>
-
-<div class="container mx-auto px-4 py-8 hidden sm:block">
-    {{-- 2 categories per row on desktop, 1 on mobile --}}
-    @foreach($groupedCategories->chunk(2) as $categoryPair)
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-
-            @foreach($categoryPair as $mainCategory => $data)
-                @php
-                    $aliases = $data['aliases'];
-                    $categoryGamesAll = $data['games'];
-                    $aliasString = implode(',', $aliases); // support multiple
-                @endphp
-
-                <div class="hidden sm:block">
-                    {{-- Category header --}}
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-xl font-bold text-white flex items-center gap-2">
-                            {{ $mainCategory }}
-                            <span class="text-sm text-gray-400">
-                                ({{ $categoryGamesAll->count() }})
-                            </span>
-                        </h2>
-
-                        <a href="{{ url('/casino?category='.$aliasString) }}" 
-                           class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition">
-                            View All
-                        </a>
-                    </div>
-
-                    {{-- Show 8 games --}}
-                    <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-4">
-                        @foreach($categoryGamesAll->take(8) as $game)
-                            <div class="relative bg-gray-800 rounded-xl shadow hover:shadow-lg overflow-hidden group">
-
-                                {{-- Game image --}}
-                                <img src="{{ $game['img'] ?? 'https://via.placeholder.com/200x150' }}" 
-                                     alt="{{ $game['name'] }}" 
-                                     class="w-full h-40 object-cover">
-
-                                {{-- Favourite & Bookmark --}}
-                                @auth
-                                    <button class="absolute top-2 left-2 text-xl fav-btn z-20" data-game="{{ $game['id'] }}">
-                                        <i class="fas fa-star {{ isset($game['lastPlay']) && $game['lastPlay'] && $game['lastPlay']->is_favourite ? 'text-yellow-400' : 'text-gray-400' }}"></i>
-                                    </button>
-                                    <button class="absolute top-2 right-2 text-xl bookmark-btn z-20" data-game="{{ $game['id'] }}">
-                                        <i class="fas fa-bookmark {{ isset($game['lastPlay']) && $game['lastPlay'] && $game['lastPlay']->is_bookmark ? 'text-green-400' : 'text-gray-400' }}"></i>
-                                    </button>
-                                @endauth
-
-                                {{-- Hover overlay --}}
-                                <div class="absolute inset-0 bg-black bg-opacity-70 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-center items-center p-2">
-                                    <h3 class="text-sm font-bold text-white text-center mb-2">{{ $game['name'] }}</h3>
-
-                                    @auth
-                                        <div class="flex gap-2">
-                                            <a href="{{ route('casino.play', ['gameId' => $game['id'], 'name' => $game['name'], 'demo' => 0]) }}">
-                                                <button type="button" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">Play</button>
-                                            </a>
-                                            <a href="{{ route('casino.play', ['gameId' => $game['id'], 'name' => $game['name'], 'demo' => 1]) }}">
-                                                <button type="button" class="bg-yellow-500 hover:bg-yellow-600 text-black px-4 py-2 rounded-md text-sm font-medium transition-colors">Demo</button>
-                                            </a>
-                                        </div>
-                                    @else
-                                        <a href="{{ route('login') }}">
-                                            <button class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">Login to Play</button>
-                                        </a>
-                                    @endauth
-                                </div>
-
-                                {{-- Game footer --}}
-                                <div class="p-3 text-center">
-                                    <h3 class="text-sm font-semibold text-white truncate">{{ $game['name'] }}</h3>
-                                    <h3 class="text-sm font-semibold text-yellow-400 truncate flex items-center justify-center gap-1">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.175c.969 0 1.371 1.24.588 1.81l-3.38 2.455a1 1 0 00-.364 1.118l1.287 3.966c.3.922-.755 1.688-1.54 1.118l-3.38-2.455a1 1 0 00-1.175 0l-3.38 2.455c-.784.57-1.838-.196-1.539-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.05 9.394c-.783-.57-.38-1.81.588-1.81h4.175a1 1 0 00.95-.69l1.286-3.967z"/>
-                                        </svg>
-                                        {{ str_replace(['_', '-'], ' ', ucwords($game['categories'])) }}
-                                    </h3>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-            @endforeach
-        </div>
-    @endforeach
-
-</div>
-
-<!-- Yandex.RTB -->
-<script>window.yaContextCb=window.yaContextCb||[]</script>
-<script src="https://yandex.ru/ads/system/context.js" async></script>
-
-<!-- Yandex.RTB R-A-17125537-1 -->
-<div id="yandex_rtb_R-A-17125537-1"></div>
-<script>
-window.yaContextCb.push(() => {
-    Ya.Context.AdvManager.render({
-        "blockId": "R-A-17125537-1",
-        "renderTo": "yandex_rtb_R-A-17125537-1"
-    })
-})
-</script>
-
-
-<div class="container mx-auto px-4 py-8 block md:hidden">
-
-    {{-- 2 categories per row --}}
-    @foreach($groupedCategories->chunk(2) as $categoryPair)
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-
-            @foreach($categoryPair as $mainCategory => $data)
-                @php
-                    $aliases = $data['aliases'];
-                    $categoryGamesAll = $data['games'];
-                    $aliasString = implode(',', $aliases); // support multiple
-                @endphp
-
+    <section class="fg-hero" aria-labelledby="fg-hero-title">
+        <div class="fg-shell">
+            <div class="fg-hero-layout">
                 <div>
-                    {{-- Category header --}}
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-xl font-bold text-white flex items-center gap-2">
-                            {{ $mainCategory }}
-                            <span class="text-sm text-gray-400">
-                                ({{ $categoryGamesAll->count() }})
-                            </span>
-                        </h2>
-
-                    <a href="{{ url('/casino?category='.$aliasString) }}" 
-                       class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition">
-                        View All
-                    </a>
-                    </div>
-
-                    {{-- Show 8 games --}}
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-6">
-                        @foreach($categoryGamesAll->take(8) as $game)
-                            <div class="relative bg-gray-800 rounded-xl shadow hover:shadow-lg overflow-hidden game-card">
-
-                                {{-- Game image --}}
-                                <img src="{{ $game['img'] ?? 'https://via.placeholder.com/200x150' }}" 
-                                     alt="{{ $game['name'] }}" 
-                                     class="w-full h-40 object-cover select-none">
-
-                                {{-- Favourite & Bookmark (only for logged in) --}}
-                                @auth
-                                    <button 
-                                        class="absolute top-2 left-2 text-xl fav-btn z-20"
-                                        data-game="{{ $game['id'] }}">
-                                        <i class="fas fa-star {{ isset($game['lastPlay']) && $game['lastPlay'] && $game['lastPlay']->is_favourite ? 'text-yellow-400' : 'text-gray-400' }}"></i>
-                                    </button>
-                                
-                                    <button 
-                                        class="absolute top-2 right-2 text-xl bookmark-btn z-20"
-                                        data-game="{{ $game['id'] }}">
-                                        <i class="fas fa-bookmark {{ isset($game['lastPlay']) && $game['lastPlay'] && $game['lastPlay']->is_bookmark ? 'text-green-400' : 'text-gray-400' }}"></i>
-                                    </button>
-                                @endauth
-
-                                {{-- Tap overlay (hidden by default; JS toggles classes) --}}
-                                <div class="absolute inset-0 z-10 bg-black/70 opacity-0 pointer-events-none transition-opacity duration-300 flex flex-col justify-center items-center p-2 game-overlay">
-                                    <h3 class="text-sm font-bold text-white text-center mb-2">{{ $game['name'] }}</h3>
-
-                                    @auth
-                                        <div class="flex gap-2">
-                                            {{-- Play button --}}
-                                            <a href="{{ route('casino.play', ['gameId' => $game['id'],'name' => $game['name'],'demo' => 0]) }}" class="overlay-action">
-                                                <button type="button"
-                                                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
-                                                    Play
-                                                </button>
-                                            </a>
-
-                                            {{-- Demo button --}}
-                                            <a href="{{ route('casino.play', ['gameId' => $game['id'],'name' => $game['name'],'demo' => 1]) }}" class="overlay-action">
-                                                <button type="button"
-                                                    class="bg-yellow-500 hover:bg-yellow-600 text-black px-4 py-2 rounded-md text-sm font-medium transition-colors">
-                                                    Demo
-                                                </button>
-                                            </a>
-                                        </div>
-                                    @else
-                                        <a href="{{ route('login') }}" class="overlay-action">
-                                            <button class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
-                                                Login to Play
-                                            </button>
-                                        </a>
-                                    @endauth
-                                </div>
-
-                                {{-- Game footer --}}
-                                <div class="p-3 text-center">
-                                    <h3 class="text-sm font-semibold text-white truncate">
-                                        {{ $game['name'] }}
-                                    </h3>
-
-                                    <h3 class="text-sm font-semibold text-yellow-400 truncate flex items-center justify-center gap-1">
-                                        {{-- Star icon --}}
-                                        <svg xmlns="http://www.w3.org/2000/svg" 
-                                            class="h-4 w-4 text-yellow-400" 
-                                            fill="currentColor" 
-                                            viewBox="0 0 20 20">
-                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.175c.969 0 1.371 1.24.588 1.81l-3.38 2.455a1 1 0 00-.364 1.118l1.287 3.966c.3.922-.755 1.688-1.54 1.118l-3.38-2.455a1 1 0 00-1.175 0l-3.38 2.455c-.784.57-1.838-.196-1.539-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.05 9.394c-.783-.57-.38-1.81.588-1.81h4.175a1 1 0 00.95-.69l1.286-3.967z"/>
-                                        </svg>
-                                        {{ str_replace(['_', '-'], ' ', ucwords($game['categories'])) }}
-                                    </h3>
-                                </div>
-                            </div>
-                        @endforeach
+                    <div class="fg-badge"><i class="fa-solid fa-gamepad" aria-hidden="true"></i>100% FREE TO PLAY</div>
+                    <h1 id="fg-hero-title">Play <span class="fg-blue-text">Free Games</span><br>Online <br class="fg-mobile-only">Anytime</h1>
+                    <p>Explore thousands of free games. No download. No cost.<br class="fg-desktop-only">Just pure fun!</p>
+                    <div class="fg-hero-actions">
+                        <a class="fg-hero-btn fg-hero-btn-primary" href="{{ route('playable.index') }}"><i class="fa-solid fa-play" aria-hidden="true"></i>Play Now</a>
+                        <a class="fg-hero-btn fg-hero-btn-secondary" href="{{ route('free.games.index') }}"><i class="fa-solid fa-grip" aria-hidden="true"></i>Browse Games</a>
                     </div>
                 </div>
-            @endforeach
+
+                <div class="fg-hero-art" aria-hidden="true">
+                    @foreach($primaryGames->take(3) as $index => $artGame)
+                        <div class="fg-art-card {{ $index === 0 ? 'fg-art-main' : ($index === 1 ? 'fg-art-side' : 'fg-art-low') }}">
+                            <img src="{{ $artGame['image'] }}" alt="">
+                        </div>
+                    @endforeach
+                    <div class="fg-hero-script">Games<br>For Everyone</div>
+                </div>
+            </div>
         </div>
-    @endforeach
+        <div class="fg-dots" aria-label="Hero slides">
+            <button class="fg-dot is-active" type="button" aria-label="Slide 1"></button>
+            <button class="fg-dot" type="button" aria-label="Slide 2"></button>
+            <button class="fg-dot" type="button" aria-label="Slide 3"></button>
+            <button class="fg-dot" type="button" aria-label="Slide 4"></button>
+        </div>
+    </section>
+
+    <main class="fg-main">
+        <div class="fg-shell">
+            <span class="sr-only">Explore Games</span>
+            <section class="fg-categories" aria-label="Game categories">
+                @foreach($categoryTiles as $tile)
+                    <a class="fg-category {{ $tile['class'] }}" href="{{ $tile['name'] === 'More' ? route('free.games.index') : $findCategoryUrl($tile['name']) }}">
+                        <i class="fa-solid {{ $tile['icon'] }}" aria-hidden="true"></i>
+                        <span>{{ $tile['name'] }}</span>
+                    </a>
+                @endforeach
+            </section>
+
+            <section class="fg-section" aria-labelledby="fg-trending-title">
+                <div class="fg-section-head">
+                    <h2 class="fg-section-title" id="fg-trending-title"><i class="fa-solid fa-star star" aria-hidden="true"></i>Trending Games</h2>
+                    <a class="fg-view-all" href="{{ route('games.trending') }}">View All <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+                </div>
+
+                @if($trendingGames->isNotEmpty())
+                    <div class="fg-games-grid">
+                        @foreach($trendingGames as $game)
+                            @include('components.home-game-card', ['game' => $game, 'fallbackTag' => 'Trending'])
+                        @endforeach
+                    </div>
+                @else
+                    <div class="fg-empty">Games are temporarily unavailable. Please try again later.</div>
+                @endif
+            </section>
+
+            <section class="fg-section" aria-labelledby="fg-new-title">
+                <div class="fg-section-head">
+                    <h2 class="fg-section-title" id="fg-new-title"><i class="fa-solid fa-gamepad" aria-hidden="true"></i>New Games</h2>
+                    <a class="fg-view-all" href="{{ route('games.viewNewGames') }}">View All <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+                </div>
+
+                @if($newGames->isNotEmpty())
+                    <div class="fg-games-grid">
+                        @foreach($newGames as $game)
+                            @include('components.home-game-card', ['game' => $game, 'fallbackTag' => 'New'])
+                        @endforeach
+                    </div>
+                @else
+                    <div class="fg-empty">New games are loading. Check back shortly.</div>
+                @endif
+            </section>
+        </div>
+    </main>
 </div>
-
-
-{{-- Mobile tap JS: robust, no width check, works with touch + click, closes on outside tap --}}
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    const gameCards = document.querySelectorAll('.game-card');
-
-    function closeAll(except = null) {
-        document.querySelectorAll('.game-overlay.opacity-100').forEach(overlay => {
-            if (overlay !== except) {
-                overlay.classList.remove('opacity-100', 'pointer-events-auto');
-                overlay.classList.add('opacity-0', 'pointer-events-none');
-            }
-        });
-    }
-
-    gameCards.forEach(card => {
-        const overlay = card.querySelector('.game-overlay');
-
-        card.addEventListener('click', e => {
-            // Don't toggle if clicking buttons/icons inside overlay
-            if (e.target.closest('.overlay-action, .fav-btn, .bookmark-btn')) return;
-
-            const isOpen = overlay.classList.contains('opacity-100');
-            if (isOpen) {
-                overlay.classList.remove('opacity-100', 'pointer-events-auto');
-                overlay.classList.add('opacity-0', 'pointer-events-none');
-            } else {
-                closeAll(overlay);
-                overlay.classList.remove('opacity-0', 'pointer-events-none');
-                overlay.classList.add('opacity-100', 'pointer-events-auto');
-            }
-        });
-    });
-
-    // Close overlay when clicking outside any card
-    document.addEventListener('click', e => {
-        if (!e.target.closest('.game-card')) {
-            closeAll();
-        }
-    });
-});
-
-</script>
-
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-    document.querySelectorAll(".casino-card").forEach(card => {
-        card.addEventListener("click", () => {
-            const overlay = card.querySelector("div.absolute");
-            if (overlay.classList.contains("opacity-0")) {
-                overlay.classList.remove("opacity-0", "pointer-events-none");
-                overlay.classList.add("opacity-100");
-            } else {
-                overlay.classList.add("opacity-0", "pointer-events-none");
-                overlay.classList.remove("opacity-100");
-            }
-        });
-    });
-});
-</script>
-
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-
-    function postShowThenReload(url, data) {
-        fetch(url, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRF-TOKEN": "{{ csrf_token() }}"
-            },
-            body: JSON.stringify(data)
-        })
-        .then(res => res.json())
-        .then(data => {
-            
-            const container = document.createElement('div');
-            container.className = `bg-${data.success ? 'green' : 'red'}-500 text-white px-4 py-3 rounded-lg shadow flex items-center cursor-pointer transition fixed top-4 right-4 z-50`;
-            container.innerHTML = `<span>${data.message}</span>`;
-            document.body.appendChild(container);
-
-            setTimeout(() => container.remove(), 5000);
-            container.addEventListener('click', () => container.remove());
-
-
-            setTimeout(() => {
-                window.location.reload();
-            }, 500);
-        })
-        .catch(err => console.error("Error:", err));
-    }
-
-    // Favourite buttons
-    document.querySelectorAll(".fav-btn").forEach(btn => {
-        btn.addEventListener("click", function (e) {
-            e.preventDefault();
-            postShowThenReload("{{ route('user.game.toggleFavourite') }}", { game_id: this.dataset.game });
-        });
-    });
-
-    // Bookmark buttons
-    document.querySelectorAll(".bookmark-btn").forEach(btn => {
-        btn.addEventListener("click", function (e) {
-            e.preventDefault();
-            postShowThenReload("{{ route('user.game.toggleBookmark') }}", { game_id: this.dataset.game });
-        });
-    });
-
-});
-</script>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const bannerSection = document.querySelector('.banner-section');
-    const bannerContainer = bannerSection.querySelector('.banner-container');
-    const banners = bannerContainer.querySelectorAll('.banner-slide');
-    const totalBanners = banners.length;
-    
-    // Only initialize slider if there are multiple banners
-    if (totalBanners > 1) {
-        const dots = bannerSection.querySelectorAll('.dot-indicator');
-        const prevBtn = bannerSection.querySelector('.banner-prev');
-        const nextBtn = bannerSection.querySelector('.banner-next');
-        let currentIndex = 0;
-        const duration = 5000; // 5 seconds per banner
-        let interval;
-        
-        // Set initial container width
-        bannerContainer.style.width = `${totalBanners * 100}%`;
-        
-        function updateBanner() {
-            // Calculate the translateX percentage
-            const translateX = -(currentIndex * (100 / totalBanners));
-            bannerContainer.style.transform = `translateX(${translateX}%)`;
-            
-            // Update active dot
-            dots.forEach((dot, index) => {
-                dot.classList.toggle('bg-white/80', index === currentIndex);
-                dot.classList.toggle('bg-white/30', index !== currentIndex);
-            });
-        }
-        
-        function nextSlide() {
-            currentIndex = (currentIndex + 1) % totalBanners;
-            updateBanner();
-        }
-        
-        function prevSlide() {
-            currentIndex = (currentIndex - 1 + totalBanners) % totalBanners;
-            updateBanner();
-        }
-        
-        function startAutoScroll() {
-            clearInterval(interval);
-            interval = setInterval(nextSlide, duration);
-        }
-        
-        // Initialize
-        updateBanner();
-        startAutoScroll();
-        
-        // Navigation controls
-        nextBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            nextSlide();
-            startAutoScroll();
-        });
-        
-        prevBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            prevSlide();
-            startAutoScroll();
-        });
-        
-        // Dot navigation
-        dots.forEach((dot) => {
-            dot.addEventListener('click', (e) => {
-                e.preventDefault();
-                currentIndex = parseInt(dot.getAttribute('data-index'));
-                updateBanner();
-                startAutoScroll();
-            });
-        });
-        
-        // Pause on hover
-        bannerSection.addEventListener('mouseenter', () => {
-            clearInterval(interval);
-        });
-        
-        bannerSection.addEventListener('mouseleave', () => {
-            startAutoScroll();
-        });
-        
-        // Handle window resize
-        window.addEventListener('resize', () => {
-            bannerContainer.style.transition = 'none';
-            updateBanner();
-            setTimeout(() => {
-                bannerContainer.style.transition = 'transform 0.5s ease-in-out';
-            }, 10);
-        });
-    } else {
-        // For single banner, ensure full width
-        bannerContainer.style.width = '100%';
-        bannerContainer.style.transform = 'translateX(0)';
-    }
-});
-</script>
-
-<script>
-    // Show/hide desktop/mobile views based on screen size
-    function updateView() {
-        if (window.innerWidth < 768) {
-            document.querySelector('.desktop-view').style.display = 'none';
-            document.querySelector('.mobile-view').style.display = 'block';
-        } else {
-            document.querySelector('.desktop-view').style.display = 'block';
-            document.querySelector('.mobile-view').style.display = 'none';
-        }
-    }
-
-    // Initial check
-    updateView();
-
-    // Update on resize
-    window.addEventListener('resize', updateView);
-
-</script>
-
-<script>
-    function toggleFavorite(gameId) {
-        const star = document.getElementById('fav-' + gameId);
-        const isFav = star.textContent === '★';
-        const url = `/user/games/${gameId}/${isFav ? 'unfavorite' : 'favorite'}`;
-        const method = isFav ? 'DELETE' : 'POST';
-
-        fetch(url, {
-            method: method,
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-            }
-        })
-        .then(res => res.json())
-        .then(data => {
-            alert(data.message);
-            star.textContent = isFav ? '☆' : '★';
-            star.style.color = isFav ? 'white' : 'yellow';
-        });
-    }
-</script>
-
-
-
 @endsection

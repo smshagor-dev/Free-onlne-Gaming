@@ -51,6 +51,7 @@ use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\SecureFileController;
 use App\Http\Controllers\SeoController;
 use App\Http\Controllers\UtilityController;
+use App\Http\Controllers\EmbeddableGameController;
 
 Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
     return (int) $user->id === (int) $id;
@@ -67,6 +68,9 @@ Route::get('/paid-games/home', [CasinoController::class, 'indexhome'])->name('ca
 Route::get('/countries', [RegisterController::class, 'getCountries']);
 
 Route::get('/', [GameController::class, 'viewIndex'])->name('games.viewIndex')->middleware('2fa');
+Route::get('/play-games', [EmbeddableGameController::class, 'index'])->name('playable.index');
+Route::get('/play-games/load', [EmbeddableGameController::class, 'homeBatch'])->name('playable.load');
+Route::get('/play-games/{id}', [EmbeddableGameController::class, 'play'])->where('id', '[A-Za-z0-9_-]+')->name('playable.play');
 Route::get('/free-games', [GameController::class, 'viewfreegames'])->name('free.games.index')->middleware('2fa');
 
 Route::get('/bonus', [BonusController::class, 'bonus'])->name('bonus.page')->middleware('auth', '2fa', 'ban');
