@@ -1,19 +1,22 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Login</title>
+@extends('layouts.app')
+@section('title', 'Admin Login')
+@push('head')
+
+
+
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
+
+
+<style>
+        .auth-page {
             background: linear-gradient(135deg, #667eea, #764ba2);
             height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
         }
-        .login-container {
+        .auth-page .login-container {
             max-width: 400px;
             width: 100%;
             background: white;
@@ -22,19 +25,19 @@
             box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
             text-align: center;
         }
-        .login-container h2 {
+        .auth-page .login-container h2 {
             font-weight: bold;
             color: #333;
             margin-bottom: 20px;
         }
-        .form-control {
+        .auth-page .form-control {
             border-radius: 8px;
             padding: 10px;
         }
-        .form-check-input {
+        .auth-page .form-check-input {
             cursor: pointer;
         }
-        .btn-login {
+        .auth-page .btn-login {
             width: 100%;
             background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
@@ -43,24 +46,25 @@
             transition: 0.3s;
             font-weight: bold;
         }
-        .btn-login:hover {
+        .auth-page .btn-login:hover {
             background: linear-gradient(135deg, #5a67d8, #6b46c1);
         }
-        .alert {
+        .auth-page .alert {
             font-size: 14px;
         }
-        .forgot-password {
+        .auth-page .forgot-password {
             display: block;
             margin-top: 10px;
             color: #6b46c1;
             text-decoration: none;
         }
-        .forgot-password:hover {
+        .auth-page .forgot-password:hover {
             text-decoration: underline;
         }
     </style>
-</head>
-<body>
+@endpush
+@section('content')
+<div class="auth-page">
     <div class="login-container">
         <h2>Admin Login</h2>
 
@@ -91,5 +95,5 @@
             <button type="submit" class="btn btn-login">Login</button>
         </form>
     </div>
-</body>
-</html>
+</div>
+@endsection

@@ -1,6 +1,10 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Free Games Admin</title><meta name="csrf-token" content="{{ csrf_token() }}"><meta name="robots" content="noindex, nofollow"><script src="https://cdn.tailwindcss.com"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"><style>body{margin:0;background:#081421;color:#eef5ff;font:16px/1.5 system-ui,sans-serif}a{color:inherit;text-decoration:none}button,input,select{font:inherit}header{background:#102131;border-bottom:1px solid #26384c;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}nav{display:flex;gap:20px;flex-wrap:wrap}main{max-width:1440px;margin:auto;padding:24px;min-height:70vh}.account-panel{padding:24px;border:1px solid #26384c;border-radius:16px;background:#102131}.portal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-top:24px}.portal-grid>a{padding:24px;background:#19334b;border-radius:12px}.portal-grid>a:hover{background:#245074}footer{padding:24px;text-align:center;color:#9db1c7}a:focus-visible,button:focus-visible{outline:3px solid #19aaff;outline-offset:4px}.status-message{padding:12px;background:#19334b;border-radius:8px;margin-bottom:16px}</style>@stack('head')</head><body><header><strong>Free Games Admin</strong><nav>
-@foreach(['admin.dashboard'=>'Dashboard','admin.games.index'=>'Games','admin.games_categories.index'=>'Categories','admin.users.index'=>'Users','admin.lottaries.index'=>'Lottery','admin.pages.index'=>'Pages','admin.setting.edit'=>'Settings','admin.contacts.index'=>'Messages'] as $name=>$label)<a href="{{ route($name) }}">{{ $label }}</a>@endforeach
-<form method="POST" action="{{ route('admin.logout') }}">@csrf<button type="submit">Logout</button></form></nav></header><main>
-@if(session('success'))<p class="status-message">{{ session('success') }}</p>@endif
-@if(session('error'))<p class="status-message">{{ session('error') }}</p>@endif
-@yield('content')</main>@stack('scripts')</body></html>
+@extends('layouts.app')
+@section('workspace-navigation')
+<nav class="workspace-nav" aria-label="Admin navigation">
+<strong>Administration</strong>
+@foreach(['admin.dashboard'=>'Dashboard','admin.games.index'=>'Games','admin.games_categories.index'=>'Categories','admin.users.index'=>'Users','admin.lottaries.index'=>'Lottery','admin.pages.index'=>'Pages','admin.setting.edit'=>'Settings','admin.contacts.index'=>'Messages'] as $name=>$label)
+<a href="{{ route($name) }}">{{ $label }}</a>
+@endforeach
+<form method="POST" action="{{ route('admin.logout') }}">@csrf<button type="submit">Logout</button></form>
+</nav>
+@endsection

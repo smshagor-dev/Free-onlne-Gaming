@@ -3,13 +3,7 @@
 @section('content')
 <style>
     /* Common styles for both desktop and mobile */
-    body {
-        margin: 0;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background: #0f172a;
-        color: white;
-        line-height: 1.6;
-    }
+
 
     .container {
         max-width: 1400px;
@@ -340,13 +334,13 @@
         text-align: center;
         padding: 40px 20px;
     }
-    
+
     .no-results h3 {
         font-size: 24px;
         margin-bottom: 10px;
         color: #e2e8f0;
     }
-    
+
     .no-results p {
         font-size: 16px;
         color: #94a3b8;
@@ -358,11 +352,11 @@
             transform: none !important;
             box-shadow: none !important;
         }
-        
+
         .game-card .game-image img {
             transform: none !important;
         }
-        
+
         .game-card.active {
             box-shadow: 0 0 0 2px #3b82f6;
         }
@@ -372,7 +366,7 @@
             gap: 15px;
             align-items: flex-start;
         }
-        
+
         .points-stats {
             width: 100%;
             justify-content: space-between;
@@ -385,12 +379,12 @@
             flex-direction: column;
             align-items: stretch;
         }
-        
+
         .games-count {
             text-align: center;
             order: 2;
         }
-        
+
         .search-container {
             order: 1;
             max-width: 100%;
@@ -430,11 +424,11 @@ window.yaContextCb.push(() => {
             </div>
         </div>
     </div>
-    
+
     <!-- Yandex.RTB -->
     <script>window.yaContextCb=window.yaContextCb||[]</script>
     <script src="https://yandex.ru/ads/system/context.js" async></script>
-    
+
     <!-- Yandex.RTB R-A-17125537-4 -->
     <div id="yandex_rtb_R-A-17125537-4"></div>
     <script>
@@ -449,18 +443,18 @@ window.yaContextCb.push(() => {
     <!-- Search section -->
     <div class="search-count-container">
         <div class="games-count">Total Games: <span id="total-games">{{ $totalGames }}</span></div>
-        
+
         <form method="GET" action="/free-games" class="search-container" id="search-form">
-            <input 
-                type="text" 
-                name="search" 
-                placeholder="Search games..." 
+            <input
+                type="text"
+                name="search"
+                placeholder="Search games..."
                 value="{{ $search }}"
                 class="search-input"
                 id="search-input"
             >
             <button type="submit" class="search-button">Search</button>
-            
+
             @if(!empty($search))
             <a href="/free-games" class="search-button" style="background: #ef4444;">Clear</a>
             @endif
@@ -474,13 +468,13 @@ window.yaContextCb.push(() => {
             <div class="game-card" id="game-card-{{ $game->id }}">
                 <div class="game-image">
                     <img src="{{ asset($game->image) }}" alt="{{ $game->name }}">
-                    
+
                     @auth
                     <div class="favorite-btn" id="fav-{{ $game->id }}" onclick="toggleFavorite({{ $game->id }})">
                         {{ auth()->user()->hasFavouriteGame($game->id) ? '★' : '☆' }}
                     </div>
                     @endauth
-                    
+
                     <div class="game-overlay">
                         <div class="game-name">{{ $game->name }}</div>
                         @auth
@@ -532,7 +526,7 @@ window.yaContextCb.push(() => {
 // Toggle favorite function
 function toggleFavorite(gameId) {
     event.stopPropagation();
-    
+
     const star = document.getElementById('fav-' + gameId);
     const isFav = star.innerHTML.trim() === '★';
     const url = `/user/games/${gameId}/${isFav ? 'unfavorite' : 'favorite'}`;
@@ -561,7 +555,7 @@ function showNotification(message, isSuccess = true) {
     notification.className = 'notification';
     notification.style.background = isSuccess ? '#10b981' : '#ef4444';
     notification.textContent = message;
-    
+
     document.body.appendChild(notification);
 
     setTimeout(() => {
@@ -579,11 +573,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const loadingIndicator = document.getElementById('loading-indicator');
     const noMoreGames = document.getElementById('no-more-games');
     const totalGamesElement = document.getElementById('total-games');
-    
+
     // Get search parameter
     const urlParams = new URLSearchParams(window.location.search);
     const searchParam = urlParams.get('search') || '';
-    
+
     // Check if we even need infinite scroll
     if ({{ $totalGames }} <= 50) {
         hasMore = false;
@@ -592,7 +586,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Mobile card click handling
     let activeCard = null;
-    
+
     function handleCardClick(event) {
         if (window.innerWidth <= 768) {
             if (this === activeCard) {
@@ -609,44 +603,44 @@ document.addEventListener('DOMContentLoaded', function() {
             activeCard = this;
         }
     }
-    
+
     // Add event listeners to initial game cards
     const gameCards = document.querySelectorAll('.game-card');
     gameCards.forEach(card => {
         card.addEventListener('click', handleCardClick);
     });
-    
+
     // Infinite scroll event listener
     window.addEventListener('scroll', checkScrollPosition);
-    
+
     function checkScrollPosition() {
         if (isLoading || !hasMore) return;
-        
+
         const scrollTop = window.scrollY || document.documentElement.scrollTop;
         const windowHeight = window.innerHeight;
         const documentHeight = document.documentElement.scrollHeight;
-        
+
         // Load more when 500px from the bottom
         if (scrollTop + windowHeight >= documentHeight - 500) {
             loadMoreGames();
         }
     }
-    
+
     // Also check on page load in case content doesn't fill the screen
     setTimeout(checkScrollPosition, 1000);
-    
+
     function loadMoreGames() {
         if (isLoading || !hasMore) return;
-        
+
         isLoading = true;
         loadingIndicator.classList.add('active');
-        
+
         // Create the URL
         let url = `/free-games?page=${nextPage}`;
         if (searchParam) {
             url += `&search=${encodeURIComponent(searchParam)}`;
         }
-        
+
         fetch(url, {
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
@@ -663,7 +657,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.html && data.html.trim() !== '') {
                 // Append new games
                 container.insertAdjacentHTML('beforeend', data.html);
-                
+
                 // Add event listeners to new cards
                 const newCards = container.querySelectorAll('.game-card');
                 newCards.forEach(card => {
@@ -672,17 +666,17 @@ document.addEventListener('DOMContentLoaded', function() {
                         card.addEventListener('click', handleCardClick);
                     }
                 });
-                
+
                 // Update total count
                 if (totalGamesElement && data.total) {
                     totalGamesElement.textContent = data.total;
                 }
             }
-            
+
             // Check if more pages available
             if (data.next_page) {
                 nextPage = data.next_page;
-                
+
                 // Check if we need to load more immediately (if page not filled)
                 setTimeout(checkScrollPosition, 100);
             } else {
@@ -704,7 +698,7 @@ document.addEventListener('DOMContentLoaded', function() {
             loadingIndicator.classList.remove('active');
         });
     }
-    
+
     // Handle search form
     const searchForm = document.getElementById('search-form');
     if (searchForm) {
@@ -712,7 +706,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Form will submit normally and reload the page
         });
     }
-    
+
     // Handle document clicks for mobile
     document.addEventListener('click', function(event) {
         if (activeCard && !activeCard.contains(event.target)) {

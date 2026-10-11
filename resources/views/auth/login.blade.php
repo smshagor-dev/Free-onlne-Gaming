@@ -1,12 +1,15 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root {
+@extends('layouts.app')
+@section('title', 'Login')
+@push('head')
+
+
+
+
+
+
+
+<style>
+        .auth-page {
             --primary: #4e54c8;
             --primary-dark: #3f43a9;
             --secondary: #ff6b6b;
@@ -18,14 +21,14 @@
             --gray: #7f8c8d;
             --gray-light: #dfe6e9;
         }
-        
-        * {
+
+        .auth-page * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
-        
-        body {
+
+        .auth-page {
             margin: 0;
             padding: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -39,7 +42,7 @@
             padding: 20px;
         }
 
-        .water-effect {
+        .auth-page .water-effect {
             position: fixed;
             width: 200%;
             height: 200%;
@@ -59,14 +62,14 @@
             100% { transform: translate(0, 0) rotate(0deg); }
         }
 
-        .container-wrapper {
+        .auth-page .container-wrapper {
             position: relative;
             width: 100%;
             max-width: 450px;
             margin: 20px auto;
         }
 
-        .login-container {
+        .auth-page .login-container {
             position: relative;
             z-index: 1;
             background: rgba(255, 255, 255, 0.95);
@@ -78,7 +81,7 @@
             overflow: hidden;
         }
 
-        .premium-badge {
+        .auth-page .premium-badge {
             position: absolute;
             top: -10px;
             right: -10px;
@@ -93,12 +96,12 @@
             z-index: 2;
         }
 
-        .login-header {
+        .auth-page .login-header {
             text-align: center;
             margin-bottom: 30px;
         }
 
-        .login-header h2 {
+        .auth-page .login-header h2 {
             color: var(--primary);
             margin: 0;
             font-size: 32px;
@@ -106,23 +109,23 @@
             letter-spacing: 0.5px;
         }
 
-        .login-header p {
+        .auth-page .login-header p {
             color: var(--gray);
             margin-top: 8px;
             font-size: 16px;
         }
 
-        .logo-link {
+        .auth-page .logo-link {
             display: inline-block;
             margin-bottom: 20px;
             transition: transform 0.3s ease;
         }
 
-        .logo-link:hover {
+        .auth-page .logo-link:hover {
             transform: scale(1.05);
         }
 
-        .site-logo {
+        .auth-page .site-logo {
             max-height: 80px;
             max-width: 200px;
             width: auto;
@@ -131,12 +134,12 @@
             filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
         }
 
-        .form-group {
+        .auth-page .form-group {
             margin-bottom: 20px;
             position: relative;
         }
 
-        .form-group label {
+        .auth-page .form-group label {
             display: block;
             margin-bottom: 8px;
             color: var(--dark);
@@ -144,7 +147,7 @@
             font-size: 14px;
         }
 
-        .form-control {
+        .auth-page .form-control {
             width: 100%;
             padding: 14px 16px;
             border: 2px solid var(--gray-light);
@@ -154,17 +157,17 @@
             background: white;
         }
 
-        .form-control:focus {
+        .auth-page .form-control:focus {
             border-color: var(--primary);
             box-shadow: 0 0 0 3px rgba(78, 84, 200, 0.2);
             outline: none;
         }
 
-        .password-wrapper {
+        .auth-page .password-wrapper {
             position: relative;
         }
-        
-        .password-toggle {
+
+        .auth-page .password-toggle {
             position: absolute;
             right: 15px;
             top: 50%;
@@ -175,48 +178,48 @@
             border: none;
             padding: 5px;
         }
-        
-        .password-toggle:hover {
+
+        .auth-page .password-toggle:hover {
             color: var(--primary);
         }
 
-        .remember-forgot {
+        .auth-page .remember-forgot {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 25px;
         }
 
-        .remember-me {
+        .auth-page .remember-me {
             display: flex;
             align-items: center;
         }
 
-        .remember-me input {
+        .auth-page .remember-me input {
             margin-right: 10px;
             width: 18px;
             height: 18px;
             accent-color: var(--primary);
         }
 
-        .remember-me label {
+        .auth-page .remember-me label {
             color: var(--dark);
             font-weight: 500;
         }
 
-        .forgot-password {
+        .auth-page .forgot-password {
             color: var(--primary);
             text-decoration: none;
             font-weight: 600;
             transition: all 0.3s;
         }
 
-        .forgot-password:hover {
+        .auth-page .forgot-password:hover {
             color: var(--primary-dark);
             text-decoration: underline;
         }
 
-        .btn-login {
+        .auth-page .btn-login {
             width: 100%;
             padding: 16px;
             background: var(--primary);
@@ -231,32 +234,32 @@
             box-shadow: 0 4px 6px rgba(78, 84, 200, 0.3);
         }
 
-        .btn-login:hover {
+        .auth-page .btn-login:hover {
             background: var(--primary-dark);
             transform: translateY(-2px);
             box-shadow: 0 6px 12px rgba(78, 84, 200, 0.4);
         }
 
-        .login-footer {
+        .auth-page .login-footer {
             text-align: center;
             margin-top: 20px;
             color: var(--gray);
             font-size: 15px;
         }
 
-        .login-footer a {
+        .auth-page .login-footer a {
             color: var(--primary);
             text-decoration: none;
             font-weight: 600;
             transition: all 0.3s;
         }
 
-        .login-footer a:hover {
+        .auth-page .login-footer a:hover {
             color: var(--primary-dark);
             text-decoration: underline;
         }
 
-        .error-message {
+        .auth-page .error-message {
             color: #e74c3c;
             margin-bottom: 20px;
             font-weight: 600;
@@ -268,30 +271,30 @@
             text-align: center;
         }
 
-        .social-divider {
+        .auth-page .social-divider {
             display: flex;
             align-items: center;
             margin: 25px 0;
             color: var(--gray);
             font-size: 14px;
         }
-        
-        .social-divider::before,
-        .social-divider::after {
+
+        .auth-page .social-divider::before,
+        .auth-page .social-divider::after {
             content: "";
             flex: 1;
             border-bottom: 1px solid var(--gray-light);
             margin: 0 10px;
         }
 
-        .social-login {
+        .auth-page .social-login {
             display: flex;
             justify-content: center;
             gap: 15px;
             margin-bottom: 20px;
         }
 
-        .social-btn {
+        .auth-page .social-btn {
             width: 50px;
             height: 50px;
             border-radius: 50%;
@@ -307,34 +310,34 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
-        .social-btn:hover {
+        .auth-page .social-btn:hover {
             transform: translateY(-3px);
             box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
         }
 
-        .google-btn {
+        .auth-page .google-btn {
             background: #DB4437;
         }
 
-        .facebook-btn {
+        .auth-page .facebook-btn {
             background: #4267B2;
         }
 
-        .telegram-btn {
+        .auth-page .telegram-btn {
             background: #0088cc;
         }
 
         /* Responsive styles */
         @media (max-width: 768px) {
-            .login-container {
+            .auth-page .login-container {
                 padding: 30px 25px;
             }
-            
-            .login-header h2 {
+
+            .auth-page .login-header h2 {
                 font-size: 28px;
             }
-            
-            .social-btn {
+
+            .auth-page .social-btn {
                 width: 45px;
                 height: 45px;
                 font-size: 18px;
@@ -342,53 +345,53 @@
         }
 
         @media (max-width: 576px) {
-            body {
+            .auth-page {
                 padding: 10px;
             }
-            
-            .login-container {
+
+            .auth-page .login-container {
                 padding: 25px 20px;
                 border-radius: 15px;
             }
-            
-            .site-logo {
+
+            .auth-page .site-logo {
                 max-height: 60px;
                 max-width: 160px;
             }
-            
-            .logo-link {
+
+            .auth-page .logo-link {
                 margin-bottom: 15px;
             }
-            
-            .login-header h2 {
+
+            .auth-page .login-header h2 {
                 font-size: 26px;
             }
-            
-            .login-header p {
+
+            .auth-page .login-header p {
                 font-size: 14px;
             }
-            
-            .form-control {
+
+            .auth-page .form-control {
                 padding: 12px;
             }
-            
-            .premium-badge {
+
+            .auth-page .premium-badge {
                 right: 0;
                 font-size: 10px;
                 padding: 4px 10px;
             }
-            
-            .social-login {
+
+            .auth-page .social-login {
                 gap: 10px;
             }
-            
-            .social-btn {
+
+            .auth-page .social-btn {
                 width: 40px;
                 height: 40px;
                 font-size: 16px;
             }
-            
-            .remember-forgot {
+
+            .auth-page .remember-forgot {
                 flex-direction: column;
                 align-items: flex-start;
                 gap: 10px;
@@ -396,23 +399,23 @@
         }
 
         @media (max-width: 400px) {
-            .login-header h2 {
+            .auth-page .login-header h2 {
                 font-size: 24px;
             }
-            
-            .btn-login {
+
+            .auth-page .btn-login {
                 padding: 14px;
                 font-size: 15px;
             }
-            
-            .form-control {
+
+            .auth-page .form-control {
                 padding: 10px;
                 font-size: 14px;
             }
         }
 
         /* Animation for form elements */
-        .form-group {
+        .auth-page .form-group {
             animation: fadeInUp 0.5s ease-out;
         }
 
@@ -428,47 +431,43 @@
         }
 
         /* Staggered animation for form elements */
-        .form-group:nth-child(1) {
+        .auth-page .form-group:nth-child(1) {
             animation-delay: 0.1s;
         }
-        
-        .form-group:nth-child(2) {
+
+        .auth-page .form-group:nth-child(2) {
             animation-delay: 0.2s;
         }
-        
-        .remember-forgot {
+
+        .auth-page .remember-forgot {
             animation: fadeInUp 0.5s ease-out 0.3s both;
         }
-        
-        .btn-login {
+
+        .auth-page .btn-login {
             animation: fadeInUp 0.5s ease-out 0.4s both;
         }
-        
-        .social-divider {
+
+        .auth-page .social-divider {
             animation: fadeInUp 0.5s ease-out 0.5s both;
         }
-        
-        .social-login {
+
+        .auth-page .social-login {
             animation: fadeInUp 0.5s ease-out 0.6s both;
         }
-        
-        .login-footer {
+
+        .auth-page .login-footer {
             animation: fadeInUp 0.5s ease-out 0.7s both;
         }
     </style>
-</head>
-<body>
+@endpush
+@section('content')
+<div class="auth-page">
     <div class="water-effect"></div>
-    
+
     <div class="container-wrapper">
         <div class="premium-badge">FREE GAMES</div>
         <div class="login-container">
             <div class="login-header">
-                <a href="{{ url('/') }}" class="logo-link">
-                    <img src="{{ asset('storage/settings/qs8K7pownxvUgrtH50Qrwgt3UaE37iSgojIygRK7.png') }}" 
-                        alt="Company Logo" 
-                        class="site-logo">
-                </a>
                 <h2>Welcome Back</h2>
                 <p>Please login to your account</p>
             </div>
@@ -481,7 +480,7 @@
 
             <form method="POST" action="{{ route('login') }}">
                 @csrf
-                
+
                 <div class="form-group">
                     <label for="login">Email, Username or UserID</label>
                     <input id="login" type="text" class="form-control" name="login" value="{{ old('login') }}" required autofocus>
@@ -519,7 +518,7 @@
                 </a>
                 <div id="telegram-login"></div>
                 <script async src="https://telegram.org/js/telegram-widget.js?22"
-                        data-telegram-login="freegameauth_bot" 
+                        data-telegram-login="freegameauth_bot"
                         data-size="large"
                         data-auth-url="{{ route('telegram.callback') }}"
                         data-request-access="write">
@@ -537,7 +536,7 @@
         function togglePassword(fieldId) {
             const field = document.getElementById(fieldId);
             const toggleIcon = field.parentElement.querySelector('i');
-            
+
             if (field.type === "password") {
                 field.type = "text";
                 toggleIcon.classList.replace('fa-eye', 'fa-eye-slash');
@@ -552,7 +551,7 @@
             input.addEventListener('focus', function() {
                 this.parentElement.classList.add('focused');
             });
-            
+
             input.addEventListener('blur', function() {
                 this.parentElement.classList.remove('focused');
             });
@@ -565,6 +564,6 @@
             });
         });
     </script>
-    
-</body>
-</html>
+
+</div>
+@endsection

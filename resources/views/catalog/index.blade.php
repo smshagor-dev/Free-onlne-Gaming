@@ -1,7 +1,7 @@
 @extends('catalog.layout')
 @section('content')
 <div class="catalog-shell">
-    <section class="catalog-hero"><div class="catalog-hero__content"><x-catalog.badge tone="accent">Multi-provider catalog</x-catalog.badge><h1>{{ auth()->check() ? 'Your personalized game discovery starts here.' : 'Find your next game without digging through four different sites.' }}</h1><p>Explore free-to-play games and active giveaways from one clean catalog.</p><form action="{{ route('catalog.search') }}" method="GET" class="catalog-search catalog-search--hero" role="search" data-search-form><label class="sr-only" for="hero-game-search">Search the game catalog</label><input id="hero-game-search" name="q" type="search" placeholder="Search by game title..." maxlength="120"><button type="submit">Search games</button></form></div></section>
+    <section class="catalog-hero"><div class="catalog-hero__content"><x-catalog.badge tone="accent">FREE GAME COLLECTION</x-catalog.badge><h1>{{ auth()->check() ? 'Your personalized game discovery starts here.' : 'Explore free games.' }}</h1><p>Explore free-to-play games and active giveaways from one clean catalog.</p><form action="{{ route('catalog.search') }}" method="GET" class="catalog-search catalog-search--hero" role="search" data-search-form><label class="sr-only" for="hero-game-search">Search the game catalog</label><input id="hero-game-search" name="q" type="search" placeholder="Search by game title..." maxlength="120"><button type="submit">Search games</button></form></div></section>
 
     @auth
         <section class="catalog-section"><x-catalog.section-header title="For You" subtitle="Ranked from your preferred genres and platforms, with sensible defaults when preferences are empty." :href="route('catalog.user.settings')" />
