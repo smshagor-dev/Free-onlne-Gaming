@@ -130,14 +130,7 @@ class GameController extends Controller
         }
 
 
-        if (!$casinoData) {
-            return response()->json([
-                'status'  => 'error',
-                'message' => 'No cached casino data found. Please refresh first.'
-            ], 404);
-        }
-
-        $casinoDataArray = json_decode($casinoData, true);
+        $casinoDataArray = $casinoData ? json_decode($casinoData, true) : [];
 
         $games = $casinoDataArray['content']['gameList'] ?? [];
 
@@ -217,20 +210,16 @@ class GameController extends Controller
         });
 
 
-        $categories = GamesCategory::select('id', 'name', 'image', 'slug')->get();
-
-        $categories->map(function ($category) {
-            $category->games = Game::select('id', 'name', 'games_url', 'image', 'category_id', 'slug')
-                ->where('category_id', $category->id)
-                ->inRandomOrder()
-                ->get();
-
-            return $category;
-        });
+        $categories = GamesCategory::select('id', 'name', 'image', 'slug')
+            ->with(['games' => fn ($query) => $query->select('id', 'name', 'games_url', 'image', 'category_id', 'slug')->latest()->limit(8)])
+            ->withCount('games')
+            ->get();
 
         $totalGames = $games->count();
 
         $banners = Banner::latest()->get();
+        $allPlayableGames = app(\App\Services\EmbeddableGameCatalog::class)->all();
+        $playableGames = array_slice($allPlayableGames, 0, 30);
 
         return view('index', [
             'games'            => $paginatedGames,
@@ -242,6 +231,8 @@ class GameController extends Controller
             'search'           => $search,
             'sortBy'           => $sortBy,
             'banners'            => $banners,
+            'playableGames'      => $playableGames,
+            'playableTotal'      => count($allPlayableGames),
         ]);
     }
 

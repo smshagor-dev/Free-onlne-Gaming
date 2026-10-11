@@ -181,10 +181,10 @@
                 </a>
 
                 <!-- Casino Games Link -->
-                <a href="/free-games" class="relative group">
+                <a href="{{ route('playable.index') }}" class="relative group">
                     <div class="flex items-center space-x-1 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 text-white px-4 py-2 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105">
                         <i class="fas fa-gamepad mr-3 w-5 text-center text-white"></i>
-                        <span class="font-medium">Free Games</span>
+                        <span class="font-medium">Play Games</span>
                     </div>
                     <div class="absolute -top-2 -right-2 bg-yellow-500 text-xs text-white rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
                         FREE
@@ -698,12 +698,29 @@
                         Promotions
                         <span class="absolute -top-2 -right-2 bg-green-500 text-xs text-white rounded-full h-5 w-5 flex items-center justify-center animate-pulse">HOT</span>
                     </a>
-                    <a href="/free-games" class="relative flex items-center px-4 py-2 text-white hover:bg-slate-700 rounded font-medium transition-colors">
+                    <a href="{{ route('playable.index') }}" class="relative flex items-center px-4 py-2 text-white hover:bg-slate-700 rounded font-medium transition-colors">
                         <i class="fas fa-donate mr-3 w-5 text-center text-white"></i>
-                        Free Games
+                        Play Games
                         <span class="absolute -top-2 -right-2 bg-yellow-500 text-xs text-white rounded-full h-5 w-5 flex items-center justify-center animate-pulse">FREE</span>
                     </a>
                 </div>
+
+                <a href="{{ route('playable.index') }}" class="flex items-center px-4 py-2 text-white hover:bg-slate-700 rounded font-medium transition-colors">
+                    <i class="fas fa-th-large mr-3 w-5 text-center text-blue-400"></i>
+                    Play Games
+                </a>
+                <a href="{{ route('catalog.index') }}" class="flex items-center px-4 py-2 text-white hover:bg-slate-700 rounded font-medium transition-colors">
+                    <i class="fas fa-gamepad mr-3 w-5 text-center text-green-400"></i>
+                    Game Catalog
+                </a>
+                <a href="{{ route('catalog.giveaways') }}" class="flex items-center px-4 py-2 text-white hover:bg-slate-700 rounded font-medium transition-colors">
+                    <i class="fas fa-gift mr-3 w-5 text-center text-yellow-400"></i>
+                    Giveaways
+                </a>
+                <a href="{{ route('catalog.deals') }}" class="flex items-center px-4 py-2 text-white hover:bg-slate-700 rounded font-medium transition-colors">
+                    <i class="fas fa-tags mr-3 w-5 text-center text-pink-400"></i>
+                    Deals
+                </a>
 
                 <a href="{{ route('games.viewNewGames')}}" class="flex items-center px-4 py-2 text-white hover:bg-slate-700 rounded font-medium transition-colors">
                     <i class="fas fa-gamepad mr-3 w-5 text-center text-green-400"></i>
@@ -810,7 +827,7 @@
                 @foreach($gameCategories as $category)
                 <a href="{{ route('category.view', ['id' => $category->id]) }}"
                     class="flex items-center px-4 py-2 text-white hover:bg-slate-700 rounded transition-colors">
-                    <img src="{{ $category->image ? Storage::url($category->home_image) : 'https://via.placeholder.com/20?text=Cat' }}"
+                    <img src="{{ $category->home_image ? Storage::url($category->home_image) : ($category->image ? Storage::url($category->image) : asset('default-thumbnail.jpg')) }}"
                         alt="{{ $category->name }}"
                         class="w-5 h-5 rounded mr-3">
                     {{ $category->name }}
