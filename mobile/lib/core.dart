@@ -66,20 +66,21 @@ class ApiClient {
     if (!kDebugMode && uri.scheme != 'https') {
       throw ApiException('A secure HTTPS server is required.', 0);
     }
+    final sentToken = token;
     final req = http.Request(method, uri)
       ..headers.addAll({
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       });
-    if (authenticated && token != null) {
-      req.headers['Authorization'] = 'Bearer $token';
+    if (authenticated && sentToken != null) {
+      req.headers['Authorization'] = 'Bearer $sentToken';
     }
     if (body != null) req.body = jsonEncode(body);
     try {
       final res = await http.Response.fromStream(
         await client.send(req).timeout(const Duration(seconds: 20)),
       ).timeout(const Duration(seconds: 20));
-      if (res.statusCode == 401 && authenticated) {
+      if (res.statusCode == 401 && authenticated && token == sentToken) {
         await saveToken(null);
         onUnauthorized?.call();
       }
@@ -205,9 +206,11 @@ class AppState extends ChangeNotifier {
         await api.request('auth/refresh', method: 'POST', authenticated: true),
       );
   Future<void> loadFavorites() async {
+    final session = api.token;
     final next = <String, Game>{};
     var page = 1;
     while (true) {
+      if (api.token != session) return;
       final res = await api.request(
         'me/favorites',
         authenticated: true,
@@ -224,7 +227,7 @@ class AppState extends ChangeNotifier {
       if ((res['meta'] as Map)['has_more'] != true) break;
       page++;
     }
-    if (!signedIn) return;
+    if (!signedIn || api.token != session) return;
     favorites
       ..clear()
       ..addAll(next);
@@ -233,13 +236,14 @@ class AppState extends ChangeNotifier {
 
   Future<void> toggleFavorite(Game g) async {
     if (!signedIn) throw ApiException('Sign in to save games.', 401);
+    final session = api.token;
     final saved = favorites.containsKey(g.key);
     await api.request(
       'me/games/${Uri.encodeComponent(g.provider)}/${Uri.encodeComponent(g.id)}/favorite',
       method: saved ? 'DELETE' : 'PUT',
       authenticated: true,
     );
-    if (!signedIn) return;
+    if (!signedIn || api.token != session) return;
     if (saved) {
       favorites.remove(g.key);
     } else {

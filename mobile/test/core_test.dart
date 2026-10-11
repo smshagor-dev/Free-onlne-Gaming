@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -109,6 +110,28 @@ void main() {
       api.request('https://other.test/api/v1/me', authenticated: true),
       throwsA(isA<ApiException>()),
     );
+    api.dispose();
+  });
+  test('a late 401 cannot revoke a newer login', () async {
+    final sent = Completer<void>();
+    final response = Completer<http.Response>();
+    final api = ApiClient(
+        baseUrl: 'https://site.test/api/v1',
+        client: MockClient((_) async {
+          sent.complete();
+          return response.future;
+        }))
+      ..token = 'old';
+    var cleared = false;
+    api.onUnauthorized = () => cleared = true;
+    final pending = api.request('me', authenticated: true);
+    final assertion = expectLater(pending, throwsA(isA<ApiException>()));
+    await sent.future;
+    await api.saveToken('new', expires: '2099-01-01T00:00:00Z');
+    response.complete(http.Response('{"message":"Expired"}', 401));
+    await assertion;
+    expect(api.token, 'new');
+    expect(cleared, false);
     api.dispose();
   });
 }

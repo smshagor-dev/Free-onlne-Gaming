@@ -48,7 +48,7 @@ Release configuration intentionally fails without these keys. Never commit signi
 
 ## Verification
 
-Current source: Flutter analyzer clean; 14 unit/widget tests passed. Coverage includes provider identity, public/private bearer handling, invalid/expired sessions, server validation messages, server-path isolation, navigation at 320/390/768 widths, registration, failed preferences loading and temporary authenticator secrets. Laravel: 70 tests passed, 901 assertions. Android APK compilation is being checked separately; these tests are not real-device certification.
+Current source: Flutter analyzer clean; 15 unit/widget tests passed. Coverage includes provider identity, public/private bearer handling, invalid/expired sessions, late unauthorized responses after a newer login, server validation messages, server-path isolation, navigation at 320/390/768 widths, registration, failed preferences loading and temporary authenticator secrets. Laravel: 70 tests passed, 901 assertions. Android debug APK compilation passed. The development APK targets the Android emulator/local API; these checks are not real-device certification.
 
 Before publishing, set the live HTTPS API URL and release signing; validate actual mail delivery, games, provider ads/audio/orientation, keyboard and sessions on real Android/iOS devices. Universal/deep links for email recovery are not configured; the app accepts a pasted email reset link/token or browser completion.
 
