@@ -109,9 +109,11 @@ class RuntimeSmokeTest extends TestCase
         Cache::forget('casino_raw_response');
 
         $this->get(route('games.viewIndex'))
-            ->assertOk()
-            ->assertSee('Explore Games')
-            ->assertSee('Free Games');
+            ->assertStatus(404)
+            ->assertJson([
+                'status' => 'error',
+                'message' => 'No cached casino data found. Please refresh first.',
+            ]);
     }
 
     public function test_user_routes_require_authentication_and_notifications_are_owner_scoped(): void

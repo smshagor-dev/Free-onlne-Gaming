@@ -51,7 +51,6 @@ use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\SecureFileController;
 use App\Http\Controllers\SeoController;
 use App\Http\Controllers\UtilityController;
-use App\Http\Controllers\EmbeddableGameController;
 
 Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
     return (int) $user->id === (int) $id;
