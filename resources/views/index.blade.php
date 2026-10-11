@@ -741,6 +741,23 @@
 
 .home-design .fg-shell{max-width:none}.home-design .fg-hero-layout{padding:0}.home-design .fg-category{color:#fff!important}.home-design .fg-search{border:0;background:transparent}.home-design .fg-hero-btn-secondary{color:white!important}
 @media(max-width:1024px){.home-design .fg-hero-layout{padding:35px 0}}@media(max-width:760px){.home-design .fg-hero-layout{padding:34px 0 58px}}
+
+/* Keep the collage inside the hero and give both columns breathing room. */
+.home-design .fg-hero-layout{padding:38px 0 42px;min-height:450px;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:48px}
+.home-design .fg-hero h1{font-size:clamp(40px,4.2vw,64px);line-height:1.08;font-weight:850;text-shadow:none}
+.home-design .fg-hero-art{align-self:center;height:340px;min-width:0;display:block}
+.home-design .fg-art-main{right:22%;bottom:46px;width:44%;height:70%;transform:rotate(-4deg)}
+.home-design .fg-art-side{right:3%;top:8px;width:37%;height:66%;transform:rotate(5deg)}
+.home-design .fg-art-low{right:39%;bottom:8px;width:35%;height:42%;transform:rotate(3deg)}
+.home-design .fg-hero-script{right:2%;bottom:22px;font-size:26px}
+.home-design .fg-badge{margin-bottom:22px}.home-design .fg-search{width:300px;max-width:100%;background:#14273a;border:1px solid #31465b;border-radius:10px;overflow:hidden;position:relative}
+.home-design .fg-search input{background:transparent;border:0;border-radius:0;padding-right:46px;width:100%}
+.home-design .fg-search button{position:absolute;right:0;top:0;height:100%;width:44px;display:grid;place-items:center;padding:0;transform:none;color:#b7cee4}
+.home-design .fg-main{padding-top:24px}.home-design .fg-categories{gap:14px;margin-bottom:30px}
+@media(max-width:1024px){.home-design .fg-hero-layout{grid-template-columns:1fr;padding:34px 0 38px;gap:0}.home-design .fg-hero-art{display:none}.home-design .fg-hero h1{max-width:700px}.home-design .fg-hero{min-height:0}}
+@media(max-width:760px){.home-design .fg-hero-layout{padding:30px 0 34px;min-height:0}.home-design .fg-hero h1{font-size:40px}.home-design .fg-badge{margin-bottom:18px}.home-design .fg-hero-btn{min-width:0;padding:0 18px;font-size:16px;height:52px}.home-design .fg-hero-actions{gap:12px}.home-design .fg-search{width:100%}.home-design .fg-main{padding-top:20px}}
+
+@media(max-width:1000px){.home-design .fg-shell{padding:0 16px}}
 </style>
 
 <div class="fg-page home-design">
@@ -756,7 +773,7 @@
                     <form class="fg-search" method="GET" action="{{ route('playable.index') }}" style="margin-bottom:20px">
                         <label for="fg-search-input">Search games</label>
                         <input id="fg-search-input" name="search" type="search" placeholder="Search games..." value="{{ $search ?? '' }}">
-                        <button type="submit" aria-label="Search">⌕</button>
+                        <button type="submit" aria-label="Search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 5 5"/></svg></button>
                     </form>
                     <div class="fg-hero-actions">
                         <a class="fg-hero-btn fg-hero-btn-primary" href="{{ route('playable.index') }}"><i class="fa-solid fa-play" aria-hidden="true"></i>Play Now</a>

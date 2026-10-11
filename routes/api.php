@@ -1,10 +1,7 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\GameCatalogController;
-
-
-
+use Illuminate\Support\Facades\Route;
 
 Route::prefix('games')->controller(GameCatalogController::class)->group(function (): void {
     Route::get('/discover', 'discover');
@@ -16,3 +13,5 @@ Route::prefix('games')->controller(GameCatalogController::class)->group(function
     Route::get('/{provider}/{id}', 'details')
         ->where('provider', 'freetogame|gamerpower');
 });
+
+require __DIR__.'/mobile.php';

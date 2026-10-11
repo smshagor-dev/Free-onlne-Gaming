@@ -14,3 +14,5 @@ Artisan::command('inspire', function () {
 Schedule::command('lottery:draw-winners')->dailyAt('23:59')->withoutOverlapping();
 Schedule::command('user:check-level')->dailyAt('00:30')->withoutOverlapping();
 Schedule::command('demo:cleanup')->dailyAt('02:20')->withoutOverlapping();
+
+Schedule::call(fn () => \App\Models\MobileApiToken::where('expires_at', '<=', now())->delete())->daily()->name('mobile:prune-tokens')->withoutOverlapping();

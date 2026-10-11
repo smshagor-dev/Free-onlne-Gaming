@@ -1,0 +1,2538 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "FreeGames Mobile API",
+    "version": "1.0.0",
+    "description": "Free gaming mobile API. Lottery read-only. No casino, payments, deposits or withdrawals. See README for web/mobile history and WebView constraints."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8000/api/v1",
+      "description": "Local development; replace with your HTTPS domain"
+    }
+  ],
+  "paths": {
+    "/auth/forgot-password": {
+      "post": {
+        "operationId": "forgotAuthForgot-Password",
+        "summary": "POST /auth/forgot-password",
+        "tags": [
+          "Authentication"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded; respect Retry-After header"
+          },
+          "404": {
+            "description": "Missing resource, unavailable game or resource owned by another user"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "email"
+                ]
+              },
+              "example": {
+                "email": "player@example.com"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "operationId": "loginAuthLogin",
+        "summary": "POST /auth/login",
+        "tags": [
+          "Authentication"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded; respect Retry-After header"
+          },
+          "404": {
+            "description": "Missing resource, unavailable game or resource owned by another user"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string",
+                    "writeOnly": true
+                  },
+                  "device_name": {
+                    "type": "string"
+                  },
+                  "otp": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "email",
+                  "password",
+                  "device_name"
+                ]
+              },
+              "example": {
+                "email": "player@example.com",
+                "password": "change-me-123",
+                "device_name": "Android phone",
+                "otp": "123456"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "operationId": "logoutAuthLogout",
+        "summary": "POST /auth/logout",
+        "tags": [
+          "Authentication"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded; respect Retry-After header"
+          },
+          "401": {
+            "description": "Missing, expired, revoked or security-invalidated token"
+          },
+          "403": {
+            "description": "Account restricted or email not verified"
+          },
+          "404": {
+            "description": "Missing resource, unavailable game or resource owned by another user"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/auth/logout-all": {
+      "post": {
+        "operationId": "logoutAllAuthLogout-All",
+        "summary": "POST /auth/logout-all",
+        "tags": [
+          "Authentication"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded; respect Retry-After header"
+          },
+          "401": {
+            "description": "Missing, expired, revoked or security-invalidated token"
+          },
+          "403": {
+            "description": "Account restricted or email not verified"
+          },
+          "404": {
+            "description": "Missing resource, unavailable game or resource owned by another user"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "operationId": "refreshAuthRefresh",
+        "summary": "POST /auth/refresh",
+        "tags": [
+          "Authentication"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded; respect Retry-After header"
+          },
+          "401": {
+            "description": "Missing, expired, revoked or security-invalidated token"
+          },
+          "403": {
+            "description": "Account restricted or email not verified"
+          },
+          "404": {
+            "description": "Missing resource, unavailable game or resource owned by another user"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "operationId": "registerAuthRegister",
+        "summary": "POST /auth/register",
+        "tags": [
+          "Authentication"
+        ],
+        "responses": {
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded; respect Retry-After header"
+          },
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing resource, unavailable game or resource owned by another user"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "username": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string",
+                    "writeOnly": true
+                  },
+                  "password_confirmation": {
+                    "type": "string",
+                    "writeOnly": true
+                  }
+                },
+                "required": [
+                  "name",
+                  "username",
+                  "email",
+                  "password",
+                  "password_confirmation"
+                ]
+              },
+              "example": {
+                "name": "Player",
+                "username": "player",
+                "email": "player@example.com",
+                "password": "change-me-123",
+                "password_confirmation": "change-me-123"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/resend-verification": {
+      "post": {
+        "operationId": "resendAuthResend-Verification",
+        "summary": "POST /auth/resend-verification",
+        "tags": [
+          "Authentication"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded; respect Retry-After header"
+          },
+          "404": {
+            "description": "Missing resource, unavailable game or resource owned by another user"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "email"
+                ]
+              },
+              "example": {
+                "email": "player@example.com"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/reset-password": {
+      "post": {
+        "operationId": "resetAuthReset-Password",
+        "summary": "POST /auth/reset-password",
+        "tags": [
+          "Authentication"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded; respect Retry-After header"
+          },
+          "404": {
+            "description": "Missing resource, unavailable game or resource owned by another user"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  },
+                  "token": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string",
+                    "writeOnly": true
+                  },
+                  "password_confirmation": {
+                    "type": "string",
+                    "writeOnly": true
+                  }
+                },
+                "required": [
+                  "email",
+                  "token",
+                  "password",
+                  "password_confirmation"
+                ]
+              },
+              "example": {
+                "email": "player@example.com",
+                "token": "reset-token-from-email",
+                "password": "new-password-123",
+                "password_confirmation": "new-password-123"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/verify-email": {
+      "post": {
+        "operationId": "verifyAuthVerify-Email",
+        "summary": "POST /auth/verify-email",
+        "tags": [
+          "Authentication"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded; respect Retry-After header"
+          },
+          "404": {
+            "description": "Missing resource, unavailable game or resource owned by another user"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  },
+                  "code": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "email",
+                  "code"
+                ]
+              },
+              "example": {
+                "email": "player@example.com",
+                "code": "123456"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/categories": {
+      "get": {
+        "operationId": "categoriesCategories",
+        "summary": "GET /categories",
+        "tags": [
+          "Games"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded; respect Retry-After header"
+          },
+          "404": {
+            "description": "Missing resource, unavailable game or resource owned by another user"
+          }
+        }
+      }
+    },
+    "/config": {
+      "get": {
+        "operationId": "ClosureConfig",
+        "summary": "GET /config",
+        "tags": [
+          "Account"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded; respect Retry-After header"
+          },
+          "404": {
+            "description": "Missing resource, unavailable game or resource owned by another user"
+          }
+        }
+      }
+    },
+    "/games": {
+      "get": {
+        "operationId": "indexGames",
+        "summary": "GET /games",
+        "tags": [
+          "Games"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GamesResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded; respect Retry-After header"
+          },
+          "404": {
+            "description": "Missing resource, unavailable game or resource owned by another user"
+          }
+        },
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "gamemonetize",
+                "local",
+                "freetogame",
+                "gamerpower"
+              ],
+              "default": "gamemonetize"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 120
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 80
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 30,
+              "default": 30
+            }
+          }
+        ]
+      }
+    },
+    "/games/{provider}/{id}": {
+      "get": {
+        "operationId": "showGamesProviderId",
+        "summary": "GET /games/{provider}/{id}",
+        "tags": [
+          "Games"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded; respect Retry-After header"
+          },
+          "404": {
+            "description": "Missing resource, unavailable game or resource owned by another user"
+          }
+        },
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "gamemonetize",
+                "local",
+                "freetogame",
+                "gamerpower"
+              ]
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/lotteries": {
+      "get": {
+        "operationId": "lotteriesLotteries",
+        "summary": "GET /lotteries",
+        "tags": [
+          "Account"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded; respect Retry-After header"
+          },
+          "401": {
+            "description": "Missing, expired, revoked or security-invalidated token"
+          },
+          "403": {
+            "description": "Account restricted or email not verified"
+          },
+          "404": {
+            "description": "Missing resource, unavailable game or resource owned by another user"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          }
+        ]
+      }
+    },
+    "/me": {
+      "get": {
+        "operationId": "meMe",
+        "summary": "GET /me",
+        "tags": [
+          "Account"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded; respect Retry-After header"
+          },
+          "401": {
+            "description": "Missing, expired, revoked or security-invalidated token"
+          },
+          "403": {
+            "description": "Account restricted or email not verified"
+          },
+          "404": {
+            "description": "Missing resource, unavailable game or resource owned by another user"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "updateMe",
+        "summary": "PATCH /me",
+        "tags": [
+          "Account"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded; respect Retry-After header"
+          },
+          "401": {
+            "description": "Missing, expired, revoked or security-invalidated token"
+          },
+          "403": {
+            "description": "Account restricted or email not verified"
+          },
+          "404": {
+            "description": "Missing resource, unavailable game or resource owned by another user"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "country": {
+                    "type": "string"
+                  },
+                  "mobile_number": {
+                    "type": "string"
+                  }
+                },
+                "required": []
+              },
+              "example": {
+                "name": "Player",
+                "country": "Bangladesh",
+                "mobile_number": "+880123456789"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteAccountMe",
+        "summary": "DELETE /me",
+        "tags": [
+          "Account"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded; respect Retry-After header"
+          },
+          "401": {
+            "description": "Missing, expired, revoked or security-invalidated token"
+          },
+          "403": {
+            "description": "Account restricted or email not verified"
+          },
+          "404": {
+            "description": "Missing resource, unavailable game or resource owned by another user"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "current_password": {
+                    "type": "string",
+                    "writeOnly": true
+                  },
+                  "otp": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "current_password"
+                ]
+              },
+              "example": {
+                "current_password": "change-me-123",
+                "otp": "123456"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/2fa/disable": {
+      "post": {
+        "operationId": "disableTwoFactorMe2FaDisable",
+        "summary": "POST /me/2fa/disable",
+        "tags": [
+          "Account"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded; respect Retry-After header"
+          },
+          "401": {
+            "description": "Missing, expired, revoked or security-invalidated token"
+          },
+          "403": {
+            "description": "Account restricted or email not verified"
+          },
+          "404": {
+            "description": "Missing resource, unavailable game or resource owned by another user"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "current_password": {
+                    "type": "string",
+                    "writeOnly": true
+                  },
+                  "otp": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "current_password",
+                  "otp"
+                ]
+              },
+              "example": {
+                "current_password": "change-me-123",
+                "otp": "123456"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/2fa/enable": {
+      "post": {
+        "operationId": "enableTwoFactorMe2FaEnable",
+        "summary": "POST /me/2fa/enable",
+        "tags": [
+          "Account"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded; respect Retry-After header"
+          },
+          "401": {
+            "description": "Missing, expired, revoked or security-invalidated token"
+          },
+          "403": {
+            "description": "Account restricted or email not verified"
+          },
+          "404": {
+            "description": "Missing resource, unavailable game or resource owned by another user"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "otp": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "otp"
+                ]
+              },
+              "example": {
+                "otp": "123456"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/2fa/setup": {
+      "post": {
+        "operationId": "setupTwoFactorMe2FaSetup",
+        "summary": "POST /me/2fa/setup",
+        "tags": [
+          "Account"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded; respect Retry-After header"
+          },
+          "401": {
+            "description": "Missing, expired, revoked or security-invalidated token"
+          },
+          "403": {
+            "description": "Account restricted or email not verified"
+          },
+          "404": {
+            "description": "Missing resource, unavailable game or resource owned by another user"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "current_password": {
+                    "type": "string",
+                    "writeOnly": true
+                  }
+                },
+                "required": [
+                  "current_password"
+                ]
+              },
+              "example": {
+                "current_password": "change-me-123"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/dashboard": {
+      "get": {
+        "operationId": "dashboardMeDashboard",
+        "summary": "GET /me/dashboard",
+        "tags": [
+          "Account"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded; respect Retry-After header"
+          },
+          "401": {
+            "description": "Missing, expired, revoked or security-invalidated token"
+          },
+          "403": {
+            "description": "Account restricted or email not verified"
+          },
+          "404": {
+            "description": "Missing resource, unavailable game or resource owned by another user"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/me/devices": {
+      "get": {
+        "operationId": "devicesMeDevices",
+        "summary": "GET /me/devices",
+        "tags": [
+          "Account"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded; respect Retry-After header"
+          },
+          "401": {
+            "description": "Missing, expired, revoked or security-invalidated token"
+          },
+          "403": {
+            "description": "Account restricted or email not verified"
+          },
+          "404": {
+            "description": "Missing resource, unavailable game or resource owned by another user"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/me/devices/{id}": {
+      "delete": {
+        "operationId": "revokeMeDevicesId",
+        "summary": "DELETE /me/devices/{id}",
+        "tags": [
+          "Account"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded; respect Retry-After header"
+          },
+          "401": {
+            "description": "Missing, expired, revoked or security-invalidated token"
+          },
+          "403": {
+            "description": "Account restricted or email not verified"
+          },
+          "404": {
+            "description": "Missing resource, unavailable game or resource owned by another user"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/me/favorites": {
+      "get": {
+        "operationId": "favoritesMeFavorites",
+        "summary": "GET /me/favorites",
+        "tags": [
+          "Account"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded; respect Retry-After header"
+          },
+          "401": {
+            "description": "Missing, expired, revoked or security-invalidated token"
+          },
+          "403": {
+            "description": "Account restricted or email not verified"
+          },
+          "404": {
+            "description": "Missing resource, unavailable game or resource owned by another user"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          }
+        ]
+      }
+    },
+    "/me/games/{provider}/{id}/favorite": {
+      "put": {
+        "operationId": "favoriteMeGamesProviderIdFavorite",
+        "summary": "PUT /me/games/{provider}/{id}/favorite",
+        "tags": [
+          "Games"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded; respect Retry-After header"
+          },
+          "401": {
+            "description": "Missing, expired, revoked or security-invalidated token"
+          },
+          "403": {
+            "description": "Account restricted or email not verified"
+          },
+          "404": {
+            "description": "Missing resource, unavailable game or resource owned by another user"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "gamemonetize",
+                "local",
+                "freetogame",
+                "gamerpower"
+              ]
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "unfavoriteMeGamesProviderIdFavorite",
+        "summary": "DELETE /me/games/{provider}/{id}/favorite",
+        "tags": [
+          "Games"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded; respect Retry-After header"
+          },
+          "401": {
+            "description": "Missing, expired, revoked or security-invalidated token"
+          },
+          "403": {
+            "description": "Account restricted or email not verified"
+          },
+          "404": {
+            "description": "Missing resource, unavailable game or resource owned by another user"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "gamemonetize",
+                "local",
+                "freetogame",
+                "gamerpower"
+              ]
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/me/games/{provider}/{id}/played": {
+      "post": {
+        "operationId": "playedMeGamesProviderIdPlayed",
+        "summary": "POST /me/games/{provider}/{id}/played",
+        "tags": [
+          "Games"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded; respect Retry-After header"
+          },
+          "401": {
+            "description": "Missing, expired, revoked or security-invalidated token"
+          },
+          "403": {
+            "description": "Account restricted or email not verified"
+          },
+          "404": {
+            "description": "Missing resource, unavailable game or resource owned by another user"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "gamemonetize",
+                "local",
+                "freetogame",
+                "gamerpower"
+              ]
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/me/lottery/tickets": {
+      "get": {
+        "operationId": "ticketsMeLotteryTickets",
+        "summary": "GET /me/lottery/tickets",
+        "tags": [
+          "Account"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded; respect Retry-After header"
+          },
+          "401": {
+            "description": "Missing, expired, revoked or security-invalidated token"
+          },
+          "403": {
+            "description": "Account restricted or email not verified"
+          },
+          "404": {
+            "description": "Missing resource, unavailable game or resource owned by another user"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          }
+        ]
+      }
+    },
+    "/me/lottery/tickets/{id}": {
+      "get": {
+        "operationId": "ticketMeLotteryTicketsId",
+        "summary": "GET /me/lottery/tickets/{id}",
+        "tags": [
+          "Account"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded; respect Retry-After header"
+          },
+          "401": {
+            "description": "Missing, expired, revoked or security-invalidated token"
+          },
+          "403": {
+            "description": "Account restricted or email not verified"
+          },
+          "404": {
+            "description": "Missing resource, unavailable game or resource owned by another user"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/me/lottery/wins": {
+      "get": {
+        "operationId": "winsMeLotteryWins",
+        "summary": "GET /me/lottery/wins",
+        "tags": [
+          "Account"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded; respect Retry-After header"
+          },
+          "401": {
+            "description": "Missing, expired, revoked or security-invalidated token"
+          },
+          "403": {
+            "description": "Account restricted or email not verified"
+          },
+          "404": {
+            "description": "Missing resource, unavailable game or resource owned by another user"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          }
+        ]
+      }
+    },
+    "/me/notifications": {
+      "get": {
+        "operationId": "notificationsMeNotifications",
+        "summary": "GET /me/notifications",
+        "tags": [
+          "Account"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded; respect Retry-After header"
+          },
+          "401": {
+            "description": "Missing, expired, revoked or security-invalidated token"
+          },
+          "403": {
+            "description": "Account restricted or email not verified"
+          },
+          "404": {
+            "description": "Missing resource, unavailable game or resource owned by another user"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          }
+        ]
+      }
+    },
+    "/me/notifications/read-all": {
+      "patch": {
+        "operationId": "readAllMeNotificationsRead-All",
+        "summary": "PATCH /me/notifications/read-all",
+        "tags": [
+          "Account"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded; respect Retry-After header"
+          },
+          "401": {
+            "description": "Missing, expired, revoked or security-invalidated token"
+          },
+          "403": {
+            "description": "Account restricted or email not verified"
+          },
+          "404": {
+            "description": "Missing resource, unavailable game or resource owned by another user"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/me/notifications/{id}/read": {
+      "patch": {
+        "operationId": "readMeNotificationsIdRead",
+        "summary": "PATCH /me/notifications/{id}/read",
+        "tags": [
+          "Account"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded; respect Retry-After header"
+          },
+          "401": {
+            "description": "Missing, expired, revoked or security-invalidated token"
+          },
+          "403": {
+            "description": "Account restricted or email not verified"
+          },
+          "404": {
+            "description": "Missing resource, unavailable game or resource owned by another user"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/me/password": {
+      "put": {
+        "operationId": "passwordMePassword",
+        "summary": "PUT /me/password",
+        "tags": [
+          "Account"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded; respect Retry-After header"
+          },
+          "401": {
+            "description": "Missing, expired, revoked or security-invalidated token"
+          },
+          "403": {
+            "description": "Account restricted or email not verified"
+          },
+          "404": {
+            "description": "Missing resource, unavailable game or resource owned by another user"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "current_password": {
+                    "type": "string",
+                    "writeOnly": true
+                  },
+                  "password": {
+                    "type": "string",
+                    "writeOnly": true
+                  },
+                  "password_confirmation": {
+                    "type": "string",
+                    "writeOnly": true
+                  }
+                },
+                "required": [
+                  "current_password",
+                  "password",
+                  "password_confirmation"
+                ]
+              },
+              "example": {
+                "current_password": "change-me-123",
+                "password": "new-password-123",
+                "password_confirmation": "new-password-123"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/preferences": {
+      "get": {
+        "operationId": "preferencesMePreferences",
+        "summary": "GET /me/preferences",
+        "tags": [
+          "Account"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded; respect Retry-After header"
+          },
+          "401": {
+            "description": "Missing, expired, revoked or security-invalidated token"
+          },
+          "403": {
+            "description": "Account restricted or email not verified"
+          },
+          "404": {
+            "description": "Missing resource, unavailable game or resource owned by another user"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "put": {
+        "operationId": "savePreferencesMePreferences",
+        "summary": "PUT /me/preferences",
+        "tags": [
+          "Account"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded; respect Retry-After header"
+          },
+          "401": {
+            "description": "Missing, expired, revoked or security-invalidated token"
+          },
+          "403": {
+            "description": "Account restricted or email not verified"
+          },
+          "404": {
+            "description": "Missing resource, unavailable game or resource owned by another user"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "preferred_genres": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "maxItems": 20
+                  },
+                  "preferred_platforms": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "maxItems": 20
+                  }
+                },
+                "required": [
+                  "preferred_genres",
+                  "preferred_platforms"
+                ]
+              },
+              "example": {
+                "preferred_genres": [
+                  "Puzzle"
+                ],
+                "preferred_platforms": [
+                  "Browser"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/recent": {
+      "get": {
+        "operationId": "recentMeRecent",
+        "summary": "GET /me/recent",
+        "tags": [
+          "Account"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded; respect Retry-After header"
+          },
+          "401": {
+            "description": "Missing, expired, revoked or security-invalidated token"
+          },
+          "403": {
+            "description": "Account restricted or email not verified"
+          },
+          "404": {
+            "description": "Missing resource, unavailable game or resource owned by another user"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "clearRecentMeRecent",
+        "summary": "DELETE /me/recent",
+        "tags": [
+          "Account"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded; respect Retry-After header"
+          },
+          "401": {
+            "description": "Missing, expired, revoked or security-invalidated token"
+          },
+          "403": {
+            "description": "Account restricted or email not verified"
+          },
+          "404": {
+            "description": "Missing resource, unavailable game or resource owned by another user"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    },
+    "schemas": {
+      "ValidationError": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "errors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "photo": {
+            "type": "string",
+            "nullable": true
+          },
+          "country": {
+            "type": "string",
+            "nullable": true
+          },
+          "is_verified": {
+            "type": "boolean"
+          },
+          "google2fa_status": {
+            "type": "boolean"
+          }
+        }
+      },
+      "TokenResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "required": [
+              "access_token",
+              "token_type",
+              "expires_at",
+              "user"
+            ],
+            "properties": {
+              "access_token": {
+                "type": "string"
+              },
+              "token_type": {
+                "type": "string",
+                "enum": [
+                  "Bearer"
+                ]
+              },
+              "expires_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "user": {
+                "$ref": "#/components/schemas/User"
+              }
+            }
+          }
+        }
+      },
+      "PaginationMeta": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer"
+          },
+          "per_page": {
+            "type": "integer",
+            "maximum": 30
+          },
+          "total": {
+            "type": "integer"
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_page": {
+            "type": "integer",
+            "nullable": true
+          }
+        }
+      },
+      "Game": {
+        "type": "object",
+        "required": [
+          "id",
+          "provider",
+          "title",
+          "playable"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "image": {
+            "type": "string",
+            "nullable": true
+          },
+          "playable": {
+            "type": "boolean"
+          },
+          "play_url": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": true
+      },
+      "GamesResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Game"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/PaginationMeta"
+          }
+        }
+      }
+    }
+  }
+}

@@ -2,10 +2,10 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
 use App\Models\Setting;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\View;
+use Illuminate\Support\ServiceProvider;
 use Throwable;
 
 class AppServiceProvider extends ServiceProvider
@@ -23,6 +23,15 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        \Illuminate\Support\Facades\RateLimiter::for('mobile-general', fn (\Illuminate\Http\Request $r) => \Illuminate\Cache\RateLimiting\Limit::perMinute(120)->by('mobile-general:'.$r->ip()));
+        \Illuminate\Support\Facades\RateLimiter::for('mobile-sensitive', fn (\Illuminate\Http\Request $r) => \Illuminate\Cache\RateLimiting\Limit::perMinute(5)->by('mobile-sensitive:'.$r->path().'|'.$r->ip()));
+        \Illuminate\Support\Facades\RateLimiter::for('mobile-mail', fn (\Illuminate\Http\Request $r) => \Illuminate\Cache\RateLimiting\Limit::perMinute(2)->by('mobile-mail:'.$r->path().'|'.$r->ip()));
+        \Illuminate\Support\Facades\RateLimiter::for('mobile-auth', function (\Illuminate\Http\Request $request) {
+            return [
+                \Illuminate\Cache\RateLimiting\Limit::perMinute(30)->by('mobile-ip:'.$request->ip()),
+                \Illuminate\Cache\RateLimiting\Limit::perMinute(5)->by('mobile-account:'.$request->path().'|'.hash('sha256', strtolower((string) $request->input('email')))),
+            ];
+        });
         // Load global settings from DB
         try {
             $setting = Cache::remember('app.settings.first', now()->addMinutes(10), fn () => Setting::first());
