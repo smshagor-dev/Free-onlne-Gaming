@@ -1327,7 +1327,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success",
+            "description": "Devices owned by the user. Each includes current: boolean identifying the requesting session.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2430,6 +2430,10 @@
           },
           "google2fa_status": {
             "type": "boolean"
+          },
+          "mobile_number": {
+            "type": "string",
+            "nullable": true
           }
         }
       },

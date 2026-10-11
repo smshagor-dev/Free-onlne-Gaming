@@ -191,3 +191,7 @@ Before promoting a release, verify:
 ## Free Games Scope
 
 Casino, deposits, withdrawals, cash rewards, bonuses, cashback, VIP and referral earnings are retired. Lottery management and ticket routes remain enabled. Historical database migrations and records are retained; no destructive data reset is performed. Lottery pricing and existing balance rules are unchanged. Paid catalog deals and the RAWG/CheapShark web/API detail routes are disabled; discovery and saved libraries show free-to-play games and giveaways.
+
+## Flutter mobile app
+
+The Android/iOS client is in [`mobile/`](mobile/README.md). It uses the mobile API for free games, account security, favorites, notifications and read-only lottery records. Setup, signing and validation details are in its README.

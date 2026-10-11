@@ -127,7 +127,9 @@ class MobileApiTest extends TestCase
         $other = $this->login($b);
         $id = MobileApiToken::where('user_id', $b->id)->value('id');
         $this->withToken($token)->deleteJson('/api/v1/me/devices/'.$id)->assertNotFound();
-        $this->withToken($token)->patchJson('/api/v1/me', ['name' => 'Updated', 'balance' => 99999, 'is_verified' => false, 'google2fa_status' => true])->assertOk()->assertJsonPath('data.name', 'Updated');
+        $this->withToken($token)->patchJson('/api/v1/me', ['name' => 'Updated', 'mobile_number' => '+880123456789', 'balance' => 99999, 'is_verified' => false, 'google2fa_status' => true])->assertOk()->assertJsonPath('data.name', 'Updated')->assertJsonPath('data.mobile_number', '+880123456789');
+        $this->withToken($token)->getJson('/api/v1/me')->assertJsonPath('data.mobile_number', '+880123456789');
+        $this->withToken($token)->getJson('/api/v1/me/devices')->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.current', true);
         $this->assertTrue($a->refresh()->is_verified);
         $this->assertFalse((bool) $a->google2fa_status);
         $this->withToken($other)->getJson('/api/v1/me/favorites')->assertJsonCount(0, 'data');

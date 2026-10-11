@@ -97,7 +97,7 @@ class MobileAuthController extends Controller
 
     public function profile(User $u): array
     {
-        return $u->only(['id', 'name', 'username', 'email', 'photo', 'country', 'is_verified', 'google2fa_status']);
+        return $u->only(['id', 'name', 'username', 'email', 'photo', 'country', 'mobile_number', 'is_verified', 'google2fa_status']);
     }
 
     public function me(Request $r)
@@ -129,7 +129,7 @@ class MobileAuthController extends Controller
 
     public function devices(Request $r)
     {
-        return response()->json(['data' => MobileApiToken::where('user_id', $r->user()->id)->where('expires_at', '>', now())->get(['id', 'device_name', 'expires_at', 'last_used_at'])]);
+        return response()->json(['data' => MobileApiToken::where('user_id', $r->user()->id)->where('expires_at', '>', now())->get(['id', 'device_name', 'expires_at', 'last_used_at'])->map(fn ($device) => [...$device->toArray(), 'current' => $device->id === $r->attributes->get('mobile_token')->id])]);
     }
 
     public function revoke(Request $r, string $id)

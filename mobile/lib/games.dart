@@ -1,0 +1,662 @@
+import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:webview_flutter/webview_flutter.dart';
+
+import 'core.dart';
+
+void showError(BuildContext context, Object e) =>
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+Future<void> openGame(BuildContext context, AppState state, Game g) =>
+    Navigator.push(
+      context,
+      MaterialPageRoute<void>(
+        builder: (_) => g.playable
+            ? PlayerScreen(state: state, game: g)
+            : GameDetails(state: state, game: g),
+      ),
+    );
+
+class GameCard extends StatelessWidget {
+  final Game game;
+  final AppState state;
+  const GameCard({super.key, required this.game, required this.state});
+  @override
+  Widget build(BuildContext context) => Card(
+        clipBehavior: Clip.antiAlias,
+        margin: EdgeInsets.zero,
+        child: InkWell(
+          onTap: () => openGame(context, state, game),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Container(
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Color(0xff1d3858), Color(0xff192338)],
+                        ),
+                      ),
+                      child: game.image == null
+                          ? const Icon(
+                              Icons.sports_esports,
+                              color: Color(0xff7cc8ff),
+                              size: 46,
+                            )
+                          : Image.network(
+                              game.image!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) =>
+                                  const Icon(Icons.sports_esports, size: 46),
+                            ),
+                    ),
+                    Positioned(
+                      right: 6,
+                      top: 6,
+                      child: IconButton.filledTonal(
+                        tooltip: 'Save game',
+                        onPressed: () async {
+                          try {
+                            await state.toggleFavorite(game);
+                          } catch (e) {
+                            if (context.mounted) showError(context, e);
+                          }
+                        },
+                        icon: Icon(
+                          state.favorites.containsKey(game.key)
+                              ? Icons.favorite
+                              : Icons.favorite_border,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      game.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      game.category,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Color(0xff9fb1c7),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+}
+
+class CatalogScreen extends StatefulWidget {
+  final AppState state;
+  final bool discover;
+  const CatalogScreen({super.key, required this.state, this.discover = false});
+  @override
+  State<CatalogScreen> createState() => _CatalogScreenState();
+}
+
+class _CatalogScreenState extends State<CatalogScreen> {
+  final scroll = ScrollController(), search = TextEditingController();
+  final games = <Game>[];
+  List<String> categories = [];
+  String provider = 'gamemonetize';
+  String? category, error;
+  bool loading = false, more = true;
+  int page = 1, generation = 0;
+  @override
+  void initState() {
+    super.initState();
+    scroll.addListener(() {
+      if (scroll.position.extentAfter < 600) load();
+    });
+    load();
+    loadCategories();
+  }
+
+  Future<void> loadCategories() async {
+    try {
+      final r = await widget.state.api.request('categories');
+      if (mounted) {
+        setState(
+          () => categories = (r['data'] as List).map((e) => '$e').toList(),
+        );
+      }
+    } catch (_) {
+      /* Metadata is optional. */
+    }
+  }
+
+  Future<void> load({bool reset = false}) async {
+    if (reset) {
+      generation++;
+      games.clear();
+      page = 1;
+      more = true;
+      loading = false;
+    }
+    if (loading || !more) return;
+    final current = generation;
+    setState(() {
+      loading = true;
+      error = null;
+    });
+    try {
+      final r = await widget.state.api.request(
+        'games',
+        query: {
+          'provider': provider,
+          'page': '$page',
+          'per_page': '30',
+          if (search.text.trim().isNotEmpty) 'q': search.text.trim(),
+          if (category != null && provider == 'gamemonetize')
+            'category': category!,
+        },
+      );
+      if (!mounted || current != generation) return;
+      final seen = games.map((g) => g.key).toSet();
+      setState(() {
+        games.addAll(
+          (r['data'] as List)
+              .map((e) => Game.fromJson(Map<String, dynamic>.from(e as Map)))
+              .where((g) => seen.add(g.key)),
+        );
+        more = (r['meta'] as Map)['has_more'] == true;
+        page++;
+      });
+    } catch (e) {
+      if (mounted && current == generation) setState(() => error = '$e');
+    } finally {
+      if (mounted && current == generation) setState(() => loading = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    scroll.dispose();
+    search.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => RefreshIndicator(
+        onRefresh: () => load(reset: true),
+        child: CustomScrollView(
+          controller: scroll,
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
+              sliver: SliverToBoxAdapter(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (!widget.discover)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(24),
+                          gradient: const LinearGradient(
+                            colors: [Color(0xff183a62), Color(0xff242045)],
+                          ),
+                        ),
+                        child: Stack(
+                          children: [
+                            const Positioned(
+                              right: -12,
+                              bottom: 8,
+                              child: Icon(
+                                Icons.sports_esports_rounded,
+                                size: 106,
+                                color: Color(0x3374c5ff),
+                              ),
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'YOUR NEXT FAVORITE',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    letterSpacing: 2,
+                                    color: Color(0xff94d3ff),
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                const SizedBox(height: 14),
+                                const Text(
+                                  'Big fun.\nZero price.',
+                                  style: TextStyle(
+                                    fontSize: 34,
+                                    height: 1.1,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: -1,
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                const Text(
+                                  'Great games, ready when you are.',
+                                  style: TextStyle(
+                                    color: Color(0xffb1c3dc),
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                const SizedBox(height: 20),
+                                FilledButton.icon(
+                                  onPressed: games.isEmpty
+                                      ? null
+                                      : () => openGame(
+                                            context,
+                                            widget.state,
+                                            games.first,
+                                          ),
+                                  icon: const Icon(Icons.play_arrow),
+                                  label: const Text('Play now'),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    const SizedBox(height: 22),
+                    TextField(
+                      controller: search,
+                      textInputAction: TextInputAction.search,
+                      onSubmitted: (_) => load(reset: true),
+                      decoration: InputDecoration(
+                        hintText: 'Find your next game',
+                        prefixIcon: const Icon(Icons.search),
+                        suffixIcon: IconButton(
+                          tooltip: 'Search games',
+                          onPressed: () => load(reset: true),
+                          icon: const Icon(Icons.arrow_forward),
+                        ),
+                      ),
+                    ),
+                    if (widget.discover) ...[
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<String>(
+                        initialValue: provider,
+                        isExpanded: true,
+                        decoration: const InputDecoration(
+                          labelText: 'Game collection',
+                        ),
+                        items: const [
+                          DropdownMenuItem(
+                            value: 'gamemonetize',
+                            child: Text('Play in the app'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'freetogame',
+                            child: Text('Free-to-play catalog'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'gamerpower',
+                            child: Text('Free giveaways'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'local',
+                            child: Text('Website games'),
+                          ),
+                        ],
+                        onChanged: (v) {
+                          if (v != null) {
+                            provider = v;
+                            category = null;
+                            load(reset: true);
+                          }
+                        },
+                      ),
+                    ],
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      height: 40,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        children: [
+                          for (final c in <String?>[
+                            null,
+                            if (provider == 'gamemonetize') ...categories,
+                          ])
+                            Padding(
+                              padding: const EdgeInsets.only(right: 8),
+                              child: ChoiceChip(
+                                label: Text(c ?? 'All games'),
+                                selected: category == c,
+                                onSelected: (_) {
+                                  category = c;
+                                  load(reset: true);
+                                },
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            widget.discover
+                                ? 'Discover games'
+                                : 'Made for your downtime',
+                            style: const TextStyle(
+                              fontSize: 19,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                        const Icon(Icons.bolt, color: Color(0xff80c7ff)),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                ),
+              ),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              sliver: SliverLayoutBuilder(
+                builder: (_, constraints) => SliverGrid(
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: constraints.crossAxisExtent > 600 ? 4 : 2,
+                    mainAxisSpacing: 14,
+                    crossAxisSpacing: 14,
+                    mainAxisExtent: 230,
+                  ),
+                  delegate: SliverChildBuilderDelegate(
+                    (_, i) => GameCard(game: games[i], state: widget.state),
+                    childCount: games.length,
+                  ),
+                ),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  children: [
+                    if (loading) const CircularProgressIndicator(),
+                    if (error != null) ...[
+                      Text(error!),
+                      TextButton(onPressed: load, child: const Text('Retry')),
+                    ],
+                    if (!loading && error == null && games.isEmpty)
+                      const Text('No games found. Try another search.'),
+                    if (!loading && !more && games.isNotEmpty)
+                      const Text(
+                        'You’re all caught up.',
+                        style: TextStyle(color: Color(0xff9fb1c7)),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+}
+
+class SavedGames extends StatelessWidget {
+  final AppState state;
+  const SavedGames({super.key, required this.state});
+  @override
+  Widget build(BuildContext context) => !state.signedIn
+      ? const Center(child: Text('Sign in from Account to save games.'))
+      : RefreshIndicator(
+          onRefresh: () async {
+            try {
+              await state.loadFavorites();
+            } catch (e) {
+              if (context.mounted) showError(context, e);
+            }
+          },
+          child: state.favorites.isEmpty
+              ? ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  children: const [
+                    Padding(
+                      padding: EdgeInsets.all(30),
+                      child: Text('Your favorites will appear here.'),
+                    ),
+                  ],
+                )
+              : GridView.builder(
+                  padding: const EdgeInsets.all(20),
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  itemCount: state.favorites.length,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount:
+                        MediaQuery.sizeOf(context).width > 600 ? 4 : 2,
+                    mainAxisExtent: 230,
+                    mainAxisSpacing: 14,
+                    crossAxisSpacing: 14,
+                  ),
+                  itemBuilder: (_, i) => GameCard(
+                    game: state.favorites.values.elementAt(i),
+                    state: state,
+                  ),
+                ),
+        );
+}
+
+class PlayerScreen extends StatefulWidget {
+  final AppState state;
+  final Game game;
+  const PlayerScreen({super.key, required this.state, required this.game});
+  @override
+  State<PlayerScreen> createState() => _PlayerScreenState();
+}
+
+class _PlayerScreenState extends State<PlayerScreen> {
+  WebViewController? controller;
+  String? error;
+  int progress = 0;
+  bool recorded = false;
+  bool allowed(Uri? uri) =>
+      uri != null &&
+      uri.scheme == 'https' &&
+      uri.host == 'html5.gamemonetize.co';
+  @override
+  void initState() {
+    super.initState();
+    final uri = Uri.tryParse(widget.game.playUrl ?? '');
+    if (!widget.game.playable || !allowed(uri)) {
+      error = 'This game is unavailable in the mobile player.';
+      return;
+    }
+    controller = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setBackgroundColor(const Color(0xff0b1220))
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onProgress: (v) {
+            if (mounted) setState(() => progress = v);
+          },
+          onNavigationRequest: (r) =>
+              !r.isMainFrame || allowed(Uri.tryParse(r.url))
+                  ? NavigationDecision.navigate
+                  : NavigationDecision.prevent,
+          onWebResourceError: (e) {
+            if (mounted && e.isForMainFrame == true) {
+              setState(() => error = 'The game could not load. Please retry.');
+            }
+          },
+          onPageFinished: (_) async {
+            if (!recorded && widget.state.signedIn) {
+              recorded = true;
+              try {
+                await widget.state.api.request(
+                  'me/games/gamemonetize/${Uri.encodeComponent(widget.game.id)}/played',
+                  method: 'POST',
+                  authenticated: true,
+                );
+              } catch (_) {
+                /* History must not interrupt play. */
+              }
+            }
+          },
+        ),
+      )
+      ..loadRequest(uri!);
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(title: Text(widget.game.title)),
+        body: error != null
+            ? Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(error!, textAlign: TextAlign.center),
+                    if (controller != null)
+                      TextButton(
+                        onPressed: () {
+                          setState(() => error = null);
+                          controller!.reload();
+                        },
+                        child: const Text('Retry'),
+                      ),
+                  ],
+                ),
+              )
+            : Column(
+                children: [
+                  if (progress < 100)
+                    LinearProgressIndicator(value: progress / 100),
+                  Expanded(child: WebViewWidget(controller: controller!)),
+                ],
+              ),
+      );
+}
+
+class GameDetails extends StatefulWidget {
+  final AppState state;
+  final Game game;
+  const GameDetails({super.key, required this.state, required this.game});
+  @override
+  State<GameDetails> createState() => _GameDetailsState();
+}
+
+class _GameDetailsState extends State<GameDetails> {
+  Game? game;
+  String? error;
+  @override
+  void initState() {
+    super.initState();
+    load();
+  }
+
+  Future<void> load() async {
+    setState(() => error = null);
+    try {
+      final r = await widget.state.api.request(
+        'games/${Uri.encodeComponent(widget.game.provider)}/${Uri.encodeComponent(widget.game.id)}',
+      );
+      if (mounted) {
+        setState(() => game = Game.fromJson(r['data'] as Map<String, dynamic>));
+      }
+    } catch (e) {
+      if (mounted) setState(() => error = '$e');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(title: Text(widget.game.title)),
+        body: error != null
+            ? Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(error!),
+                    TextButton(onPressed: load, child: const Text('Retry')),
+                  ],
+                ),
+              )
+            : game == null
+                ? const Center(child: CircularProgressIndicator())
+                : ListView(
+                    padding: const EdgeInsets.all(24),
+                    children: [
+                      if (game!.image != null)
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(18),
+                          child: Image.network(
+                            game!.image!,
+                            height: 210,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) =>
+                                const SizedBox(height: 40),
+                          ),
+                        ),
+                      const SizedBox(height: 20),
+                      Text(
+                        game!.title,
+                        style: const TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(game!.description),
+                      const SizedBox(height: 20),
+                      const Text(
+                        'This collection opens on the provider website. Website login is separate from app login.',
+                      ),
+                      const SizedBox(height: 16),
+                      FilledButton.icon(
+                        icon: const Icon(Icons.open_in_new),
+                        label: const Text('Open provider website'),
+                        onPressed: () async {
+                          final uri = Uri.tryParse(game!.websiteUrl ?? '');
+                          try {
+                            if (uri == null ||
+                                uri.scheme != 'https' ||
+                                !await launchUrl(
+                                  uri,
+                                  mode: LaunchMode.externalApplication,
+                                )) {
+                              throw ApiException(
+                                'No secure provider link is available.',
+                                0,
+                              );
+                            }
+                          } catch (e) {
+                            if (context.mounted) showError(context, e);
+                          }
+                        },
+                      ),
+                      OutlinedButton.icon(
+                        icon: const Icon(Icons.favorite_border),
+                        label: const Text('Save game'),
+                        onPressed: () async {
+                          try {
+                            await widget.state.toggleFavorite(game!);
+                          } catch (e) {
+                            if (context.mounted) showError(context, e);
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+      );
+}
