@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<main class="max-w-7xl mx-auto px-4 py-6 text-white">
+<div class="max-w-7xl mx-auto px-4 py-6 text-white">
     <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
         <h1 class="text-2xl font-bold">Play Games</h1>
         <form class="flex flex-wrap gap-2" action="{{ route('playable.index') }}" method="GET">
@@ -31,5 +31,5 @@
         </div>
         <div class="mt-6">{{ $games->links() }}</div>
     @endif
-</main>
+</div>
 @endsection

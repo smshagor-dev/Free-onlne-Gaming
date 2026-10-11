@@ -3,15 +3,9 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use App\Models\UserLogin;
-use App\Models\GameOpen;
 use App\Models\Setting;
-use App\Models\Page;
-use App\Models\GamesCategory;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\View;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Request;
 use Throwable;
 
 class AppServiceProvider extends ServiceProvider
@@ -67,41 +61,6 @@ class AppServiceProvider extends ServiceProvider
             ]);
         }
 
-        // Share variables with views
-        View::composer(['layouts.app', 'layouts.admin'], function ($view) use ($setting) {
-            $user = Auth::user();
-
-            $lastLogin = $user
-                ? UserLogin::where('user_id', $user->id)->latest('created_at')->first()
-                : null;
-
-            $gameCategories = Cache::remember('app.nav.game_categories', now()->addMinutes(10), fn () => GamesCategory::get());
-            $pages = Cache::remember('app.nav.pages.active', now()->addMinutes(10), fn () => Page::where('status', 1)->get());
-            $currentSlug = Request::segment(1);
-            $gameOpenCounts = null;
-
-            if ($user) {
-                $gameOpenCounts = GameOpen::query()
-                    ->where('user_id', $user->id)
-                    ->selectRaw('SUM(CASE WHEN game_id > 0 THEN 1 ELSE 0 END) as last_played_count')
-                    ->selectRaw('SUM(CASE WHEN `like` = 1 THEN 1 ELSE 0 END) as favorites_count')
-                    ->selectRaw('SUM(CASE WHEN bookmark = 1 THEN 1 ELSE 0 END) as bookmarks_count')
-                    ->first();
-
-
-            }
-
-            $view->with([
-                'user' => $user,
-                'lastLogin' => $lastLogin,
-                'setting' => $setting,
-                'gameCategories' => $gameCategories,
-                'lastPlayedCount' => (int) ($gameOpenCounts->last_played_count ?? 0),
-                'favoritesCount'  => (int) ($gameOpenCounts->favorites_count ?? 0),
-                'bookmarksCount'  => (int) ($gameOpenCounts->bookmarks_count ?? 0),
-                'pages' => $pages,
-                'currentSlug' => $currentSlug,
-            ]);
-        });
+        View::share('setting', $setting);
     }
 }

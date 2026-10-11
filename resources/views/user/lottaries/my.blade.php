@@ -89,7 +89,7 @@
                     $winningNumber = $transaction->lottary->winner_number;
                     @endphp
 
-                
+
                 @endforeach
 
 
@@ -333,11 +333,6 @@
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600;700&display=swap');
 
-    body {
-        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-        min-height: 100vh;
-        font-family: 'Inter', sans-serif;
-    }
 
     .font-playfair {
         font-family: 'Playfair Display', serif;

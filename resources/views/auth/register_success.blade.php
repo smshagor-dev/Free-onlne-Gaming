@@ -36,7 +36,7 @@
                             <i class="fas fa-copy mr-1"></i> Copy
                         </button>
                     </div>
-                    
+
                     <!-- Username Field -->
                     <div class="mb-4">
                         <label class="block text-gray-400 text-sm font-medium mb-2">Username</label>
@@ -53,7 +53,7 @@
                             </button>
                         </div>
                     </div>
-                    
+
                     <!-- Password Field -->
                     <div class="mb-1">
                         <label class="block text-gray-400 text-sm font-medium mb-2">Password</label>
@@ -79,7 +79,7 @@
 
                 <!-- Action Buttons -->
                 <div class="flex flex-col space-y-3">
-                    <button class="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white py-3 px-4 rounded-xl font-medium flex items-center justify-center transition-all transform hover:-translate-y-0.5 shadow-lg hover:shadow-xl" 
+                    <button class="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white py-3 px-4 rounded-xl font-medium flex items-center justify-center transition-all transform hover:-translate-y-0.5 shadow-lg hover:shadow-xl"
                             onclick="downloadCredentials()">
                         <i class="fas fa-download mr-2"></i> Download Login Details
                     </button>
@@ -98,7 +98,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Additional Info -->
         <div class="mt-6 text-center text-gray-400 text-sm">
             <p>You can now access all features of our platform</p>
@@ -134,7 +134,7 @@
     function togglePassword() {
         const passwordField = document.getElementById('password');
         const eyeIcon = document.querySelector('#password + button i');
-        
+
         if (passwordField.type === 'password') {
             passwordField.type = 'text';
             eyeIcon.classList.remove('fa-eye');
@@ -149,16 +149,16 @@
     // Copy credentials to clipboard
     function copyToClipboard() {
         const text = `Username: {{ $username }}\nPassword: {{ $password }}`;
-        
+
         navigator.clipboard.writeText(text).then(() => {
             // Show success message
             const copyBtn = document.querySelector('button[onclick="copyToClipboard()"]');
             const originalHtml = copyBtn.innerHTML;
-            
+
             copyBtn.innerHTML = '<i class="fas fa-check mr-1"></i> Copied!';
             copyBtn.classList.remove('bg-gray-700', 'hover:bg-gray-600');
             copyBtn.classList.add('bg-green-600', 'hover:bg-green-700');
-            
+
             setTimeout(() => {
                 copyBtn.innerHTML = originalHtml;
                 copyBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
@@ -197,22 +197,22 @@ Important:
 Generated on: ${new Date().toLocaleString()}
 
 Thank you for joining us!`;
-        
+
         const blob = new Blob([content], { type: 'text/plain' });
         const url = URL.createObjectURL(blob);
-        
+
         const a = document.createElement('a');
         a.href = url;
         a.download = '{{ $username }}-credentials.txt';
         document.body.appendChild(a);
         a.click();
-        
+
         // Clean up
         setTimeout(() => {
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
         }, 100);
-        
+
         // Show download confirmation
         Swal.fire({
             title: 'Download Complete!',
@@ -257,60 +257,56 @@ function copyToClipboard(id) {
 </script>
 
 <style>
-    body {
-        font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background-color: #0b141d;
-        color: #e2e8f0;
-    }
-    
+
+
     .bg-gray-750 {
         background-color: #252e39;
     }
-    
+
     .bg-gray-800 {
         background-color: #1a202c;
     }
-    
+
     .bg-blue-900 {
         background-color: #1e3a8a;
     }
-    
+
     .border-blue-700 {
         border-color: #1d4ed8;
     }
-    
+
     .text-blue-100 {
         color: #dbeafe;
     }
-    
+
     .bg-gray-700 {
         background-color: #374151;
     }
-    
+
     .bg-gray-600 {
         background-color: #4b5563;
     }
-    
+
     .border-gray-600 {
         border-color: #4b5563;
     }
-    
+
     .border-gray-700 {
         border-color: #374151;
     }
-    
+
     input:read-only {
         cursor: not-allowed;
     }
-    
+
     .shadow-lg {
         box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
     }
-    
+
     .shadow-xl {
         box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
     }
-    
+
     .rounded-2xl {
         border-radius: 1rem;
     }

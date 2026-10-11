@@ -42,7 +42,7 @@ class RuntimeSmokeTest extends TestCase
             ->assertOk()
             ->assertSee('Browser Game 1')
             ->assertSee(route('playable.play', 'game1'), false)
-            ->assertSee('Browser Game 30')->assertSee('Load More Games')->assertDontSee('Browser Game 31')
+            ->assertSee('Browser Game 30')->assertSee('fg-scroll-sentinel')->assertDontSee('Load More Games')->assertDontSee('Browser Game 31')
             ->assertDontSee('Unsafe Game');
 
         $this->get(route('playable.load', ['page' => 2]))
@@ -209,7 +209,7 @@ class RuntimeSmokeTest extends TestCase
             route('user.games.viewFavorites'),
             route('user.lottaries.view'),
         ] as $uri) {
-            $this->actingAs($user)->get($uri)->assertOk();
+            $this->actingAs($user)->get($uri)->assertOk()->assertSee('fg-topbar')->assertSee('site-footer');
         }
     }
 
@@ -240,7 +240,7 @@ class RuntimeSmokeTest extends TestCase
             route('admin.games_categories.index'),
             route('admin.lottaries.index'),
         ] as $uri) {
-            $this->actingAs($admin, 'admin')->get($uri)->assertOk();
+            $this->actingAs($admin, 'admin')->get($uri)->assertOk()->assertSee('fg-topbar')->assertSee('site-footer');
         }
     }
 }

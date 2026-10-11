@@ -2,11 +2,7 @@
 
 @section('content')
 <style>
-    body {
-        margin: 0;
-        font-family: Arial, sans-serif;
-        background: #f8f9fa;
-    }
+
     .tag-banner {
         position: relative;
         width: 100%;
@@ -195,7 +191,7 @@
     .back-to-category-btn svg {
         margin-right: 4px;
     }
-    
+
     /* Mobile styles */
     @media (max-width: 768px) {
         .back-to-category-btn {
@@ -244,9 +240,9 @@
 
             <!-- Favourite star -->
             @auth
-            <span id="fav-{{ $game->id }}" 
-                onclick="toggleFavorite({{ $game->id }})" 
-                style="position: absolute; top: 8px; left: 8px; font-size: 20px; cursor: pointer; 
+            <span id="fav-{{ $game->id }}"
+                onclick="toggleFavorite({{ $game->id }})"
+                style="position: absolute; top: 8px; left: 8px; font-size: 20px; cursor: pointer;
                        color: {{ auth()->user()->hasFavouriteGame($game->id) ? 'yellow' : 'white' }}">
                 {{ auth()->user()->hasFavouriteGame($game->id) ? '★' : '☆' }}
             </span>

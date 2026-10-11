@@ -1,12 +1,15 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verify Your Account</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <style>
+@extends('layouts.app')
+@section('title', 'Verify Your Account')
+@push('head')
+
+
+
+
+
+
+
+
+<style>
         @keyframes waterMovement {
             0% { transform: translate(0, 0) rotate(0deg); }
             25% { transform: translate(-5%, 5%) rotate(1deg); }
@@ -14,8 +17,8 @@
             75% { transform: translate(-5%, -5%) rotate(-1deg); }
             100% { transform: translate(0, 0) rotate(0deg); }
         }
-        
-        .water-effect {
+
+        .auth-page .water-effect {
             position: fixed;
             width: 200%;
             height: 200%;
@@ -26,22 +29,23 @@
             opacity: 0.1;
             z-index: 0;
         }
-        
-        .email-popup {
+
+        .auth-page .email-popup {
             max-height: 0;
             overflow: hidden;
             transition: max-height 0.3s ease-out;
         }
-        
-        .email-popup.show {
+
+        .auth-page .email-popup.show {
             max-height: 100px;
             transition: max-height 0.3s ease-in;
         }
     </style>
-</head>
-<body class="bg-gray-50">
+@endpush
+@section('content')
+<div class="auth-page">
     <div class="water-effect"></div>
-    
+
     <div class="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative z-10">
         <div class="sm:mx-auto sm:w-full sm:max-w-md">
             <div class="flex justify-center">
@@ -65,7 +69,7 @@
                 <div id="status-message" class="hidden mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded">
                     <!-- Dynamic content will be inserted here -->
                 </div>
-                
+
                 <div id="error-message" class="hidden mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
                     <!-- Dynamic content will be inserted here -->
                 </div>
@@ -74,7 +78,7 @@
                 <form class="space-y-6" action="{{ route('verify.code') }}" method="POST">
                     @csrf
                     <input type="hidden" name="email" id="user-email" value="{{ $email ?? '' }}">
-                    
+
                     <div>
                         <label for="code" class="block text-sm font-medium text-gray-700">
                             Verification Code
@@ -120,13 +124,13 @@
                                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                                    placeholder="your@email.com">
                             <p id="email-error" class="hidden mt-2 text-sm text-red-600"></p>
-                            
+
                             <button id="submit-resend"
                                     class="w-full mt-2 flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
                                 Submit
                             </button>
                         </div>
-                        
+
                         <button id="resend-button"
                                 class="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
                             Resend Verification Code
@@ -156,7 +160,7 @@
                     resendVerificationCode(userEmail);
                     return;
                 }
-                
+
                 // Show the email popup
                 emailPopup.classList.add('show');
                 resendButton.classList.add('hidden');
@@ -166,7 +170,7 @@
             submitResend.addEventListener('click', function() {
                 const email = emailInput.value;
                 const emailError = document.getElementById('email-error');
-                
+
                 // Validate email
                 if (!email) {
                     emailError.textContent = 'Please enter your email address';
@@ -177,7 +181,7 @@
                     emailError.classList.remove('hidden');
                     return;
                 }
-                
+
                 emailError.classList.add('hidden');
                 resendVerificationCode(email);
             });
@@ -186,12 +190,12 @@
                 // Disable button and show loading state
                 submitResend.disabled = true;
                 submitResend.innerHTML = 'Sending...';
-                
+
                 // Create form data for POST
                 const formData = new FormData();
                 formData.append('email', email);
                 formData.append('_token', csrfToken);
-                
+
                 // Make AJAX request
                 fetch("{{ route('verify.resend') }}", {
                     method: 'POST',
@@ -212,11 +216,11 @@
                     if (data.success) {
                         showMessage(data.message || 'New verification code sent!', 'status');
                         startCountdown(60); // Start 60-second countdown
-                        
+
                         // Hide the popup and show the resend button again
                         emailPopup.classList.remove('show');
                         resendButton.classList.remove('hidden');
-                        
+
                         // Store the email in the hidden field
                         document.getElementById('user-email').value = email;
                     } else {
@@ -243,7 +247,7 @@
                 const element = document.getElementById(elementId);
                 element.textContent = message;
                 element.classList.remove('hidden');
-                
+
                 // Hide after 5 seconds
                 setTimeout(() => {
                     element.classList.add('hidden');
@@ -254,17 +258,17 @@
             function startCountdown(seconds) {
                 const timerElement = document.getElementById('resend-timer');
                 const countdownElement = document.getElementById('countdown');
-                
+
                 resendButton.disabled = true;
                 timerElement.classList.remove('hidden');
-                
+
                 let remaining = seconds;
                 countdownElement.textContent = remaining;
-                
+
                 const interval = setInterval(() => {
                     remaining--;
                     countdownElement.textContent = remaining;
-                    
+
                     if (remaining <= 0) {
                         clearInterval(interval);
                         resendButton.disabled = false;
@@ -278,12 +282,12 @@
                 if (this.value.length > 6) {
                     this.value = this.value.slice(0, 6);
                 }
-                
+
                 if (this.value.length === 6) {
                     document.getElementById('code-error').classList.add('hidden');
                 }
             });
         });
     </script>
-</body>
-</html>
+</div>
+@endsection
