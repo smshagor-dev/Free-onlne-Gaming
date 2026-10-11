@@ -7,10 +7,6 @@ const PRIVATE_PATH_PREFIXES = [
     '/admin/',
     '/sm-shagor/free-games/admin-main/control-back-office/',
     '/api/',
-    '/casino/play',
-    '/bonus-play/play',
-    '/casino-cashback/play',
-    '/vip-bonus-play/play',
     '/user/transactions',
     '/private-files/'
 ];

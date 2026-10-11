@@ -106,7 +106,7 @@ class LoginController extends Controller
 
             if (is_null($user->last_login_at)) {
                 $user->update(['last_login_at' => now()]);
-                return redirect()->route('bonus.page');
+                return redirect()->route('user.dashboard');
             }
 
             $user->last_login_at = now();
@@ -137,7 +137,7 @@ class LoginController extends Controller
     {
         if (is_null($user->last_login_at)) {
             $user->update(['last_login_at' => now()]);
-            return redirect()->route('bonus.page');
+            return redirect()->route('user.dashboard');
         }
 
         $user->update(['last_login_at' => now()]);

@@ -42,12 +42,14 @@ class RuntimeSmokeTest extends TestCase
             ->assertOk()
             ->assertSee('Browser Game 1')
             ->assertSee(route('playable.play', 'game1'), false)
-            ->assertDontSee('Browser Game 31')
+            ->assertSee('Browser Game 30')->assertSee('Load More Games')->assertDontSee('Browser Game 31')
             ->assertDontSee('Unsafe Game');
 
         $this->get(route('playable.load', ['page' => 2]))
             ->assertOk()->assertJsonPath('has_more', true)
             ->assertSee('Browser Game 31')->assertDontSee('Browser Game 61');
+        $this->get(route('playable.load', ['page' => 2, 'layout' => 'home']))
+            ->assertOk()->assertJsonPath('has_more', true)->assertSee('fg-game-card')->assertSee('Browser Game 31');
         $this->get(route('playable.load', ['page' => 3]))
             ->assertOk()->assertJsonPath('has_more', false)
             ->assertSee('Browser Game 65');
@@ -57,6 +59,48 @@ class RuntimeSmokeTest extends TestCase
             ->assertOk()
             ->assertSee('src="https://html5.gamemonetize.co/game1/"', false);
         $this->get(route('playable.play', 'MissingGame'))->assertNotFound();
+    }
+
+    public function test_home_search_and_categories_link_to_the_playable_catalog(): void
+    {
+        config(['cache.default' => 'array']);
+        Cache::put('gamemonetize.embeddable.all', [
+            ['id' => 'alpha', 'name' => 'Alpha Racer', 'category' => 'Racing', 'image' => null, 'url' => 'https://html5.gamemonetize.co/alpha/'],
+            ['id' => 'beta', 'name' => 'Beta Puzzle', 'category' => 'Puzzle', 'image' => null, 'url' => 'https://html5.gamemonetize.co/beta/'],
+        ], 60);
+
+        $this->get('/')->assertOk()
+            ->assertSee(route('playable.index', ['category' => 'Racing']), false)
+            ->assertDontSee('aria-label="Hero slides"', false);
+        $this->get('/play-games?search=racer&category=Racing')
+            ->assertOk()->assertSee('Alpha Racer')->assertDontSee('Beta Puzzle');
+        $this->get('/play-games?search=missing')->assertOk()->assertSee('No games are available');
+        Http::assertNothingSent();
+    }
+
+    public function test_unavailable_game_feed_is_cached_briefly(): void
+    {
+        config(['cache.default' => 'array']);
+        Cache::flush();
+        Http::fake(['gamemonetize.com/rssfeed.php*' => Http::response('Unavailable', 503)]);
+        $catalog = app(\App\Services\EmbeddableGameCatalog::class);
+        $this->assertSame([], $catalog->all());
+        $this->assertSame([], $catalog->all());
+        Http::assertSentCount(1);
+    }
+
+    public function test_embeddable_catalog_excludes_casino_games_even_from_old_cache(): void
+    {
+        config(['cache.default' => 'array']);
+        Cache::put('gamemonetize.embeddable.all', [
+            ['id' => 'puzzle', 'name' => 'Puzzle Adventure', 'category' => 'Puzzle'],
+            ['id' => 'roulette', 'name' => 'Lucky Roulette', 'category' => 'Casino'],
+            ['id' => 'slots', 'name' => 'Vegas Slots', 'category' => 'Arcade'],
+        ], 60);
+        $games = app(\App\Services\EmbeddableGameCatalog::class)->all();
+        $this->assertSame(['puzzle'], array_column($games, 'id'));
+        $this->assertNull(app(\App\Services\EmbeddableGameCatalog::class)->find('roulette'));
+        Http::assertNothingSent();
     }
 
     public function test_every_controller_route_has_a_resolvable_target(): void
@@ -91,10 +135,6 @@ class RuntimeSmokeTest extends TestCase
         foreach ([
             route('games.viewIndex'),
             route('free.games.index'),
-            route('casino.index'),
-            route('casino.bonus.index'),
-            route('casino.cashback.index'),
-            route('casino.vip.bonus.index'),
             route('login.form'),
             route('register'),
             route('password.request'),
@@ -108,12 +148,7 @@ class RuntimeSmokeTest extends TestCase
         config(['casino.host' => null]);
         Cache::forget('casino_raw_response');
 
-        $this->get(route('games.viewIndex'))
-            ->assertStatus(404)
-            ->assertJson([
-                'status' => 'error',
-                'message' => 'No cached casino data found. Please refresh first.',
-            ]);
+        $this->get(route('games.viewIndex'))->assertOk()->assertSee('Play');
     }
 
     public function test_user_routes_require_authentication_and_notifications_are_owner_scoped(): void
@@ -122,9 +157,6 @@ class RuntimeSmokeTest extends TestCase
             route('user.dashboard'),
             route('user.profile'),
             route('user.games.viewFavorites'),
-            route('user.deposit.index'),
-            route('user.withdrew.index'),
-            route('user.kyc.index'),
         ] as $uri) {
             $this->get($uri)->assertRedirect(route('login.form'));
         }
@@ -175,11 +207,6 @@ class RuntimeSmokeTest extends TestCase
             route('user.dashboard'),
             route('user.profile'),
             route('user.games.viewFavorites'),
-            route('user.deposit.index'),
-            route('user.withdrew.index'),
-            route('user.kyc.create'),
-            route('bonus.page'),
-            route('my.bonus'),
             route('user.lottaries.view'),
         ] as $uri) {
             $this->actingAs($user)->get($uri)->assertOk();
@@ -211,13 +238,7 @@ class RuntimeSmokeTest extends TestCase
             route('admin.users.index'),
             route('admin.games.index'),
             route('admin.games_categories.index'),
-            route('admin.kyc.index'),
-            route('admin.bonuses.index'),
             route('admin.lottaries.index'),
-            route('admin.casino.view'),
-            route('admin.casino.bonuscache.view'),
-            route('admin.casino.cashbackcache.view'),
-            route('admin.casino.vipcache.view'),
         ] as $uri) {
             $this->actingAs($admin, 'admin')->get($uri)->assertOk();
         }

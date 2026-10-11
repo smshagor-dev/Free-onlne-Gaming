@@ -13,14 +13,8 @@ final class SeoController extends Controller
             route('catalog.index'),
             route('catalog.free'),
             route('catalog.giveaways'),
-            route('catalog.deals'),
             route('free.games.index'),
-            route('casino.index'),
-            route('casino.bonus.index'),
-            route('casino.cashback.index'),
-            route('casino.vip.bonus.index'),
-            route('bonuses.index'),
-            route('promotion.index'),
+            route('user.lottaries.view'),
         ];
 
         $urls = collect($routes)

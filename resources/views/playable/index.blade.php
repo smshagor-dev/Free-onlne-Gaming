@@ -4,7 +4,10 @@
 <main class="max-w-7xl mx-auto px-4 py-6 text-white">
     <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
         <h1 class="text-2xl font-bold">Play Games</h1>
-        <form action="{{ route('playable.index') }}" method="GET">
+        <form class="flex flex-wrap gap-2" action="{{ route('playable.index') }}" method="GET">
+            <label for="game-search" class="sr-only">Search games</label>
+            <input id="game-search" name="search" type="search" value="{{ $search }}" placeholder="Search games..." class="bg-slate-800 border border-slate-600 rounded px-3 py-2 text-white">
+            <button type="submit" class="bg-blue-600 rounded px-3 py-2">Search</button>
             <label for="game-category" class="sr-only">Category</label>
             <select id="game-category" name="category" onchange="this.form.submit()" class="bg-slate-800 border border-slate-600 rounded px-3 py-2 text-white">
                 <option value="">All categories</option>

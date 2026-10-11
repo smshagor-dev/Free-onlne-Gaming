@@ -44,60 +44,7 @@ class UserController extends Controller
 
     public function userView($id)
     {
-        $user = User::where('id', $id)->firstOrFail();
-
-        $deposits = UserDeposit::where('user_id', $user->id)->latest()->paginate(20);
-        $withdrawals = UserWithdrew::where('user_id', $user->id)->latest()->paginate(20);
-        $transactions = Transaction::where('user_id', $user->id)->latest()->paginate(20);
-        $logins = UserLogin::where('user_id', $user->id)->latest()->paginate(20);
-        $lotteryWins = LottaryWinner::where('user_id', $user->id)->latest()->paginate(20);
-        $lotteryTransactions = LotteryTransaction::with('lottary')->where('user_id', $user->id)->latest()->paginate(20);
-
-        $totalDeposits = UserDeposit::where('user_id', $user->id)->sum('amount');
-        $totalWithdrawals = $withdrawals->sum('amount');
-        
-        $casinoTransactions = Transaction::where('user_id', $user->id)
-            ->where('trx_type', '+')
-            ->get();
-    
-        $totalWins = 0;
-        foreach ($casinoTransactions as $trx) {
-            if (!empty($trx->casino_details)) {
-                $details = json_decode($trx->casino_details, true);
-                if (isset($details['win'])) {
-                    $totalWins += floatval($details['win']);
-                }
-            }
-        }
-        
-        $lotteryBuy = Transaction::where('user_id', $user->id)
-            ->where('transaction_type', 'lottary Buy')
-            ->sum('amount');
-        
-        $lotteryWinAmount = Transaction::where('user_id', $user->id)
-            ->where('transaction_type', 'Lottery Win')
-            ->sum('amount');
-
-        $bonus_release = Transaction::where('user_id', $user->id)
-            ->where('transaction_type', 'Bonus Release')
-            ->sum('amount');
-        
-        $adminProfit = ($totalDeposits + $lotteryBuy + $bonus_release) - ($totalWins + $lotteryWinAmount);
-        $adminStatus = $adminProfit >= 0 ? 'Profit' : 'Lose';
-
-        return view('admin.users.view', [
-            'user' => $user,
-            'deposits' => $deposits,
-            'withdrawals' => $withdrawals,
-            'transactions' => $transactions,
-            'logins' => $logins,
-            'lotteryWins' => $lotteryWins,
-            'totalDeposits' => $totalDeposits,
-            'totalWithdrawals' => $totalWithdrawals,
-            'adminProfit' => $adminProfit,
-            'adminStatus' => $adminStatus,
-            'lotteryTransactions' => $lotteryTransactions,
-        ]);
+        return view('admin.users.view', ['user' => User::findOrFail($id)]);
     }
 
 
@@ -145,10 +92,6 @@ class UserController extends Controller
             'date_of_birth' => 'nullable|date',
             'email_verified' => 'nullable|boolean',
             'google2fa_status' => 'nullable|boolean',
-            'balance' => 'nullable|numeric',
-            'available_balance' => 'nullable|numeric',
-            'bonus_balance' => 'nullable|numeric',
-            'kyc_verified' => 'nullable|boolean',
         ]);
 
         $data = $request->only(
@@ -160,9 +103,6 @@ class UserController extends Controller
             'country',
             'currency',
             'date_of_birth',
-            'balance',
-            'available_balance',
-            'bonus_balance',
         );
 
         if ($request->filled('password')) {

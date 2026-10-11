@@ -27,7 +27,7 @@ final class CatalogLibraryController extends Controller
     public function store(Request $request, string $provider, string $id): RedirectResponse
     {
         $provider = Str::lower($provider);
-        abort_unless(in_array($provider, ['rawg', 'freetogame', 'gamerpower', 'cheapshark'], true), 404);
+        abort_unless(in_array($provider, ['freetogame', 'gamerpower'], true), 404);
         $game = $this->catalog->details($provider, $id);
         abort_unless($game instanceof GameData, 404);
         $this->personalization->save($request->user(), $game);
@@ -37,7 +37,7 @@ final class CatalogLibraryController extends Controller
     public function destroy(Request $request, string $provider, string $id): RedirectResponse
     {
         $provider = Str::lower($provider);
-        abort_unless(in_array($provider, ['rawg', 'freetogame', 'gamerpower', 'cheapshark'], true), 404);
+        abort_unless(in_array($provider, ['freetogame', 'gamerpower'], true), 404);
         $this->personalization->remove($request->user(), $provider, $id);
         return back()->with('success', 'Game removed from your watchlist.');
     }

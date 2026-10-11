@@ -23,11 +23,10 @@ class PointManagementController extends Controller
         $request->validate([
             'played_games' => 'required|integer|min:0',
             'points' => 'required|integer|min:0',
-            'get_balance' => 'required|integer|min:0',
             'points_amount' => 'required|integer|min:0',
         ]);
 
-        GamePoint::create($request->only(['played_games', 'points', 'get_balance', 'points_amount']));
+        GamePoint::create([...$request->only(['played_games', 'points', 'points_amount']), 'get_balance' => 0]);
 
         return redirect()->route('admin.points.index')->with('success', 'Record created successfully.');
     }
@@ -48,12 +47,11 @@ class PointManagementController extends Controller
         $request->validate([
             'played_games' => 'required|integer|min:0',
             'points' => 'required|integer|min:0',
-            'get_balance' => 'required|integer|min:0',
             'points_amount' => 'required|integer|min:0',
         ]);
 
         $record = GamePoint::findOrFail($id);
-        $record->update($request->only(['played_games', 'points', 'get_balance', 'points_amount']));
+        $record->update([...$request->only(['played_games', 'points', 'points_amount']), 'get_balance' => 0]);
 
         return redirect()->route('admin.points.index')->with('success', 'Record updated successfully.');
     }

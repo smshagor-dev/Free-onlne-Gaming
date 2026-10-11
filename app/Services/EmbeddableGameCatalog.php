@@ -10,12 +10,12 @@ class EmbeddableGameCatalog
     public function all(): array
     {
         $cached = Cache::get('gamemonetize.embeddable.all');
-        if (is_array($cached) && $cached !== []) {
-            return $cached;
+        if (is_array($cached)) {
+            return $this->withoutCasinoGames($cached);
         }
 
         try {
-            $items = Http::timeout(15)->get('https://gamemonetize.com/rssfeed.php', [
+            $items = Http::connectTimeout(3)->timeout(8)->get('https://gamemonetize.com/rssfeed.php', [
                 'format' => 'json',
                 'category' => 'All',
                 'type' => 'html5',
@@ -24,10 +24,12 @@ class EmbeddableGameCatalog
                 'amount' => 'All',
             ])->json();
         } catch (\Throwable) {
+            Cache::put('gamemonetize.embeddable.all', [], now()->addMinute());
             return [];
         }
 
         if (!is_array($items)) {
+            Cache::put('gamemonetize.embeddable.all', [], now()->addMinute());
             return [];
         }
 
@@ -51,12 +53,18 @@ class EmbeddableGameCatalog
             ];
         }
 
-        $games = array_values($games);
-        if ($games !== []) {
-            Cache::put('gamemonetize.embeddable.all', $games, now()->addHours(6));
-        }
+        $games = $this->withoutCasinoGames(array_values($games));
+        Cache::put('gamemonetize.embeddable.all', $games, $games !== [] ? now()->addHours(6) : now()->addMinute());
 
         return $games;
+    }
+
+    private function withoutCasinoGames(array $games): array
+    {
+        return array_values(array_filter($games, static function (array $game): bool {
+            $text = ($game['name'] ?? '').' '.($game['category'] ?? '');
+            return !preg_match('/\b(casino|slots?|roulette|black\s?jack|baccarat|poker|gambling)\b/i', $text);
+        }));
     }
 
     public function find(string $id): ?array

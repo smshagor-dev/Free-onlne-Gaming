@@ -17,55 +17,14 @@ class AuthorizationAndOwnershipTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_kyc_submission_is_owned_by_the_authenticated_user(): void
+
+
+    public function test_removed_casino_endpoints_are_not_available(): void
     {
-        Mail::fake();
-        $field = KycField::create([
-            'title' => 'Identity number',
-            'input_type' => 'text',
-            'is_required' => true,
-        ]);
-        $user = $this->user();
-        $other = $this->user();
-
-        $this->actingAs($user)
-            ->post(route('user.kyc.store'), ['kyc_'.$field->id => 'ABC-123'])
-            ->assertRedirect(route('user.kyc.index'));
-
-        $this->assertDatabaseHas('user_kyc_submissions', [
-            'user_id' => $user->id,
-            'kyc_field_id' => $field->id,
-            'value' => 'ABC-123',
-            'status' => 'pending',
-        ]);
-        $this->assertDatabaseMissing('user_kyc_submissions', [
-            'user_id' => $other->id,
-            'kyc_field_id' => $field->id,
-        ]);
-    }
-
-    public function test_casino_favourites_and_bookmarks_are_scoped_to_each_user(): void
-    {
-        $user = $this->user();
-        $other = $this->user();
-
-        $this->actingAs($user)
-            ->postJson(route('user.game.toggleFavourite'), ['game_id' => 701])
-            ->assertOk()
-            ->assertJsonPath('is_active', true);
-
-        $this->actingAs($other)
-            ->postJson(route('user.game.toggleFavourite'), ['game_id' => 701])
-            ->assertOk()
-            ->assertJsonPath('is_active', true);
-
-        $this->actingAs($user)
-            ->postJson(route('user.game.toggleBookmark'), ['game_id' => 701])
-            ->assertOk()
-            ->assertJsonPath('is_active', true);
-
-        $this->assertDatabaseHas('last_play', ['user_id' => $user->id, 'game_id' => 701, 'is_favourite' => 1, 'is_bookmark' => 1]);
-        $this->assertDatabaseHas('last_play', ['user_id' => $other->id, 'game_id' => 701, 'is_favourite' => 1, 'is_bookmark' => 0]);
+        foreach (['/casino', '/casino/play', '/api/casino/player', '/user/paid-game/favourite', '/admin/casino', '/user/deposit', '/user/withdrew', '/user/points/convert', '/user/bonus/claim/welcome', '/games/deals', '/api/games/deals'] as $url) {
+            $this->get($url)->assertNotFound();
+            $this->post($url)->assertNotFound();
+        }
     }
 
     public function test_private_files_are_available_to_owners_and_admins_only(): void
@@ -105,7 +64,6 @@ class AuthorizationAndOwnershipTest extends TestCase
     {
         $this->get(route('admin.dashboard'))->assertRedirect(route('admin.login'));
         $this->get(route('user.notifications.markAllAsRead'))->assertMethodNotAllowed();
-        $this->get(route('admin.casino.cache'))->assertMethodNotAllowed();
         $this->get(route('admin.lottary.draw', 1))->assertMethodNotAllowed();
     }
 

@@ -163,67 +163,6 @@
         </h1>
     </div>
     
-        <h1 class="text-3xl font-bold mt-12 mb-6 text-white border-l-4 border-green-500 pl-3">Casino Games</h1>
-
-    @if($games->count() > 0)
-        <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:20px;">
-            @foreach($games as $casino)
-                <div class="relative group bg-gray-800 rounded-xl overflow-hidden shadow-lg transition transform hover:-translate-y-1 hover:shadow-2xl">
-                    
-                    <!-- Game Image -->
-                    <img src="{{ $casino->img }}" alt="{{ $casino->name }}" class="w-full h-36 object-cover">
-    
-                    <!-- Auth Buttons -->
-                    @auth
-                        <!-- Favourite Icon -->
-                        <button 
-                            class="absolute top-2 left-2 text-xl fav-btn z-20"
-                            data-game="{{ $casino->id }}">
-                            <i class="fas fa-star {{ $casino->lastPlay && $casino->lastPlay->is_favourite ? 'text-yellow-400' : 'text-gray-400' }}"></i>
-                        </button>
-    
-                        <!-- Bookmark Icon -->
-                        <button 
-                            class="absolute top-2 right-2 text-xl bookmark-btn z-20"
-                            data-game="{{ $casino->id }}">
-                            <i class="fas fa-bookmark {{ $casino->lastPlay && $casino->lastPlay->is_bookmark ? 'text-green-400' : 'text-gray-400' }}"></i>
-                        </button>
-                    @endauth
-    
-                    <!-- Card Content -->
-                    <div class="p-3">
-                        <h2 class="text-white font-semibold truncate">{{ $casino->name }}</h2>
-                        <p class="text-gray-400 text-sm">Bookmarked {{ $casino->last_played_at->diffForHumans() }}</p>
-                    </div>
-    
-                    <!-- Hover Play Button -->
-                    <div class="absolute inset-0 flex justify-center items-center bg-black bg-opacity-0 group-hover:bg-opacity-40 transition gap-2">
-                        {{-- Play button --}}
-                        <a href="{{ route('casino.play', ['gameId' => $casino->id, 'name' => $casino->name, 'demo' => 0]) }}" 
-                        target="_blank" 
-                        class="px-4 py-2 bg-green-500 text-black rounded-full text-sm font-medium opacity-0 group-hover:opacity-100 transition">
-                        Play
-                        </a>
-
-                        {{-- Demo button --}}
-                        <a href="{{ route('casino.play', ['gameId' => $casino->id, 'name' => $casino->name, 'demo' => 1]) }}" 
-                        target="_blank" 
-                        class="px-4 py-2 bg-yellow-500 text-black rounded-full text-sm font-medium opacity-0 group-hover:opacity-100 transition">
-                        Demo
-                        </a>
-                    </div>
-                </div>
-            @endforeach
-        </div>
-    @else
-        <div class="text-center py-20 bg-gray-800 bg-opacity-50 rounded-xl">
-            <h3 class="text-gray-300 text-xl mb-4">No Casino Games available yet</h3>
-            <a href="{{ route('casino.index') }}" class="px-5 py-2 bg-green-500 text-black font-semibold rounded-lg hover:bg-green-600 transition">Explore Games</a>
-        </div>
-    @endif
-
-    
-    
     <h1 class="text-3xl font-bold mb-6 text-white border-l-4 border-green-500 pl-3">Free Games</h1>
     
     @if($bookmarkedGames->count() > 0)
@@ -326,23 +265,7 @@ document.addEventListener("DOMContentLoaded", function () {
         .catch(err => console.error("Error:", err));
     }
 
-    // Favourite buttons
-    document.querySelectorAll(".fav-btn").forEach(btn => {
-        btn.addEventListener("click", function (e) {
-            e.preventDefault();
-            let gameId = this.dataset.game;
-            postAndReload("{{ route('user.game.toggleFavourite') }}", { game_id: gameId });
-        });
-    });
 
-    // Bookmark buttons
-    document.querySelectorAll(".bookmark-btn").forEach(btn => {
-        btn.addEventListener("click", function (e) {
-            e.preventDefault();
-            let gameId = this.dataset.game;
-            postAndReload("{{ route('user.game.toggleBookmark') }}", { game_id: gameId });
-        });
-    });
 
 });
 </script>

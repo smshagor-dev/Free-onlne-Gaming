@@ -7,7 +7,6 @@ use App\Models\UserLogin;
 use App\Models\GameOpen;
 use App\Models\Setting;
 use App\Models\Page;
-use App\Models\LastPlay;
 use App\Models\GamesCategory;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\View;
@@ -80,7 +79,6 @@ class AppServiceProvider extends ServiceProvider
             $pages = Cache::remember('app.nav.pages.active', now()->addMinutes(10), fn () => Page::where('status', 1)->get());
             $currentSlug = Request::segment(1);
             $gameOpenCounts = null;
-            $casinoPlayCounts = null;
 
             if ($user) {
                 $gameOpenCounts = GameOpen::query()
@@ -90,12 +88,7 @@ class AppServiceProvider extends ServiceProvider
                     ->selectRaw('SUM(CASE WHEN bookmark = 1 THEN 1 ELSE 0 END) as bookmarks_count')
                     ->first();
 
-                $casinoPlayCounts = LastPlay::query()
-                    ->where('user_id', $user->id)
-                    ->selectRaw('SUM(CASE WHEN last_play = 1 THEN 1 ELSE 0 END) as last_played_count')
-                    ->selectRaw('SUM(CASE WHEN is_favourite = 1 THEN 1 ELSE 0 END) as favorites_count')
-                    ->selectRaw('SUM(CASE WHEN is_bookmark = 1 THEN 1 ELSE 0 END) as bookmarks_count')
-                    ->first();
+
             }
 
             $view->with([
@@ -106,9 +99,6 @@ class AppServiceProvider extends ServiceProvider
                 'lastPlayedCount' => (int) ($gameOpenCounts->last_played_count ?? 0),
                 'favoritesCount'  => (int) ($gameOpenCounts->favorites_count ?? 0),
                 'bookmarksCount'  => (int) ($gameOpenCounts->bookmarks_count ?? 0),
-                'casinolastPlayedCount' => (int) ($casinoPlayCounts->last_played_count ?? 0),
-                'casinofavoritesCount'  => (int) ($casinoPlayCounts->favorites_count ?? 0),
-                'casinobookmarksCount'  => (int) ($casinoPlayCounts->bookmarks_count ?? 0),
                 'pages' => $pages,
                 'currentSlug' => $currentSlug,
             ]);

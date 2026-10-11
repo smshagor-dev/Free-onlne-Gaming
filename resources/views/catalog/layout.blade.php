@@ -6,7 +6,7 @@
         $isDemoUser = auth()->check() && auth()->user()->registration_type === 'demo';
         $robots = $robots ?? (($isPrivateCatalogPage || $isDemoUser) ? 'noindex, nofollow' : 'index, follow');
         $title = $pageTitle ?? ('Games | '.config('app.name'));
-        $description = $metaDescription ?? 'Discover games, giveaways and deals.';
+        $description = $metaDescription ?? 'Discover free games and giveaways.';
     @endphp
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -42,12 +42,12 @@
             <a href="{{ route('catalog.index') }}">Discover</a>
             <a href="{{ route('catalog.free') }}">Free</a>
             <a href="{{ route('catalog.giveaways') }}">Giveaways</a>
-            <a href="{{ route('catalog.deals') }}">Deals</a>
+            <a href="{{ route('user.lottaries.view') }}">Lottery</a>
             @auth
                 <a href="{{ route('catalog.user.library') }}">My Games</a>
                 <a href="{{ route('catalog.user.settings') }}">Preferences</a>
             @endauth
-            <a href="{{ route('casino.index') }}">Casino</a>
+            <a href="{{ route('playable.index') }}">Play Games</a>
         </nav>
         <form action="{{ route('catalog.search') }}" method="GET" class="catalog-search catalog-search--header" role="search">
             <label class="sr-only" for="header-game-search">Search games</label>
@@ -63,7 +63,7 @@
 <footer class="catalog-footer">
     <div class="catalog-shell catalog-footer__inner">
         <p>Games and offer data are provided by RAWG, FreeToGame, GamerPower and CheapShark where applicable.</p>
-        <div class="catalog-footer__links"><a href="/">Main site</a><a href="{{ route('free.games.index') }}">Legacy free games</a><a href="{{ route('casino.index') }}">Casino</a></div>
+        <div class="catalog-footer__links"><a href="/">Main site</a><a href="{{ route('free.games.index') }}">Legacy free games</a><a href="{{ route('playable.index') }}">Play Games</a></div>
     </div>
 </footer>
 <script>

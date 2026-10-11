@@ -33,7 +33,6 @@
                     <td class="px-6 py-4 whitespace-nowrap">{{ $record->played_games }}</td>
                     <td class="px-6 py-4 whitespace-nowrap">{{ $record->points }}</td>
                     <td class="px-6 py-4 whitespace-nowrap">{{ $record->points_amount }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">{{ $record->get_balance }}</td>
                     <td class="px-6 py-4 whitespace-nowrap flex space-x-2">
                         <a href="{{ route('admin.points.edit', $record->id) }}" 
                            class="text-blue-500 hover:text-blue-700">

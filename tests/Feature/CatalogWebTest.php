@@ -40,14 +40,14 @@ class CatalogWebTest extends TestCase
 
         $this->get('/games')
             ->assertOk()
-            ->assertSee('Trending &amp; discover', false)
+            ->assertDontSee('Trending &amp; discover', false)
             ->assertSee('Free-to-play')
             ->assertSee('Active giveaways')
-            ->assertSee('Game deals')
-            ->assertSee('RAWG Pick')
+            ->assertDontSee('Game deals')
+            ->assertDontSee('RAWG Pick')
             ->assertSee('Free Pick')
             ->assertSee('Giveaway Pick')
-            ->assertSee('Deal Pick');
+            ->assertDontSee('Deal Pick');
     }
 
     public function test_search_preserves_query_and_renders_aggregated_results(): void
@@ -71,31 +71,31 @@ class CatalogWebTest extends TestCase
         $this->get('/games/search?q=Alpha')
             ->assertOk()
             ->assertSee('value="Alpha"', false)
-            ->assertSee('Alpha RAWG')
+            ->assertDontSee('Alpha RAWG')
             ->assertSee('Alpha Free');
     }
 
     public function test_details_page_renders_normalized_game_information_and_safe_external_link(): void
     {
         Http::fake([
-            'rawg.test/api/games/77*' => Http::response([
+            'freetogame.test/api/game*' => Http::response([
                 'id' => 77,
                 'slug' => 'detail-game',
-                'name' => 'Detail Game',
-                'description_raw' => '<b>Safe description</b>',
+                'title' => 'Detail Game',
+                'description' => '<b>Safe description</b>',
                 'background_image' => 'https://img.test/detail.jpg',
                 'released' => '2026-06-07',
                 'rating' => 4.7,
                 'genres' => [['name' => 'Action']],
                 'platforms' => [['platform' => ['name' => 'PC']]],
-                'developers' => [['name' => 'Studio']],
-                'publishers' => [['name' => 'Publisher']],
+                'developer' => 'Studio',
+                'publisher' => 'Publisher',
                 'stores' => [['store' => ['name' => 'Steam']]],
-                'website' => 'https://game.test',
+                'game_url' => 'https://game.test',
             ], 200),
         ]);
 
-        $this->get('/games/rawg/77')
+        $this->get('/games/freetogame/77')
             ->assertOk()
             ->assertSee('Detail Game')
             ->assertSee('Safe description')
@@ -134,7 +134,7 @@ class CatalogWebTest extends TestCase
         Cache::flush();
         $this->get('/games/giveaways')->assertOk()->assertSee('Giveaway Page Game');
         Cache::flush();
-        $this->get('/games/deals')->assertOk()->assertSee('Deal Page Game');
+        $this->get('/games/deals')->assertNotFound();
     }
 
     public function test_invalid_provider_and_missing_game_return_not_found(): void
@@ -158,7 +158,6 @@ class CatalogWebTest extends TestCase
 
         $this->get('/games')
             ->assertOk()
-            ->assertSee('Discover games are temporarily unavailable')
             ->assertSee('No free-to-play games available right now');
 
         Cache::flush();
@@ -168,12 +167,12 @@ class CatalogWebTest extends TestCase
             ->assertSee('No matching games found');
     }
 
-    public function test_legacy_game_and_casino_routes_are_preserved(): void
+    public function test_free_game_routes_remain_and_casino_routes_are_removed(): void
     {
         $routes = collect(app('router')->getRoutes()->getRoutes());
 
         $this->assertTrue($routes->contains(fn ($route) => $route->uri() === 'free-games' && $route->getName() === 'free.games.index'));
-        $this->assertTrue($routes->contains(fn ($route) => $route->uri() === 'casino' && $route->getName() === 'casino.index'));
+        $this->assertFalse($routes->contains(fn ($route) => $route->uri() === 'casino'));
         $this->assertTrue($routes->contains(fn ($route) => $route->uri() === 'games/open/{id}' && $route->getName() === 'games.open'));
         $this->assertTrue($routes->contains(fn ($route) => $route->uri() === 'games/{provider}/{id}' && $route->getName() === 'catalog.show'));
     }

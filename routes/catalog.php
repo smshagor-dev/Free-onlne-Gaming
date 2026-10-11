@@ -13,18 +13,17 @@ Route::controller(GameBrowseController::class)->group(function (): void {
     Route::get('/games/search', 'search')->name('catalog.search');
     Route::get('/games/free', 'free')->name('catalog.free');
     Route::get('/games/giveaways', 'giveaways')->name('catalog.giveaways');
-    Route::get('/games/deals', 'deals')->name('catalog.deals');
     Route::get('/games/{provider}/{id}', 'show')
-        ->where('provider', 'rawg|freetogame|gamerpower|cheapshark')
+        ->where('provider', 'freetogame|gamerpower')
         ->where('id', '[^/]+')->name('catalog.show');
 });
 
 Route::middleware(['auth', 'ban'])->prefix('user/catalog')->name('catalog.user.')->group(function (): void {
     Route::get('/', [CatalogLibraryController::class, 'index'])->name('library');
     Route::post('/saved/{provider}/{id}', [CatalogLibraryController::class, 'store'])
-        ->where('provider', 'rawg|freetogame|gamerpower|cheapshark')->name('saved.store');
+        ->where('provider', 'freetogame|gamerpower')->name('saved.store');
     Route::delete('/saved/{provider}/{id}', [CatalogLibraryController::class, 'destroy'])
-        ->where('provider', 'rawg|freetogame|gamerpower|cheapshark')->name('saved.destroy');
+        ->where('provider', 'freetogame|gamerpower')->name('saved.destroy');
     Route::delete('/recent', [CatalogLibraryController::class, 'clearRecent'])->name('recent.clear');
     Route::get('/settings', [GamingPreferenceController::class, 'edit'])->name('settings');
     Route::put('/settings', [GamingPreferenceController::class, 'update'])->name('settings.update');

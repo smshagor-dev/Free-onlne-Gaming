@@ -322,12 +322,10 @@ class GameProviderIntegrationTest extends TestCase
         ]);
 
         $this->getJson('/api/games/deals')
-            ->assertOk()
-            ->assertJsonPath('data.0.provider', 'cheapshark')
-            ->assertJsonPath('data.0.title', 'Route Deal');
+            ->assertNotFound();
 
         $routes = collect(app('router')->getRoutes()->getRoutes());
-        $this->assertTrue($routes->contains(fn ($route) => $route->uri() === 'api/casino/player'));
+        $this->assertFalse($routes->contains(fn ($route) => $route->uri() === 'api/casino/player'));
         $this->assertTrue($routes->contains(fn ($route) => $route->uri() === 'api/games/search'));
     }
 }

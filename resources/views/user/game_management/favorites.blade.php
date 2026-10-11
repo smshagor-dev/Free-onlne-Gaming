@@ -22,68 +22,6 @@
         <h1 class="text-2xl md:text-3xl font-bold text-white">My Favorite Games</h1>
     </div>
 
-    <!-- Paid Games Section -->
-    <div class="mb-10">
-        <h2 class="text-xl md:text-2xl font-bold mb-4 text-white border-l-4 border-green-500 pl-3">Paid Games</h2>
-        
-        @if($games->count() > 0)
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-                @foreach($games as $casino)
-                    <div class="game-card relative group bg-gray-800 rounded-lg overflow-hidden shadow-lg">
-                        <!-- Game Image -->
-                        <img src="{{ $casino->img }}" alt="{{ $casino->name }}" class="w-full h-32 md:h-36 object-cover">
-
-                        <!-- Auth Buttons -->
-                        @auth
-                            <!-- Favourite Icon -->
-                            <button 
-                                class="absolute top-2 left-2 text-xl fav-btn z-20 bg-gray-900 bg-opacity-60 rounded-full p-1"
-                                data-game="{{ $casino->id }}">
-                                <i class="fas fa-star {{ $casino->lastPlay && $casino->lastPlay->is_favourite ? 'text-yellow-400' : 'text-gray-400' }}"></i>
-                            </button>
-
-                            <!-- Bookmark Icon -->
-                            <button 
-                                class="absolute top-2 right-2 text-xl bookmark-btn z-20 bg-gray-900 bg-opacity-60 rounded-full p-1"
-                                data-game="{{ $casino->id }}">
-                                <i class="fas fa-bookmark {{ $casino->lastPlay && $casino->lastPlay->is_bookmark ? 'text-green-400' : 'text-gray-400' }}"></i>
-                            </button>
-                        @endauth
-
-                        <!-- Card Content -->
-                        <div class="p-3">
-                            <h2 class="text-white font-semibold text-sm truncate">{{ $casino->name }}</h2>
-                            <p class="text-gray-400 text-xs mt-1">Added: {{ $casino->last_played_at->diffForHumans() }}</p>
-                        </div>
-
-                        <!-- Play / Demo Buttons -->
-                        <div class="game-overlay absolute inset-0 flex justify-center items-center gap-2 bg-black bg-opacity-40 md:bg-opacity-0 transition opacity-0 md:opacity-0 group-hover:opacity-100">
-                            <a href="{{ route('casino.play', ['gameId' => $casino->id, 'name' => $casino->name, 'demo' => 0]) }}" 
-                            target="_blank" 
-                            class="px-4 py-2 bg-green-500 text-black rounded-full text-sm font-medium">
-                            Play
-                            </a>
-                            <a href="{{ route('casino.play', ['gameId' => $casino->id, 'name' => $casino->name, 'demo' => 1]) }}" 
-                            target="_blank" 
-                            class="px-4 py-2 bg-yellow-500 text-black rounded-full text-sm font-medium">
-                            Demo
-                            </a>
-                        </div>
-
-                    </div>
-                @endforeach
-            </div>
-        @else
-            <div class="text-center py-12 bg-gray-800 rounded-xl">
-                <div class="mb-4 text-gray-400">
-                    <i class="fas fa-gamepad text-4xl"></i>
-                </div>
-                <h3 class="text-gray-300 text-lg mb-4">No paid games available yet</h3>
-                <a href="{{ route('casino.index') }}" class="inline-block px-5 py-2 bg-green-500 text-black font-semibold rounded-lg hover:bg-green-600 transition">Explore Games</a>
-            </div>
-        @endif
-    </div>
-
     <!-- Free Games Section -->
     <div class="mb-10">
         <h2 class="text-xl md:text-2xl font-bold mb-4 text-white border-l-4 border-green-500 pl-3">Free Games</h2>
@@ -204,21 +142,7 @@ document.addEventListener("DOMContentLoaded", function () {
         .catch(err => console.error("Error:", err));
     }
 
-    document.querySelectorAll(".fav-btn").forEach(btn => {
-        btn.addEventListener("click", function (e) {
-            e.preventDefault();
-            let gameId = this.dataset.game;
-            postAndReload("{{ route('user.game.toggleFavourite') }}", { game_id: gameId });
-        });
-    });
 
-    document.querySelectorAll(".bookmark-btn").forEach(btn => {
-        btn.addEventListener("click", function (e) {
-            e.preventDefault();
-            let gameId = this.dataset.game;
-            postAndReload("{{ route('user.game.toggleBookmark') }}", { game_id: gameId });
-        });
-    });
 });
 </script>
 

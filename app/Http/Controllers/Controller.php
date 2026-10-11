@@ -10,18 +10,4 @@ class Controller extends BaseController
 {
     use AuthorizesRequests, ValidatesRequests;
 
-    protected function casinoApiUrl(mixed $host, string $path = ''): ?string
-    {
-        if (!is_string($host) || trim($host) === '') {
-            return null;
-        }
-
-        $host = trim($host);
-
-        if ($path === '') {
-            return $host;
-        }
-
-        return rtrim($host, '/') . '/' . ltrim($path, '/');
-    }
 }

@@ -43,11 +43,8 @@ class AuthSecurityTest extends TestCase
         ])->assertRedirect('/');
     }
 
-    public function test_financial_actions_require_authentication(): void
+    public function test_lottery_purchase_requires_authentication(): void
     {
-        $this->post(route('user.points.convert'), [
-            'points' => 100,
-            'conversion_type' => 'balance',
-        ])->assertRedirect('/login');
+        $this->post(route('user.lottaries.buy', 1))->assertRedirect('/login');
     }
 }

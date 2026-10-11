@@ -110,7 +110,7 @@ final class CatalogPersonalizationService
 
     private function hydrate(Collection $rows): array
     {
-        return $rows->map(fn ($row) => GameData::fromArray([
+        return $rows->filter(fn ($row) => in_array($row->provider, ['freetogame', 'gamerpower'], true))->map(fn ($row) => GameData::fromArray([
             'id' => $row->provider.':'.$row->provider_game_id,
             'provider' => $row->provider,
             'provider_id' => $row->provider_game_id,

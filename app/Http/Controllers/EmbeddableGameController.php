@@ -16,7 +16,7 @@ class EmbeddableGameController extends Controller
         $games = array_slice($all, $offset, 30);
 
         return response()->json([
-            'html' => view('playable.cards', compact('games'))->render(),
+            'html' => view($request->query('layout') === 'home' ? 'playable.home-cards' : 'playable.cards', compact('games'))->render(),
             'has_more' => $offset + count($games) < count($all),
         ]);
     }
@@ -27,6 +27,10 @@ class EmbeddableGameController extends Controller
         $category = $request->query('category');
         $categories = $all->pluck('category')->unique()->sort()->values();
         $filtered = $category ? $all->where('category', $category)->values() : $all;
+        $search = trim((string) $request->query('search', ''));
+        if ($search !== '') {
+            $filtered = $filtered->filter(fn ($game) => mb_stripos($game['name'], $search) !== false)->values();
+        }
         $page = max(1, $request->integer('page', 1));
         $games = new LengthAwarePaginator(
             $filtered->forPage($page, 48)->values(),
@@ -36,7 +40,7 @@ class EmbeddableGameController extends Controller
             ['path' => $request->url(), 'query' => $request->query()]
         );
 
-        return view('playable.index', compact('games', 'categories', 'category'));
+        return view('playable.index', compact('games', 'categories', 'category', 'search'));
     }
 
     public function play(string $id, EmbeddableGameCatalog $catalog)

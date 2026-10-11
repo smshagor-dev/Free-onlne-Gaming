@@ -16,38 +16,38 @@ class CatalogPersonalizationTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        config(['cache.default' => 'array', 'games.rawg.key' => 'test-key', 'games.rawg.base_url' => 'https://rawg.test/api']);
+        config(['cache.default' => 'array', 'games.freetogame.key' => 'test-key', 'games.freetogame.base_url' => 'https://freetogame.test/api']);
     }
 
-    private function fakeRawg(string $id = '10', string $name = 'Alpha', array $extra = []): void
+    private function fakeFreeGame(string $id = '10', string $name = 'Alpha', array $extra = []): void
     {
-        Http::fake(['rawg.test/api/games/*' => Http::response(array_merge(['id' => (int) $id, 'name' => $name, 'genres' => [['name' => 'Action']], 'platforms' => [['platform' => ['name' => 'PC']]]], $extra), 200)]);
+        Http::fake(['freetogame.test/api/game*' => Http::response(array_merge(['id' => (int) $id, 'title' => $name, 'genre' => 'Action', 'platform' => 'PC'], $extra), 200)]);
     }
 
     public function test_catalog_game_can_be_saved_without_duplicates_and_removed(): void
     {
-        $user = User::factory()->create(); $this->fakeRawg();
-        $this->actingAs($user)->post('/user/catalog/saved/rawg/10')->assertRedirect();
-        $this->actingAs($user)->post('/user/catalog/saved/rawg/10')->assertRedirect();
+        $user = User::factory()->create(); $this->fakeFreeGame();
+        $this->actingAs($user)->post('/user/catalog/saved/freetogame/10')->assertRedirect();
+        $this->actingAs($user)->post('/user/catalog/saved/freetogame/10')->assertRedirect();
         $this->assertDatabaseCount('catalog_saved_games', 1);
-        $this->actingAs($user)->delete('/user/catalog/saved/rawg/10')->assertRedirect();
+        $this->actingAs($user)->delete('/user/catalog/saved/freetogame/10')->assertRedirect();
         $this->assertDatabaseCount('catalog_saved_games', 0);
     }
 
     public function test_saved_game_ownership_is_isolated(): void
     {
         $a = User::factory()->create(); $b = User::factory()->create();
-        CatalogSavedGame::create(['user_id'=>$a->id,'provider'=>'rawg','provider_game_id'=>'1','title'=>'Private']);
-        $this->actingAs($b)->delete('/user/catalog/saved/rawg/1')->assertRedirect();
+        CatalogSavedGame::create(['user_id'=>$a->id,'provider'=>'freetogame','provider_game_id'=>'1','title'=>'Private']);
+        $this->actingAs($b)->delete('/user/catalog/saved/freetogame/1')->assertRedirect();
         $this->assertDatabaseHas('catalog_saved_games', ['user_id'=>$a->id,'provider_game_id'=>'1']);
     }
 
     public function test_recently_viewed_is_deduplicated_ordered_and_limited(): void
     {
         $user = User::factory()->create();
-        for ($i=1; $i<=55; $i++) CatalogRecentGame::create(['user_id'=>$user->id,'provider'=>'rawg','provider_game_id'=>(string)$i,'title'=>'G'.$i,'viewed_at'=>now()->subMinutes(55-$i)]);
-        $this->fakeRawg('99','Newest');
-        $this->actingAs($user)->get('/games/rawg/99')->assertOk();
+        for ($i=1; $i<=55; $i++) CatalogRecentGame::create(['user_id'=>$user->id,'provider'=>'freetogame','provider_game_id'=>(string)$i,'title'=>'G'.$i,'viewed_at'=>now()->subMinutes(55-$i)]);
+        $this->fakeFreeGame('99','Newest');
+        $this->actingAs($user)->get('/games/freetogame/99')->assertOk();
         $this->assertSame(50, CatalogRecentGame::where('user_id',$user->id)->count());
         $this->assertSame('99', CatalogRecentGame::where('user_id',$user->id)->latest('viewed_at')->value('provider_game_id'));
     }
@@ -63,7 +63,7 @@ class CatalogPersonalizationTest extends TestCase
 
     public function test_guest_save_route_requires_login(): void
     {
-        $this->post('/user/catalog/saved/rawg/1')->assertRedirect('/login');
+        $this->post('/user/catalog/saved/freetogame/1')->assertRedirect('/login');
     }
 
     public function test_demo_login_creates_isolated_normal_user_and_blocks_financial_mutations(): void
@@ -72,8 +72,8 @@ class CatalogPersonalizationTest extends TestCase
         $user = auth()->user();
         $this->assertSame('demo', $user->registration_type);
         $this->assertSame(0.0, (float) $user->balance);
-        $this->post('/user/bonus/claim/welcome')->assertForbidden();
-        $this->get('/casino/play')->assertForbidden();
+        $this->post('/user/bonus/claim/welcome')->assertNotFound();
+        $this->get('/casino/play')->assertNotFound();
     }
 
     public function test_demo_sessions_are_isolated(): void
@@ -83,10 +83,10 @@ class CatalogPersonalizationTest extends TestCase
         $this->assertNotSame($first, $second);
     }
 
-    public function test_existing_casino_favorite_route_is_preserved(): void
+    public function test_casino_favorite_route_is_removed_and_catalog_save_remains(): void
     {
         $routes = collect(app('router')->getRoutes()->getRoutes());
-        $this->assertTrue($routes->contains(fn ($route) => $route->getName() === 'user.game.toggleFavourite'));
+        $this->assertFalse($routes->contains(fn ($route) => $route->getName() === 'user.game.toggleFavourite'));
         $this->assertTrue($routes->contains(fn ($route) => $route->getName() === 'catalog.user.saved.store'));
     }
 }

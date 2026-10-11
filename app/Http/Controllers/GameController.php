@@ -122,117 +122,18 @@ class GameController extends Controller
 
     public function viewIndex(Request $request)
     {
-        $casinoData = Cache::get('casino_raw_response');
-        
-        if (!$casinoData) {
-            app()->call('App\Http\Controllers\CasinoController@cacheCasinoData');
-            $casinoData = Cache::get('casino_raw_response');
-        }
-
-
-        $casinoDataArray = $casinoData ? json_decode($casinoData, true) : [];
-
-        $games = $casinoDataArray['content']['gameList'] ?? [];
-
-        if (auth::check()) {
-            $userId = auth()->id();
-            $gameIds = array_column($games, 'id');
-
-            $lastPlays = \App\Models\LastPlay::where('user_id', $userId)
-                ->whereIn('game_id', $gameIds)
-                ->get()
-                ->keyBy('game_id');
-
-            foreach ($games as &$game) {
-                $game['lastPlay'] = $lastPlays[$game['id']] ?? null;
-            }
-            unset($game);
-        }
-
-        $category = $request->get('category');
-        $search   = $request->get('search');
-        $sortBy   = $request->get('sort_by', 'name');
-        $order    = $request->get('order', 'asc');
-        $perPage  = (int) $request->get('limit', 60);
-
-        $games = array_filter($games, function ($game) use ($category, $search) {
-            $matchCategory = true;
-            $matchSearch   = true;
-
-            if ($category) {
-                $categories = explode(',', $category); // multiple support
-                $matchCategory = isset($game['categories']) && in_array($game['categories'], $categories);
-            }
-
-            if ($search) {
-                $matchSearch = isset($game['name']) && stripos($game['name'], $search) !== false;
-            }
-
-            return $matchCategory && $matchSearch;
-        });
-
-        $games = collect($games);
-
-        $games = $games->sortBy(function ($game) use ($sortBy) {
-            return $game[$sortBy] ?? null;
-        }, SORT_REGULAR, strtolower($order) === 'desc')->values();
-
-        $perPage     = $perPage > 0 ? $perPage : 60;
-        $currentPage = $request->get('page', 1);
-        $pagedData   = $games->slice(($currentPage - 1) * $perPage, $perPage)->values();
-
-        $paginatedGames = new \Illuminate\Pagination\LengthAwarePaginator(
-            $pagedData,
-            $games->count(),
-            $perPage,
-            $currentPage,
-            ['path' => $request->url(), 'query' => $request->query()]
-        );
-
-        $categories = $games->pluck('categories')->filter()->unique()->values();
-
-        $categoryMap = [
-            'Slots' => ['slots'],
-            'Live Casino' => ['live_dealers', 'roulette'],
-            'Crash Games' => ['crash_games'],
-            'Arcade' => ['arcade'],
-            'Card' => ['card', 'video_poker', 'table_games'],
-            'Fast Games' => ['fast_games', 'lottery'],
-        ];
-
-        $groupedCategories = collect($categoryMap)->map(function ($aliases, $mainCategory) use ($games) {
-            return [
-                'aliases' => $aliases,
-                'games'   => $games->filter(function ($game) use ($aliases) {
-                    return in_array($game['categories'], $aliases);
-                })
-            ];
-        });
-
-
         $categories = GamesCategory::select('id', 'name', 'image', 'slug')
             ->with(['games' => fn ($query) => $query->select('id', 'name', 'games_url', 'image', 'category_id', 'slug')->latest()->limit(8)])
             ->withCount('games')
             ->get();
-
-        $totalGames = $games->count();
-
-        $banners = Banner::latest()->get();
         $allPlayableGames = app(\App\Services\EmbeddableGameCatalog::class)->all();
-        $playableGames = array_slice($allPlayableGames, 0, 30);
 
         return view('index', [
-            'games'            => $paginatedGames,
-            'allGames'         => $games,
-            'totalGames'       => $totalGames,
-            'categories'       => $categories,
-            'groupedCategories' => $groupedCategories,
-            'selectedCategory' => $category,
-            'search'           => $search,
-            'sortBy'           => $sortBy,
-            'banners'            => $banners,
-            'playableGames'      => $playableGames,
-            'playableTotal'      => count($allPlayableGames),
+            'categories' => $categories,
+            'playableGames' => array_slice($allPlayableGames, 0, 30),
+            'playableCategories' => collect($allPlayableGames)->pluck('category')->unique()->values(),
+            'playableTotal' => count($allPlayableGames),
+            'search' => '',
         ]);
     }
 
@@ -485,16 +386,5 @@ class GameController extends Controller
         ]);
     }
 
-    public function dashboard()
-    {
-        $user = auth::user();
 
-        // Only for first login show popup
-        $showPopup = $user->last_login_at === null;
-
-        // Get all deposit settings for Welcome & First Deposit Bonus
-        $bonusSettings = DepositSetting::whereIn('bonus_type', ['Welcome Bonus', 'First Deposit Bonus'])->get();
-
-        return view('index', compact('bonusSettings', 'showPopup'));
-    }
 }

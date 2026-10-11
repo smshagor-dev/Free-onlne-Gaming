@@ -1,6 +1,6 @@
 # Free Games
 
-Laravel 12 + Blade application for free games, catalog discovery, casino provider integration, bonuses, payments, demo mode, and admin operations.
+Laravel 12 + Blade application for free games, catalog discovery, lottery, demo mode, and admin operations.
 
 ## Requirements
 
@@ -13,7 +13,7 @@ Laravel 12 + Blade application for free games, catalog discovery, casino provide
 
 ## Environment
 
-Never commit `.env`, provider credentials, app keys, OAuth secrets, mail passwords, casino credentials, or database passwords.
+Never commit `.env`, provider credentials, app keys, OAuth secrets, mail passwords, database passwords.
 
 Required production values:
 
@@ -45,18 +45,6 @@ FREE_TO_GAME_BASE_URL=https://www.freetogame.com/api
 GAMERPOWER_BASE_URL=https://www.gamerpower.com/api
 CHEAPSHARK_BASE_URL=https://www.cheapshark.com/api/1.0
 
-CASINO_API_HOST=
-CASINO_CDN_URL=https://static.cdns-stat.com/resources/
-CASINO_DOMAIN="${APP_URL}"
-CASINO_CURRENCY=BDT
-CASINO_HALL=
-CASINO_KEY=
-CASINO_BONUS_HALL=
-CASINO_BONUS_KEY=
-CASINO_CASHBACK_HALL=
-CASINO_CASHBACK_KEY=
-CASINO_VIP_BONUS_HALL=
-CASINO_VIP_BONUS_KEY=
 ```
 
 Use real secret values only in the deployment environment.
@@ -137,14 +125,13 @@ php artisan queue:restart
 - Sitemap: `/sitemap.xml`
 - Robots: `public/robots.txt`
 
-The service worker avoids authenticated, private, API, and financial/casino launch paths. Account/admin/demo pages are marked `noindex`.
+The service worker avoids authenticated, private, API, and financial paths. Account/admin/demo pages are marked `noindex`.
 
 ## Security Notes
 
 - Keep `APP_DEBUG=false` in production.
 - Serve the app only over HTTPS.
 - Configure `TRUSTED_PROXIES` and `TRUSTED_HOSTS` for the load balancer/domain.
-- Casino callback and launch routes intentionally keep broad method compatibility because providers and existing UI links depend on it. Do not narrow `Route::any` without provider verification.
 - `.env`, `.env.production`, `auth.json`, vendor directories, node modules, build output, and logs are ignored.
 
 ## Validation
@@ -174,8 +161,7 @@ Before promoting a release, verify:
 - Desktop and mobile catalog pages load
 - Register, login, logout, and demo login work
 - Catalog search, details, save, history, and preferences work
-- Casino listing and launch navigation still work with valid provider config
-- Financial pages require authentication and block demo users
+- Lottery ticket purchases require authentication and block demo users
 - Admin login and core read pages load
 - 403, 404, 419, 429, 500, and 503 pages are polished and hide internals
 
@@ -190,7 +176,7 @@ Before promoting a release, verify:
 7. Restart PHP-FPM/opcache if used.
 8. Restart queue workers.
 9. Confirm scheduler cron is active.
-10. Smoke test public, auth, catalog, casino, financial authorization, and admin flows.
+10. Smoke test public, auth, catalog, financial authorization, and admin flows.
 11. Bring the app out of maintenance mode.
 
 ## Rollback
@@ -201,3 +187,7 @@ Before promoting a release, verify:
 4. Run `php artisan optimize:clear`, then rebuild production caches.
 5. Restart PHP-FPM/opcache and queue workers.
 6. If a migration needs rollback, use a tested database backup or a specific migration rollback plan. Do not run destructive rollback commands blindly on production financial data.
+
+## Free Games Scope
+
+Casino, deposits, withdrawals, cash rewards, bonuses, cashback, VIP and referral earnings are retired. Lottery management and ticket routes remain enabled. Historical database migrations and records are retained; no destructive data reset is performed. Lottery pricing and existing balance rules are unchanged. Paid catalog deals and the RAWG/CheapShark web/API detail routes are disabled; discovery and saved libraries show free-to-play games and giveaways.

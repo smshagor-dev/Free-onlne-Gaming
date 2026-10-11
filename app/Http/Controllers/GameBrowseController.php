@@ -22,10 +22,10 @@ final class GameBrowseController extends Controller
         if ($request->filled('genre')) $filters['genres'] = Str::limit((string) $request->query('genre'), 80, '');
         if ($request->filled('platform')) $filters['platforms'] = Str::limit((string) $request->query('platform'), 80, '');
 
-        $discover = $this->take($this->catalog->discover($filters), 12);
+        $discover = [];
         $free = $this->take($this->catalog->freeToPlay(), 8);
         $giveaways = $this->take($this->catalog->giveaways(['sort_by' => 'value']), 6);
-        $deals = $this->take($this->catalog->deals(['page_size' => 12, 'sort_by' => 'Savings', 'desc' => true]), 8);
+        $deals = [];
         $genres = $this->take($this->catalog->genres(), 14);
         $platforms = $this->take($this->catalog->platforms(), 14);
 
@@ -41,14 +41,14 @@ final class GameBrowseController extends Controller
         return view('catalog.index', compact('discover', 'free', 'giveaways', 'deals', 'genres', 'platforms', 'personalized', 'recent', 'saved', 'preferences') + [
             'activeGenre' => $request->query('genre'), 'activePlatform' => $request->query('platform'),
             'pageTitle' => 'Discover Games | '.config('app.name'),
-            'metaDescription' => 'Discover popular games, free-to-play titles, giveaways and current game deals from multiple trusted sources.',
+            'metaDescription' => 'Discover free-to-play titles and giveaways from multiple trusted sources.',
         ]);
     }
 
     public function search(Request $request): View
     {
         $query = trim(Str::limit((string) $request->query('q', ''), 120, ''));
-        $results = $query === '' ? [] : $this->catalog->search($query, ['page_size' => 40]);
+        $results = $query === '' ? [] : array_values(array_filter([...$this->catalog->freeToPlay(), ...$this->catalog->giveaways()], fn (GameData $game) => str_contains(Str::lower($game->title), Str::lower($query))));
         return view('catalog.search', ['query' => $query, 'games' => $this->paginate($results, $request, 24), 'pageTitle' => $query === '' ? 'Search Games | '.config('app.name') : 'Search: '.$query.' | '.config('app.name'), 'metaDescription' => $query === '' ? 'Search games across multiple game providers.' : 'Search results for '.$query.' across multiple game providers.']);
     }
 
@@ -64,11 +64,7 @@ final class GameBrowseController extends Controller
         return view('catalog.giveaways', ['games' => $this->paginate($games, $request, 18), 'pageTitle' => 'Game Giveaways | '.config('app.name'), 'metaDescription' => 'Find active game giveaways and limited-time free offers.']);
     }
 
-    public function deals(Request $request): View
-    {
-        $games = $this->catalog->deals(['page_size' => 60, 'sort_by' => 'Savings', 'desc' => true, 'lower_price' => $request->query('min'), 'upper_price' => $request->query('max')]);
-        return view('catalog.deals', ['games' => $this->paginate($games, $request, 24), 'pageTitle' => 'Game Deals | '.config('app.name'), 'metaDescription' => 'Browse current game discounts and price deals.']);
-    }
+
 
     public function show(Request $request, string $provider, string $id): View
     {

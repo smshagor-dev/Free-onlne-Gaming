@@ -15,21 +15,6 @@ final class RestrictDemoFinancialActions
             return $next($request);
         }
 
-        $casinoFinancial = [
-            'casino/play',
-            'casino/close',
-            'casino/session/*',
-            'bonus-play/*',
-            'casino-cashback/*',
-            'vip-bonus-play/*',
-        ];
-
-        foreach ($casinoFinancial as $pattern) {
-            if ($request->is($pattern)) {
-                abort(403, 'Financial game actions are disabled in demo mode.');
-            }
-        }
-
         if ($request->isMethodSafe()) {
             return $next($request);
         }

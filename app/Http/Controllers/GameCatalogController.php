@@ -24,7 +24,7 @@ final class GameCatalogController extends Controller
             'dates' => ['sometimes', 'string', 'max:80'],
         ]);
 
-        return $this->gamesResponse($this->catalog->discover($filters));
+        return $this->gamesResponse($this->catalog->freeToPlay());
     }
 
     public function search(Request $request): JsonResponse
@@ -78,22 +78,7 @@ final class GameCatalogController extends Controller
         return $this->gamesResponse($this->catalog->giveaways($filters));
     }
 
-    public function deals(Request $request): JsonResponse
-    {
-        $filters = $request->validate([
-            'store_id' => ['sometimes', 'string', 'max:40'],
-            'page' => ['sometimes', 'integer', 'min:0'],
-            'page_size' => ['sometimes', 'integer', 'min:1', 'max:60'],
-            'sort_by' => ['sometimes', 'string', 'max:80'],
-            'desc' => ['sometimes', 'boolean'],
-            'lower_price' => ['sometimes', 'numeric', 'min:0'],
-            'upper_price' => ['sometimes', 'numeric', 'min:0'],
-            'title' => ['sometimes', 'string', 'max:120'],
-            'exact' => ['sometimes', 'boolean'],
-        ]);
 
-        return $this->gamesResponse($this->catalog->deals($filters));
-    }
 
     public function genres(): JsonResponse
     {
@@ -110,7 +95,7 @@ final class GameCatalogController extends Controller
         return response()->json([
             'data' => array_values(array_map(
                 static fn (GameData $game): array => $game->toArray(),
-                $games
+                array_filter($games, static fn (GameData $game): bool => in_array($game->provider, ['freetogame', 'gamerpower'], true))
             )),
         ]);
     }

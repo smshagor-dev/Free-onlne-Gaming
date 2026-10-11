@@ -15,10 +15,5 @@ final class UtilityController extends Controller
         return response('Event has been sent!');
     }
 
-    public function bonusPopupSeen(): JsonResponse
-    {
-        session()->forget('show_bonus_popup');
 
-        return response()->json(['status' => 'ok']);
-    }
 }

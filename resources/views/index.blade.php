@@ -3,9 +3,9 @@
 @section('content')
 @php
     $localGames = collect($categories ?? [])->pluck('games')->flatten()->filter()->values();
-    $primaryGames = collect($playableGames ?? [])->filter(fn ($game) => !empty($game['image']))->values();
-    $trendingGames = $primaryGames->take(6);
-    $newGames = $primaryGames->slice(6, 6)->values();
+    $primaryGames = collect($playableGames ?? [])->values();
+    $newGames = $primaryGames->take(6);
+    $trendingGames = $primaryGames->slice(6, 6)->values();
 
     if ($trendingGames->count() < 6 && $localGames->isNotEmpty()) {
         $trendingGames = $trendingGames->concat($localGames->take(6 - $trendingGames->count()))->values();
@@ -20,7 +20,7 @@
         ? ($heroGame['image'] ?? asset('default.png'))
         : ($heroGame?->image ? asset($heroGame->image) : asset('default.png'));
 
-    $categoryLinks = collect($categories ?? []);
+    $categoryLinks = collect($playableCategories ?? []);
     $categoryTiles = [
         ['name' => 'Action', 'icon' => 'fa-crosshairs', 'class' => 'cat-action'],
         ['name' => 'Adventure', 'icon' => 'fa-mountain-sun', 'class' => 'cat-adventure'],
@@ -34,8 +34,9 @@
     ];
 
     $findCategoryUrl = function (string $name) use ($categoryLinks) {
-        $match = $categoryLinks->first(fn ($category) => str_contains(strtolower($category->name ?? ''), strtolower($name)));
-        return $match ? route('category.view', ['id' => $match->id]) : route('free.games.index');
+        $aliases = ['Shooting' => 'Shooter', 'Simulation' => 'Sim', 'Sports' => 'Sports'];
+        $match = $categoryLinks->first(fn ($category) => strcasecmp($category, $aliases[$name] ?? $name) === 0);
+        return route('playable.index', ['category' => $match ?? $name]);
     };
 @endphp
 
@@ -55,6 +56,7 @@
 
     html,
     body {
+        margin: 0;
         height: auto !important;
         min-height: 100%;
         overflow: auto !important;
@@ -95,6 +97,7 @@
     }
 
     .fg-page {
+        width: 100%;
         overflow-x: hidden;
     }
 
@@ -122,7 +125,7 @@
     .fg-nav {
         min-height: 70px;
         display: grid;
-        grid-template-columns: auto minmax(420px, 1fr) auto;
+        grid-template-columns: auto minmax(0, 1fr) auto;
         gap: 28px;
         align-items: center;
     }
@@ -206,7 +209,7 @@
 
     .fg-search {
         position: relative;
-        width: 292px;
+        width: 240px;
     }
 
     .fg-search label {
@@ -583,6 +586,11 @@
         color: #66caff;
     }
 
+    .fg-page [hidden] { display: none !important; }
+    .fg-nav > * { min-width: 0; }
+    .fg-more-actions { display: flex; justify-content: center; margin-top: 24px; }
+    .fg-load-status { color: var(--fg-muted); text-align: center; }
+
     .fg-games-grid {
         display: grid;
         grid-template-columns: repeat(6, minmax(0, 1fr));
@@ -683,6 +691,7 @@
         }
 
         .fg-nav-links {
+            min-width: 0;
             order: 3;
             min-height: auto;
             overflow-x: auto;
@@ -779,14 +788,14 @@
                 <div class="fg-nav-links">
                     <a class="fg-nav-link is-active" href="{{ route('games.viewIndex') }}"><i class="fa-solid fa-house" aria-hidden="true"></i>Home</a>
                     <a class="fg-nav-link" href="{{ route('playable.index') }}">Games</a>
-                    <a class="fg-nav-link" href="{{ route('free.games.index') }}">Categories</a>
-                    <a class="fg-nav-link" href="{{ route('games.viewNewGames') }}">New</a>
-                    <a class="fg-nav-link" href="{{ route('games.trending') }}"><i class="fa-solid fa-fire-flame-curved" aria-hidden="true"></i>Trending</a>
+                    <a class="fg-nav-link" href="{{ route('playable.index') }}">Categories</a><a class="fg-nav-link" href="{{ route('user.lottaries.view') }}">Lottery</a>
+                    <a class="fg-nav-link" href="{{ route('playable.index') }}">New</a>
+                    <a class="fg-nav-link" href="{{ route('playable.index') }}"><i class="fa-solid fa-fire-flame-curved" aria-hidden="true"></i>Featured</a>
                     <a class="fg-nav-link" href="{{ route('contacts.create') }}">About</a>
                 </div>
 
                 <div class="fg-actions">
-                    <form class="fg-search" method="GET" action="{{ route('free.games.index') }}">
+                    <form class="fg-search" method="GET" action="{{ route('playable.index') }}">
                         <label for="fg-search-input">Search games</label>
                         <input id="fg-search-input" name="search" type="search" placeholder="Search games..." value="{{ $search ?? '' }}">
                         <button type="submit" aria-label="Search"><i class="fa-solid fa-magnifying-glass"></i></button>
@@ -810,37 +819,31 @@
                 <div>
                     <div class="fg-badge"><i class="fa-solid fa-gamepad" aria-hidden="true"></i>100% FREE TO PLAY</div>
                     <h1 id="fg-hero-title">Play <span class="fg-blue-text">Free Games</span><br>Online <br class="fg-mobile-only">Anytime</h1>
-                    <p>Explore thousands of free games. No download. No cost.<br class="fg-desktop-only">Just pure fun!</p>
+                    <p>Discover free browser games. No download required.<br class="fg-desktop-only">Just pure fun!</p>
                     <div class="fg-hero-actions">
                         <a class="fg-hero-btn fg-hero-btn-primary" href="{{ route('playable.index') }}"><i class="fa-solid fa-play" aria-hidden="true"></i>Play Now</a>
-                        <a class="fg-hero-btn fg-hero-btn-secondary" href="{{ route('free.games.index') }}"><i class="fa-solid fa-grip" aria-hidden="true"></i>Browse Games</a>
+                        <a class="fg-hero-btn fg-hero-btn-secondary" href="{{ route('playable.index') }}"><i class="fa-solid fa-grip" aria-hidden="true"></i>Browse Games</a>
                     </div>
                 </div>
 
                 <div class="fg-hero-art" aria-hidden="true">
                     @foreach($primaryGames->take(3) as $index => $artGame)
                         <div class="fg-art-card {{ $index === 0 ? 'fg-art-main' : ($index === 1 ? 'fg-art-side' : 'fg-art-low') }}">
-                            <img src="{{ $artGame['image'] }}" alt="">
+                            <img src="{{ $artGame['image'] ?: asset('default.png') }}" alt="">
                         </div>
                     @endforeach
                     <div class="fg-hero-script">Games<br>For Everyone</div>
                 </div>
             </div>
         </div>
-        <div class="fg-dots" aria-label="Hero slides">
-            <button class="fg-dot is-active" type="button" aria-label="Slide 1"></button>
-            <button class="fg-dot" type="button" aria-label="Slide 2"></button>
-            <button class="fg-dot" type="button" aria-label="Slide 3"></button>
-            <button class="fg-dot" type="button" aria-label="Slide 4"></button>
-        </div>
     </section>
 
-    <main class="fg-main">
+    <div class="fg-main">
         <div class="fg-shell">
             <span class="sr-only">Explore Games</span>
             <section class="fg-categories" aria-label="Game categories">
                 @foreach($categoryTiles as $tile)
-                    <a class="fg-category {{ $tile['class'] }}" href="{{ $tile['name'] === 'More' ? route('free.games.index') : $findCategoryUrl($tile['name']) }}">
+                    <a class="fg-category {{ $tile['class'] }}" href="{{ $tile['name'] === 'More' ? route('playable.index') : $findCategoryUrl($tile['name']) }}">
                         <i class="fa-solid {{ $tile['icon'] }}" aria-hidden="true"></i>
                         <span>{{ $tile['name'] }}</span>
                     </a>
@@ -849,14 +852,14 @@
 
             <section class="fg-section" aria-labelledby="fg-trending-title">
                 <div class="fg-section-head">
-                    <h2 class="fg-section-title" id="fg-trending-title"><i class="fa-solid fa-star star" aria-hidden="true"></i>Trending Games</h2>
-                    <a class="fg-view-all" href="{{ route('games.trending') }}">View All <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+                    <h2 class="fg-section-title" id="fg-trending-title"><i class="fa-solid fa-star star" aria-hidden="true"></i>Featured Games</h2>
+                    <a class="fg-view-all" href="{{ route('playable.index') }}">View All <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
                 </div>
 
                 @if($trendingGames->isNotEmpty())
                     <div class="fg-games-grid">
                         @foreach($trendingGames as $game)
-                            @include('components.home-game-card', ['game' => $game, 'fallbackTag' => 'Trending'])
+                            @include('components.home-game-card', ['game' => $game, 'fallbackTag' => 'Featured'])
                         @endforeach
                     </div>
                 @else
@@ -867,7 +870,7 @@
             <section class="fg-section" aria-labelledby="fg-new-title">
                 <div class="fg-section-head">
                     <h2 class="fg-section-title" id="fg-new-title"><i class="fa-solid fa-gamepad" aria-hidden="true"></i>New Games</h2>
-                    <a class="fg-view-all" href="{{ route('games.viewNewGames') }}">View All <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+                    <a class="fg-view-all" href="{{ route('playable.index') }}">View All <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
                 </div>
 
                 @if($newGames->isNotEmpty())
@@ -877,10 +880,54 @@
                         @endforeach
                     </div>
                 @else
-                    <div class="fg-empty">New games are loading. Check back shortly.</div>
+                    <div class="fg-empty">No new games are available right now. Please try again later.</div>
                 @endif
             </section>
+            @if($primaryGames->count() > 12)
+            <section class="fg-section" aria-labelledby="fg-explore-title">
+                <div class="fg-section-head"><h2 class="fg-section-title" id="fg-explore-title">Explore More Games</h2></div>
+                <div class="fg-games-grid" id="fg-more-games">
+                    @foreach($primaryGames->slice(12) as $game)
+                        @include('components.home-game-card', ['game' => $game, 'fallbackTag' => 'Free'])
+                    @endforeach
+                </div>
+                @if(($playableTotal ?? 0) > 30)
+                <div class="fg-more-actions"><button id="fg-load-more" type="button" class="fg-hero-btn fg-hero-btn-primary">Load More Games</button></div>
+                <p id="fg-load-status" class="fg-load-status" role="status" aria-live="polite"></p>
+                @endif
+            </section>
+            @endif
         </div>
-    </main>
+    </div>
 </div>
+<script>
+(() => {
+    const button = document.getElementById('fg-load-more');
+    if (!button) return;
+    let page = 2;
+    const status = document.getElementById('fg-load-status');
+    button.addEventListener('click', async () => {
+        button.disabled = true;
+        button.textContent = 'Loading...';
+        status.textContent = '';
+        try {
+            const url = new URL(@json(route('playable.load')), window.location.origin);
+            url.searchParams.set('page', page);
+            url.searchParams.set('layout', 'home');
+            const response = await fetch(url, {headers: {'Accept': 'application/json'}});
+            if (!response.ok) throw new Error('Unable to load games');
+            const data = await response.json();
+            document.getElementById('fg-more-games').insertAdjacentHTML('beforeend', data.html);
+            page++;
+            button.hidden = !data.has_more;
+            if (!data.has_more) status.textContent = 'You have reached the end of the games list.';
+        } catch (error) {
+            status.textContent = 'Games could not be loaded. Please try again.';
+        } finally {
+            button.disabled = false;
+            button.textContent = 'Load More Games';
+        }
+    });
+})();
+</script>
 @endsection

@@ -38,6 +38,7 @@
     </div>
 </article>
 
+@if(empty($cardsOnly))
 @once
     <style>
         .fg-game-card {
@@ -185,3 +186,5 @@
         });
     </script>
 @endonce
+
+@endif
