@@ -127,185 +127,177 @@ class _AccountScreenState extends State<AccountScreen> {
         ),
       );
     }
+    final name = '${widget.state.user?['name'] ?? 'Player'}';
+    final protected = widget.state.user?['google2fa_status'] == true ||
+        widget.state.user?['google2fa_status'] == 1;
     return RefreshIndicator(
-      onRefresh: load,
-      child: ListView(
-        padding: const EdgeInsets.all(20),
-        physics: const AlwaysScrollableScrollPhysics(),
-        children: [
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
-              gradient: const LinearGradient(
-                colors: [Color(0xff183a62), Color(0xff242045)],
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'YOUR PLAYER SPACE',
-                  style: TextStyle(
-                    letterSpacing: 2,
-                    fontSize: 10,
-                    color: Color(0xff94d3ff),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  '${widget.state.user?['name']}',
-                  style: const TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '${widget.state.user?['email']}',
-                  style: const TextStyle(color: Color(0xffb1c3dc)),
-                ),
-                const SizedBox(height: 20),
-                Wrap(
-                  spacing: 16,
-                  runSpacing: 16,
-                  children: [
-                    for (final entry in [
-                      ('Saved', 'favorites'),
-                      ('Played', 'games_played'),
-                      ('Tickets', 'lottery_tickets'),
-                    ])
-                      Container(
-                        width: 84,
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: const Color(0x33102035),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: Column(
-                          children: [
-                            Text(
-                              '${dashboard?[entry.$2] ?? '—'}',
-                              style: const TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            Text(
-                              entry.$1,
-                              style: const TextStyle(fontSize: 12),
-                            ),
-                          ],
-                        ),
-                      ),
-                  ],
-                ),
+        onRefresh: load,
+        child: ListView(
+            padding: const EdgeInsets.all(20),
+            physics: const AlwaysScrollableScrollPhysics(),
+            children: [
+              const Text('Your account',
+                  style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700)),
+              const SizedBox(height: 6),
+              const Text('Your games, activity and personal settings.',
+                  style: TextStyle(color: Color(0xff9fb1c7))),
+              const SizedBox(height: 20),
+              Card(
+                  child: Padding(
+                      padding: const EdgeInsets.all(18),
+                      child: Row(children: [
+                        CircleAvatar(
+                            radius: 26,
+                            backgroundColor: const Color(0xff203d59),
+                            child: Text(
+                                name.isEmpty
+                                    ? 'P'
+                                    : name.substring(0, 1).toUpperCase(),
+                                style: const TextStyle(
+                                    fontSize: 24, color: Color(0xff80c7ff)))),
+                        const SizedBox(width: 14),
+                        Expanded(
+                            child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                              Text(name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w700)),
+                              const SizedBox(height: 4),
+                              Text('${widget.state.user?['email'] ?? ''}',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                      color: Color(0xff9fb1c7), fontSize: 13))
+                            ])),
+                        IconButton(
+                            tooltip: 'Edit profile',
+                            onPressed: () => form(AccountAction.profile),
+                            icon: const Icon(Icons.edit_outlined, size: 20))
+                      ]))),
+              const SizedBox(height: 12),
+              Card(
+                  child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      child: Row(children: [
+                        for (final entry in [
+                          ('Saved', 'favorites'),
+                          ('Played', 'games_played'),
+                          ('Tickets', 'lottery_tickets')
+                        ])
+                          Expanded(
+                              child: Column(children: [
+                            Text('${dashboard?[entry.$2] ?? '—'}',
+                                style: const TextStyle(
+                                    fontSize: 22, fontWeight: FontWeight.w700)),
+                            const SizedBox(height: 4),
+                            Text(entry.$1,
+                                style: const TextStyle(
+                                    fontSize: 12, color: Color(0xff9fb1c7)))
+                          ]))
+                      ]))),
+              if (busy)
+                const Padding(
+                    padding: EdgeInsets.only(top: 12),
+                    child: LinearProgressIndicator()),
+              if (error != null) ...[
+                Text(error!),
+                TextButton(onPressed: load, child: const Text('Retry'))
               ],
-            ),
-          ),
-          const SizedBox(height: 24),
-          if (busy) const LinearProgressIndicator(),
-          if (error != null) ...[
-            Text(error!),
-            TextButton(onPressed: load, child: const Text('Retry')),
-          ],
-          const Text(
-            'YOUR ACCOUNT',
-            style: TextStyle(
-              letterSpacing: 2,
-              fontSize: 11,
-              color: Color(0xff9fb1c7),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Card(
-            child: Column(
-              children: [
-                tile(
-                  Icons.notifications_none,
-                  'Notifications',
-                  () => list('Notifications', 'me/notifications'),
-                ),
-                tile(
-                  Icons.history,
-                  'Recently played',
-                  () => list('Recently played', 'me/recent'),
-                ),
-                tile(
-                  Icons.event_available,
-                  'Available lottery draws',
-                  () => list('Available lottery draws', 'lotteries'),
-                ),
-                tile(
-                  Icons.confirmation_number_outlined,
-                  'My lottery tickets',
-                  () => list('My lottery tickets', 'me/lottery/tickets'),
-                ),
-                tile(
-                  Icons.emoji_events_outlined,
-                  'Lottery results',
-                  () => list('Lottery results', 'me/lottery/wins'),
-                ),
-                tile(
-                  Icons.manage_accounts_outlined,
-                  'Edit profile',
-                  () => form(AccountAction.profile),
-                ),
-                tile(
-                  Icons.tune,
-                  'Gaming preferences',
-                  () => form(AccountAction.preferences),
-                ),
-                tile(
-                  Icons.lock_outline,
-                  'Change password',
-                  () => form(AccountAction.password),
-                ),
-                tile(
-                  Icons.security,
-                  'Two-factor authentication',
-                  () => Navigator.push(
-                    context,
-                    MaterialPageRoute<void>(
-                      builder: (_) => SecurityScreen(state: widget.state),
-                    ),
-                  ),
-                ),
-                tile(
-                  Icons.devices,
-                  'Your devices',
-                  () => list('Your devices', 'me/devices'),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          OutlinedButton.icon(
-            icon: const Icon(Icons.logout),
-            label: const Text('Sign out'),
-            onPressed: () async {
-              try {
-                await widget.state.signOut();
-              } catch (e) {
-                if (context.mounted) showError(context, e);
-              }
-            },
-          ),
-          TextButton(
-            onPressed: () => form(AccountAction.close),
-            child: const Text('Close account'),
-          ),
-        ],
-      ),
-    );
+              section('Your activity', [
+                tile(Icons.history_rounded, 'Recently played',
+                    () => list('Recently played', 'me/recent')),
+                tile(Icons.tune_rounded, 'Gaming preferences',
+                    () => form(AccountAction.preferences))
+              ]),
+              section('Account & security', [
+                tile(Icons.person_outline_rounded, 'Personal details',
+                    () => form(AccountAction.profile)),
+                tile(Icons.lock_outline_rounded, 'Change password',
+                    () => form(AccountAction.password)),
+                ListTile(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                    leading: iconBox(Icons.shield_outlined),
+                    title: const Text('Two-factor authentication',
+                        style: TextStyle(fontSize: 14)),
+                    subtitle: Text(
+                        protected
+                            ? 'Enabled · your account is protected'
+                            : 'Add an extra layer of protection',
+                        style: const TextStyle(
+                            fontSize: 12, color: Color(0xff9fb1c7))),
+                    trailing: const Icon(Icons.chevron_right, size: 20),
+                    onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(
+                            builder: (_) =>
+                                SecurityScreen(state: widget.state)))),
+                tile(Icons.devices_outlined, 'Devices & sessions',
+                    () => list('Your devices', 'me/devices'))
+              ]),
+              section('Lottery', [
+                tile(Icons.event_available_outlined, 'Browse draws',
+                    () => list('Available lottery draws', 'lotteries')),
+                tile(Icons.confirmation_number_outlined, 'My tickets',
+                    () => list('My lottery tickets', 'me/lottery/tickets')),
+                tile(Icons.emoji_events_outlined, 'Results',
+                    () => list('Lottery results', 'me/lottery/wins'))
+              ]),
+              const SizedBox(height: 20),
+              OutlinedButton.icon(
+                  icon: const Icon(Icons.logout, size: 18),
+                  label: const Text('Sign out'),
+                  onPressed: () async {
+                    try {
+                      await widget.state.signOut();
+                    } catch (e) {
+                      if (context.mounted) showError(context, e);
+                    }
+                  }),
+              const SizedBox(height: 8),
+              TextButton(
+                  style: TextButton.styleFrom(
+                      foregroundColor: Theme.of(context).colorScheme.error),
+                  onPressed: () => form(AccountAction.close),
+                  child: const Text('Close account')),
+              const SizedBox(height: 8)
+            ]));
   }
 
+  Widget section(String title, List<Widget> children) => Padding(
+      padding: const EdgeInsets.only(top: 24),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(title,
+            style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: Color(0xffb6c6d8))),
+        const SizedBox(height: 10),
+        Card(
+            child: Column(children: [
+          for (var i = 0; i < children.length; i++) ...[
+            children[i],
+            if (i < children.length - 1)
+              const Divider(height: 1, indent: 64, color: Color(0xff25374e))
+          ]
+        ]))
+      ]));
+  Widget iconBox(IconData icon) => Container(
+      width: 34,
+      height: 34,
+      decoration: BoxDecoration(
+          color: const Color(0xff1b334c),
+          borderRadius: BorderRadius.circular(10)),
+      child: Icon(icon, size: 19, color: const Color(0xff80c7ff)));
   Widget tile(IconData icon, String title, VoidCallback onTap) => ListTile(
-        leading: Icon(icon),
-        title: Text(title),
-        trailing: const Icon(Icons.chevron_right),
-        onTap: onTap,
-      );
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+      leading: iconBox(icon),
+      title: Text(title, style: const TextStyle(fontSize: 14)),
+      trailing: const Icon(Icons.chevron_right, size: 20),
+      onTap: onTap);
 }
 
 class AccountList extends StatefulWidget {
@@ -392,6 +384,7 @@ class _AccountListState extends State<AccountList> {
           error = null;
         });
       }
+      if (notifications) await widget.state.refreshUnreadNotifications();
     } catch (e) {
       if (mounted) setState(() => error = '$e');
     } finally {

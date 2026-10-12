@@ -141,6 +141,7 @@ class AppState extends ChangeNotifier {
   Map<String, dynamic>? user;
   final favorites = <String, Game>{};
   bool ready = false;
+  int unreadNotifications = 0;
   String? error;
   AppState(this.api) {
     api.onUnauthorized = clearSession;
@@ -149,7 +150,22 @@ class AppState extends ChangeNotifier {
   void clearSession() {
     user = null;
     favorites.clear();
+    unreadNotifications = 0;
     notifyListeners();
+  }
+
+  Future<void> refreshUnreadNotifications() async {
+    if (!signedIn) return;
+    final session = api.token;
+    try {
+      final response = await api.request('me/dashboard', authenticated: true);
+      if (!signedIn || api.token != session) return;
+      unreadNotifications =
+          ((response['data'] as Map)['unread_notifications'] as num?)
+                  ?.toInt() ??
+              0;
+      notifyListeners();
+    } catch (_) {/* Keep the last count when the server is unavailable. */}
   }
 
   Future<void> initialize() async {

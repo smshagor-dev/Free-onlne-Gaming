@@ -3,6 +3,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import 'core.dart';
+import 'forms.dart';
 
 void showError(BuildContext context, Object e) =>
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
@@ -40,23 +41,24 @@ class GameCard extends StatelessWidget {
                         ),
                       ),
                       child: game.image == null
-                          ? const Icon(
-                              Icons.sports_esports,
-                              color: Color(0xff7cc8ff),
-                              size: 46,
-                            )
+                          ? GameArtwork(category: game.category)
                           : Image.network(
                               game.image!,
                               fit: BoxFit.cover,
                               errorBuilder: (_, __, ___) =>
-                                  const Icon(Icons.sports_esports, size: 46),
+                                  GameArtwork(category: game.category),
                             ),
                     ),
                     Positioned(
                       right: 6,
                       top: 6,
                       child: IconButton.filledTonal(
-                        tooltip: 'Save game',
+                        tooltip: state.favorites.containsKey(game.key)
+                            ? 'Remove saved game'
+                            : 'Save game',
+                        style: IconButton.styleFrom(
+                            backgroundColor: const Color(0xcc0b1220),
+                            foregroundColor: Colors.white),
                         onPressed: () async {
                           try {
                             await state.toggleFavorite(game);
@@ -102,6 +104,47 @@ class GameCard extends StatelessWidget {
           ),
         ),
       );
+}
+
+class GameArtwork extends StatelessWidget {
+  final String category;
+  const GameArtwork({super.key, required this.category});
+  @override
+  Widget build(BuildContext context) {
+    final (icon, color) = switch (category.toLowerCase()) {
+      'puzzle' => (Icons.extension_rounded, const Color(0xff83dbc7)),
+      'racing' => (Icons.sports_motorsports_rounded, const Color(0xffffae87)),
+      'adventure' => (Icons.explore_rounded, const Color(0xffb4a8ff)),
+      'strategy' => (Icons.grid_view_rounded, const Color(0xffe5d599)),
+      'sports' => (Icons.sports_soccer_rounded, const Color(0xff9be0b0)),
+      _ => (Icons.bolt_rounded, const Color(0xffffd378))
+    };
+    return Container(
+        decoration: BoxDecoration(
+            gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+              Color.alphaBlend(
+                  color.withValues(alpha: .28), const Color(0xff142237)),
+              const Color(0xff112033)
+            ])),
+        child: Stack(children: [
+          Positioned(
+              right: -15,
+              bottom: -25,
+              child:
+                  Icon(icon, size: 150, color: color.withValues(alpha: .08))),
+          Center(
+              child: Container(
+                  padding: const EdgeInsets.all(17),
+                  decoration: BoxDecoration(
+                      color: color.withValues(alpha: .12),
+                      borderRadius: BorderRadius.circular(22),
+                      border: Border.all(color: color.withValues(alpha: .22))),
+                  child: Icon(icon, size: 40, color: color)))
+        ]));
+  }
 }
 
 class CatalogScreen extends StatefulWidget {
@@ -209,73 +252,47 @@ class _CatalogScreenState extends State<CatalogScreen> {
                   children: [
                     if (!widget.discover)
                       Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(24),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(24),
-                          gradient: const LinearGradient(
-                            colors: [Color(0xff183a62), Color(0xff242045)],
-                          ),
-                        ),
-                        child: Stack(
-                          children: [
-                            const Positioned(
-                              right: -12,
-                              bottom: 8,
-                              child: Icon(
-                                Icons.sports_esports_rounded,
-                                size: 106,
-                                color: Color(0x3374c5ff),
-                              ),
-                            ),
-                            Column(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(18),
+                              gradient: const LinearGradient(colors: [
+                                Color(0xff173c60),
+                                Color(0xff142c46)
+                              ])),
+                          child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+                                const Text('A little play. A better day.',
+                                    style: TextStyle(
+                                        fontSize: 24,
+                                        height: 1.2,
+                                        fontWeight: FontWeight.w700)),
+                                const SizedBox(height: 8),
                                 const Text(
-                                  'YOUR NEXT FAVORITE',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    letterSpacing: 2,
-                                    color: Color(0xff94d3ff),
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                                const SizedBox(height: 14),
-                                const Text(
-                                  'Big fun.\nZero price.',
-                                  style: TextStyle(
-                                    fontSize: 34,
-                                    height: 1.1,
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: -1,
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
-                                const Text(
-                                  'Great games, ready when you are.',
-                                  style: TextStyle(
-                                    color: Color(0xffb1c3dc),
-                                    fontSize: 12,
-                                  ),
-                                ),
-                                const SizedBox(height: 20),
+                                    'Find your next favorite. Play for free.',
+                                    style: TextStyle(
+                                        color: Color(0xffb1c3dc),
+                                        fontSize: 13)),
+                                const SizedBox(height: 16),
                                 FilledButton.icon(
-                                  onPressed: games.isEmpty
-                                      ? null
-                                      : () => openGame(
-                                            context,
-                                            widget.state,
-                                            games.first,
-                                          ),
-                                  icon: const Icon(Icons.play_arrow),
-                                  label: const Text('Play now'),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    const SizedBox(height: 22),
+                                    onPressed: games.isEmpty
+                                        ? null
+                                        : () => openGame(
+                                            context, widget.state, games.first),
+                                    icon: const Icon(Icons.play_arrow_rounded,
+                                        size: 20),
+                                    label: const Text('Start playing'))
+                              ])),
+                    if (widget.discover) ...[
+                      const Text('Explore games',
+                          style: TextStyle(
+                              fontSize: 26, fontWeight: FontWeight.w700)),
+                      const SizedBox(height: 6),
+                      const Text('Find something you’ll love playing.',
+                          style: TextStyle(color: Color(0xff9fb1c7)))
+                    ],
+                    const SizedBox(height: 20),
                     TextField(
                       controller: search,
                       textInputAction: TextInputAction.search,
@@ -355,10 +372,10 @@ class _CatalogScreenState extends State<CatalogScreen> {
                         Expanded(
                           child: Text(
                             widget.discover
-                                ? 'Discover games'
-                                : 'Made for your downtime',
+                                ? 'Browse collection'
+                                : 'Pick your next game',
                             style: const TextStyle(
-                              fontSize: 19,
+                              fontSize: 18,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
@@ -379,7 +396,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
                     crossAxisCount: constraints.crossAxisExtent > 600 ? 4 : 2,
                     mainAxisSpacing: 14,
                     crossAxisSpacing: 14,
-                    mainAxisExtent: 230,
+                    mainAxisExtent: 212,
                   ),
                   delegate: SliverChildBuilderDelegate(
                     (_, i) => GameCard(game: games[i], state: widget.state),
@@ -418,43 +435,89 @@ class SavedGames extends StatelessWidget {
   final AppState state;
   const SavedGames({super.key, required this.state});
   @override
-  Widget build(BuildContext context) => !state.signedIn
-      ? const Center(child: Text('Sign in from Account to save games.'))
-      : RefreshIndicator(
-          onRefresh: () async {
-            try {
-              await state.loadFavorites();
-            } catch (e) {
-              if (context.mounted) showError(context, e);
-            }
-          },
-          child: state.favorites.isEmpty
-              ? ListView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  children: const [
-                    Padding(
-                      padding: EdgeInsets.all(30),
-                      child: Text('Your favorites will appear here.'),
-                    ),
-                  ],
-                )
-              : GridView.builder(
-                  padding: const EdgeInsets.all(20),
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  itemCount: state.favorites.length,
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount:
-                        MediaQuery.sizeOf(context).width > 600 ? 4 : 2,
-                    mainAxisExtent: 230,
-                    mainAxisSpacing: 14,
-                    crossAxisSpacing: 14,
-                  ),
-                  itemBuilder: (_, i) => GameCard(
-                    game: state.favorites.values.elementAt(i),
-                    state: state,
-                  ),
-                ),
-        );
+  Widget build(BuildContext context) {
+    if (!state.signedIn) {
+      return Center(
+          child: Padding(
+              padding: const EdgeInsets.all(28),
+              child: Column(mainAxisSize: MainAxisSize.min, children: [
+                const Icon(Icons.favorite_border_rounded,
+                    size: 54, color: Color(0xff80c7ff)),
+                const SizedBox(height: 18),
+                const Text('Keep your favorites together',
+                    textAlign: TextAlign.center,
+                    style:
+                        TextStyle(fontSize: 23, fontWeight: FontWeight.w700)),
+                const SizedBox(height: 10),
+                const Text('Sign in to save games and find them here any time.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Color(0xff9fb1c7))),
+                const SizedBox(height: 22),
+                FilledButton(
+                    onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(
+                            builder: (_) => AccountForm(
+                                state: state, action: AccountAction.login))),
+                    child: const Text('Sign in'))
+              ])));
+    }
+    return RefreshIndicator(
+        onRefresh: () async {
+          try {
+            await state.loadFavorites();
+          } catch (e) {
+            if (context.mounted) showError(context, e);
+          }
+        },
+        child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+                  sliver: SliverToBoxAdapter(
+                      child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                        const Text('Saved games',
+                            style: TextStyle(
+                                fontSize: 26, fontWeight: FontWeight.w700)),
+                        const SizedBox(height: 6),
+                        Text(
+                            '${state.favorites.length} favorites, ready whenever you are.',
+                            style: const TextStyle(color: Color(0xff9fb1c7)))
+                      ]))),
+              if (state.favorites.isEmpty)
+                const SliverToBoxAdapter(
+                    child: Padding(
+                        padding: EdgeInsets.all(32),
+                        child: Column(children: [
+                          Icon(Icons.favorite_border_rounded,
+                              size: 48, color: Color(0xff80c7ff)),
+                          SizedBox(height: 16),
+                          Text('Your next favorite is waiting.'),
+                          SizedBox(height: 6),
+                          Text('Tap the heart on any game to save it here.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: Color(0xff9fb1c7)))
+                        ])))
+              else
+                SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    sliver: SliverGrid.builder(
+                        itemCount: state.favorites.length,
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount:
+                                MediaQuery.sizeOf(context).width > 600 ? 4 : 2,
+                            mainAxisExtent: 212,
+                            mainAxisSpacing: 14,
+                            crossAxisSpacing: 14),
+                        itemBuilder: (_, i) => GameCard(
+                            game: state.favorites.values.elementAt(i),
+                            state: state))),
+              const SliverToBoxAdapter(child: SizedBox(height: 24))
+            ]));
+  }
 }
 
 class PlayerScreen extends StatefulWidget {

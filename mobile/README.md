@@ -7,7 +7,7 @@ Flutter Material 3 app for Android and iOS using the Laravel `/api/v1` API. Navy
 - Home: search, categories and infinite scrolling in batches of 30 games.
 - Explore: GameMonetize, FreeToGame, GamerPower and local website catalogs.
 - Game detail pages, isolated HTML5 WebView player and external HTTPS provider links.
-- Favorites, browser play history, account dashboard and notifications.
+- Favorites, browser play history, grouped account dashboard and header notification bell with live unread count.
 - Registration, email verification/resend, login with authenticator OTP, password recovery/reset.
 - Secure session restoration/renewal, device revocation and sign-out from all devices.
 - Profile and password editing, gaming preferences, authenticator QR setup/disable and confirmed account closure.
@@ -48,7 +48,7 @@ Release configuration intentionally fails without these keys. Never commit signi
 
 ## Verification
 
-Current source: Flutter analyzer clean; 15 unit/widget tests passed. Coverage includes provider identity, public/private bearer handling, invalid/expired sessions, late unauthorized responses after a newer login, server validation messages, server-path isolation, navigation at 320/390/768 widths, registration, failed preferences loading and temporary authenticator secrets. Laravel: 70 tests passed, 901 assertions. Android debug APK compilation passed. The development APK targets the Android emulator/local API; these checks are not real-device certification.
+Current source: Flutter analyzer clean; 17 unit/widget tests passed. Coverage includes provider identity, public/private bearer handling, invalid/expired sessions, late unauthorized responses after a newer login, server validation messages, server-path isolation, navigation at 320/390/768 widths, registration, failed preferences loading and temporary authenticator secrets. Laravel: 70 tests passed, 904 assertions. The earlier development APK compiled successfully; it does not include this UI refresh. The development APK targets the Android emulator/local API; these checks are not real-device certification.
 
 Before publishing, set the live HTTPS API URL and release signing; validate actual mail delivery, games, provider ads/audio/orientation, keyboard and sessions on real Android/iOS devices. Universal/deep links for email recovery are not configured; the app accepts a pasted email reset link/token or browser completion.
 

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'core.dart';
 import 'games.dart';
 import 'account.dart';
+import 'forms.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,9 +33,27 @@ class FreeGamesApp extends StatelessWidget {
           colorScheme: const ColorScheme.dark(
             primary: Color(0xff55adff),
             onPrimary: Color(0xff07111d),
-            secondary: Color(0xffb09bff),
+            secondary: Color(0xff80c7ff),
+            secondaryContainer: Color(0xff203d59),
+            onSecondaryContainer: Color(0xffd9edff),
             surface: Color(0xff142237),
           ),
+          textTheme: const TextTheme(
+              titleLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+              titleMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              bodyLarge: TextStyle(fontSize: 15, height: 1.45),
+              bodyMedium: TextStyle(fontSize: 14, height: 1.45)),
+          filledButtonTheme: FilledButtonThemeData(
+              style: FilledButton.styleFrom(
+                  minimumSize: const Size(48, 48),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)))),
+          chipTheme: ChipThemeData(
+              side: const BorderSide(color: Color(0xff29415d)),
+              selectedColor: const Color(0xff203d59),
+              showCheckmark: false,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10))),
           navigationBarTheme: const NavigationBarThemeData(
               indicatorColor: Color(0xff25476b),
               backgroundColor: Color(0xff0e1b2b)),
@@ -44,14 +63,18 @@ class FreeGamesApp extends StatelessWidget {
           ),
           cardTheme: CardThemeData(
             elevation: 0,
+            margin: EdgeInsets.zero,
+            color: const Color(0xff142237),
             shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           ),
           inputDecorationTheme: InputDecorationTheme(
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             filled: true,
             fillColor: const Color(0xff16263b),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none,
             ),
           ),
@@ -73,8 +96,65 @@ class AppShell extends StatefulWidget {
   State<AppShell> createState() => _AppShellState();
 }
 
-class _AppShellState extends State<AppShell> {
+class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
   int tab = 0;
+  String? notificationSession;
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    syncNotifications();
+  }
+
+  @override
+  void didUpdateWidget(covariant AppShell oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    syncNotifications();
+  }
+
+  void syncNotifications() {
+    final session = widget.state.signedIn ? widget.state.api.token : null;
+    if (session == notificationSession) return;
+    notificationSession = session;
+    if (session != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) widget.state.refreshUnreadNotifications();
+      });
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      widget.state.refreshUnreadNotifications();
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  Future<void> openNotifications() async {
+    if (!widget.state.signedIn) {
+      await Navigator.push(
+          context,
+          MaterialPageRoute<void>(
+              builder: (_) => AccountForm(
+                  state: widget.state, action: AccountAction.login)));
+    }
+    if (!mounted || !widget.state.signedIn) return;
+    await Navigator.push(
+        context,
+        MaterialPageRoute<void>(
+            builder: (_) => AccountList(
+                state: widget.state,
+                title: 'Notifications',
+                path: 'me/notifications')));
+    if (mounted) await widget.state.refreshUnreadNotifications();
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(
@@ -109,6 +189,15 @@ class _AppShellState extends State<AppShell> {
             ),
           ),
           actions: [
+            IconButton(
+                tooltip: 'Notifications',
+                onPressed: openNotifications,
+                icon: Badge(
+                    isLabelVisible: widget.state.unreadNotifications > 0,
+                    label: Text(widget.state.unreadNotifications > 99
+                        ? '99+'
+                        : '${widget.state.unreadNotifications}'),
+                    child: const Icon(Icons.notifications_outlined))),
             IconButton(
               tooltip: 'My account',
               onPressed: () => setState(() => tab = 3),

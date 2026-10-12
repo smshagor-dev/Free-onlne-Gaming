@@ -49,7 +49,7 @@ Provider failures may return an empty cached catalog. Unknown/unavailable detail
 
 ## Personalization
 
-- `GET /me/dashboard`: current player, favorite count, mobile browser play count, lottery ticket/win count and 2FA status.
+- `GET /me/dashboard`: current player, favorite count, mobile browser play count, lottery ticket/win count and 2FA status. `unread_notifications` returns the current user’s unread count for the mobile header badge.
 - `PUT /me/games/{provider}/{id}/favorite`: save; DELETE removes it. Writes are idempotent. GET `/me/favorites` returns provider/game_id plus cached `snapshot` for cards and pagination metadata.
 - Website local Favorites and catalog My Library are visible in mobile favorites. Saving/removing those providers in the app updates the corresponding website collections. Browser favorites use the new mobile state table; the website has no browser-favorites screen yet.
 - `POST /me/games/gamemonetize/{id}/played`: record browser play; GET `/me/recent` returns distinct mobile browser games ordered by last play. DELETE clears mobile browser history. Legacy website local-game history stays separate and is preserved.

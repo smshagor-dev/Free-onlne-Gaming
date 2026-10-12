@@ -36,6 +36,7 @@ class _AccountFormState extends State<AccountForm> {
       preferencesLoaded = false,
       confirmed = false;
   String? error;
+  final visiblePasswords = <String>{};
   AccountAction get action => widget.action;
   String get title => switch (action) {
         AccountAction.login => 'Welcome back',
@@ -80,8 +81,8 @@ class _AccountFormState extends State<AccountForm> {
             'password_confirmation': 'Confirm password',
           },
         AccountAction.preferences => {
-            'preferred_genres': 'Genres, separated by commas',
-            'preferred_platforms': 'Platforms, separated by commas',
+            'preferred_genres': 'Favorite genres',
+            'preferred_platforms': 'Platforms you play on',
           },
         AccountAction.close => {
             'current_password': 'Current password',
@@ -269,6 +270,53 @@ class _AccountFormState extends State<AccountForm> {
           ),
         ),
       );
+  Widget preferenceChoices(String key) {
+    final selected = fields[key]!
+        .text
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toSet();
+    final options = <String>{
+      ...(key == 'preferred_genres'
+          ? [
+              'Puzzle',
+              'Action',
+              'Arcade',
+              'Adventure',
+              'Racing',
+              'Sports',
+              'Strategy'
+            ]
+          : ['Android', 'iOS', 'PC', 'Web', 'PlayStation', 'Xbox']),
+      ...selected
+    };
+    return Padding(
+        padding: const EdgeInsets.only(bottom: 24),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(labels[key]!,
+              style: const TextStyle(fontWeight: FontWeight.w600)),
+          const SizedBox(height: 10),
+          Wrap(spacing: 8, runSpacing: 8, children: [
+            for (final option in options)
+              FilterChip(
+                  label: Text(option),
+                  showCheckmark: true,
+                  selected: selected.contains(option),
+                  onSelected: busy || loading || !preferencesLoaded
+                      ? null
+                      : (value) => setState(() {
+                            if (value) {
+                              selected.add(option);
+                            } else {
+                              selected.remove(option);
+                            }
+                            fields[key]!.text = selected.join(', ');
+                          }))
+          ])
+        ]));
+  }
+
   @override
   void dispose() {
     for (final c in fields.values) {
@@ -279,7 +327,16 @@ class _AccountFormState extends State<AccountForm> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: Text(title)),
+        appBar: AppBar(
+            title: Text(switch (action) {
+          AccountAction.login ||
+          AccountAction.register ||
+          AccountAction.verify ||
+          AccountAction.forgot ||
+          AccountAction.reset =>
+            'Account access',
+          _ => 'Account settings'
+        })),
         body: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 520),
@@ -301,8 +358,17 @@ class _AccountFormState extends State<AccountForm> {
                       AccountAction.reset =>
                         'Paste the reset link from your email, or finish resetting in your browser.',
                       AccountAction.preferences =>
-                        'Choose the genres and platforms you enjoy. Leave blank to clear.',
-                      _ => 'Make your gaming space yours.',
+                        'Choose what you enjoy. You can change these any time.',
+                      AccountAction.login =>
+                        'Welcome back. Sign in to your player account.',
+                      AccountAction.register =>
+                        'One account for favorites, history and your settings.',
+                      AccountAction.verify =>
+                        'Enter the six-digit code sent to your email.',
+                      AccountAction.forgot =>
+                        'We’ll email you a link to reset your password.',
+                      AccountAction.profile =>
+                        'Keep your player details up to date.',
                     },
                     style: const TextStyle(color: Color(0xff9fb1c7))),
                 const SizedBox(height: 24),
@@ -312,27 +378,51 @@ class _AccountFormState extends State<AccountForm> {
                   child: Column(
                     children: [
                       for (final e in labels.entries)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 16),
-                          child: TextFormField(
-                            controller: fields[e.key],
-                            enabled: !busy && !loading,
-                            obscureText: e.key.contains('password'),
-                            maxLength: ['otp', 'code'].contains(e.key)
-                                ? 6
-                                : e.key.contains('password')
-                                    ? 128
-                                    : null,
-                            keyboardType: e.key == 'email'
-                                ? TextInputType.emailAddress
-                                : ['otp', 'code', 'mobile_number']
-                                        .contains(e.key)
-                                    ? TextInputType.phone
-                                    : TextInputType.text,
-                            decoration: InputDecoration(labelText: e.value),
-                            validator: (v) => validate(e.key, v),
+                        if (action == AccountAction.preferences)
+                          preferenceChoices(e.key)
+                        else
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: TextFormField(
+                              controller: fields[e.key],
+                              enabled: !busy && !loading,
+                              obscureText: e.key.contains('password') &&
+                                  !visiblePasswords.contains(e.key),
+                              maxLength: ['otp', 'code'].contains(e.key)
+                                  ? 6
+                                  : e.key.contains('password')
+                                      ? 128
+                                      : null,
+                              keyboardType: e.key == 'email'
+                                  ? TextInputType.emailAddress
+                                  : ['otp', 'code', 'mobile_number']
+                                          .contains(e.key)
+                                      ? TextInputType.phone
+                                      : TextInputType.text,
+                              decoration: InputDecoration(
+                                  labelText: e.value,
+                                  counterText: '',
+                                  suffixIcon: e.key.contains('password')
+                                      ? IconButton(
+                                          tooltip:
+                                              visiblePasswords.contains(e.key)
+                                                  ? 'Hide password'
+                                                  : 'Show password',
+                                          icon: Icon(visiblePasswords
+                                                  .contains(e.key)
+                                              ? Icons.visibility_off_outlined
+                                              : Icons.visibility_outlined),
+                                          onPressed: () => setState(() {
+                                                if (!visiblePasswords
+                                                    .add(e.key)) {
+                                                  visiblePasswords
+                                                      .remove(e.key);
+                                                }
+                                              }))
+                                      : null),
+                              validator: (v) => validate(e.key, v),
+                            ),
                           ),
-                        ),
                     ],
                   ),
                 ),
@@ -371,11 +461,16 @@ class _AccountFormState extends State<AccountForm> {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : Text(
-                            action == AccountAction.login
-                                ? 'Sign in'
-                                : action == AccountAction.register
-                                    ? 'Create account'
-                                    : 'Save',
+                            switch (action) {
+                              AccountAction.login => 'Sign in',
+                              AccountAction.register => 'Create account',
+                              AccountAction.verify => 'Verify email',
+                              AccountAction.forgot => 'Send reset link',
+                              AccountAction.reset => 'Reset password',
+                              AccountAction.password => 'Update password',
+                              AccountAction.close => 'Close my account',
+                              _ => 'Save changes'
+                            },
                           ),
                   ),
                 ),

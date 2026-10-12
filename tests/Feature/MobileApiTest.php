@@ -124,6 +124,11 @@ class MobileApiTest extends TestCase
         $notification = Notification::create(['user_id' => $b->id, 'title' => 'Private', 'message' => 'Secret', 'is_read' => false]);
         $this->withToken($token)->patchJson('/api/v1/me/notifications/'.$notification->id.'/read')->assertNotFound();
         $this->withToken($token)->getJson('/api/v1/me/notifications')->assertJsonCount(0, 'data');
+        Notification::create(['user_id' => $a->id, 'title' => 'Unread', 'message' => 'Own message', 'is_read' => false]);
+        Notification::create(['user_id' => $a->id, 'title' => 'Read', 'message' => 'Own message', 'is_read' => true]);
+        $this->withToken($token)->getJson('/api/v1/me/dashboard')->assertJsonPath('data.unread_notifications', 1);
+        $this->withToken($token)->patchJson('/api/v1/me/notifications/read-all')->assertOk();
+        $this->withToken($token)->getJson('/api/v1/me/dashboard')->assertJsonPath('data.unread_notifications', 0);
         $other = $this->login($b);
         $id = MobileApiToken::where('user_id', $b->id)->value('id');
         $this->withToken($token)->deleteJson('/api/v1/me/devices/'.$id)->assertNotFound();

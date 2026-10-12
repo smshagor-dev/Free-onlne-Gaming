@@ -63,7 +63,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('Big fun.\nZero price.'), findsOneWidget);
+      expect(find.text('A little play. A better day.'), findsOneWidget);
       expect(tester.takeException(), isNull);
       if (const bool.fromEnvironment('SAVE_APP_PREVIEW') && width == 390) {
         await tester.runAsync(() async {
@@ -149,9 +149,12 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+        find.widgetWithText(FilledButton, 'Save changes'), 200);
     expect(
       tester
-          .widget<FilledButton>(find.widgetWithText(FilledButton, 'Save'))
+          .widget<FilledButton>(
+              find.widgetWithText(FilledButton, 'Save changes'))
           .onPressed,
       isNull,
     );
@@ -184,6 +187,81 @@ void main() {
       (await state.api.storage.readAll()).values.contains('PREVIEWSECRET'),
       false,
     );
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+    state.dispose();
+  });
+  testWidgets('header notifications show unread count and clear after read-all',
+      (tester) async {
+    var unread = 2;
+    final state = AppState(ApiClient(
+        baseUrl: 'https://site.test/api/v1',
+        client: MockClient((r) async {
+          final path = r.url.path;
+          if (r.method == 'PATCH') {
+            unread = 0;
+            return http.Response('{"message":"Read"}', 200);
+          }
+          if (path.endsWith('me/dashboard')) {
+            return http.Response(
+                jsonEncode({
+                  'data': {'unread_notifications': unread}
+                }),
+                200);
+          }
+          if (path.endsWith('me/notifications')) {
+            return http.Response(
+                '{"data":[{"id":1,"title":"New games this week","message":"Ready to explore?","is_read":false}],"next_page_url":null}',
+                200);
+          }
+          return http.Response('{"data":[],"meta":{"has_more":false}}', 200);
+        })))
+      ..ready = true
+      ..user = {'id': 7, 'name': 'Demo'};
+    state.api.token = 'demo';
+    await tester.pumpWidget(FreeGamesApp(state: state));
+    await tester.pumpAndSettle();
+    expect(tester.widget<Badge>(find.byType(Badge)).isLabelVisible, true);
+    expect(find.text('2'), findsOneWidget);
+    await tester.tap(find.byTooltip('Notifications'));
+    await tester.pumpAndSettle();
+    expect(find.text('New games this week'), findsOneWidget);
+    await tester.tap(find.byTooltip('Mark all read'));
+    await tester.pumpAndSettle();
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(tester.widget<Badge>(find.byType(Badge)).isLabelVisible, false);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+    state.dispose();
+  });
+  testWidgets('preferences chips save the selected genres and platforms',
+      (tester) async {
+    Map<String, dynamic>? posted;
+    final state = AppState(ApiClient(
+        baseUrl: 'https://site.test/api/v1',
+        client: MockClient((r) async {
+          if (r.method == 'PUT') {
+            posted = jsonDecode(r.body) as Map<String, dynamic>;
+            return http.Response('{"message":"Saved"}', 200);
+          }
+          return http.Response(
+              '{"data":{"preferred_genres":["Puzzle"],"preferred_platforms":["Android"]}}',
+              200);
+        })))
+      ..user = {'id': 7};
+    state.api.token = 'demo';
+    await tester.pumpWidget(MaterialApp(
+        home: AccountForm(state: state, action: AccountAction.preferences)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilterChip, 'Adventure'));
+    final save = find.widgetWithText(FilledButton, 'Save changes');
+    await tester.scrollUntilVisible(save, 200);
+    await tester.pumpAndSettle();
+    await tester.tap(save);
+    await tester.pumpAndSettle();
+    expect(posted?['preferred_genres'], ['Puzzle', 'Adventure']);
+    expect(posted?['preferred_platforms'], ['Android']);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
     state.dispose();

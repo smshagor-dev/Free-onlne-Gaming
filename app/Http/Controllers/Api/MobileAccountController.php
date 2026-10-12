@@ -16,7 +16,7 @@ class MobileAccountController extends Controller
     {
         $id = $r->user()->id;
 
-        return response()->json(['data' => ['name' => $r->user()->name, 'favorites' => app(MobileActivityService::class)->favorites($r->user())->count(), 'games_played' => app(MobileActivityService::class)->recent($r->user())->count(), 'lottery_tickets' => LotteryTransaction::where('user_id', $id)->count(), 'lottery_wins' => LottaryWinner::where('user_id', $id)->count(), 'two_factor_enabled' => (bool) $r->user()->google2fa_status]]);
+        return response()->json(['data' => ['name' => $r->user()->name, 'favorites' => app(MobileActivityService::class)->favorites($r->user())->count(), 'games_played' => app(MobileActivityService::class)->recent($r->user())->count(), 'lottery_tickets' => LotteryTransaction::where('user_id', $id)->count(), 'lottery_wins' => LottaryWinner::where('user_id', $id)->count(), 'unread_notifications' => $r->user()->notifications()->where('is_read', false)->count(), 'two_factor_enabled' => (bool) $r->user()->google2fa_status]]);
     }
 
     public function preferences(Request $r, CatalogPersonalizationService $s)
