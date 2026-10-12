@@ -5,15 +5,15 @@ Flutter Material 3 app for Android and iOS using the Laravel `/api/v1` API. Navy
 ## Included flows
 
 - Home: search, categories and infinite scrolling in batches of 30 games.
-- Explore: GameMonetize, FreeToGame, GamerPower and local website catalogs.
-- Game detail pages, isolated HTML5 WebView player and external HTTPS provider links.
+- Explore: playable HTML5 games from the API, with search and categories.
+- Game detail pages, isolated in-app HTML5 WebView player.
 - Favorites, browser play history, grouped account dashboard and header notification bell with live unread count.
 - Registration, email verification/resend, login with authenticator OTP, password recovery/reset.
 - Secure session restoration/renewal, device revocation and sign-out from all devices.
 - Profile and password editing, gaming preferences, authenticator QR setup/disable and confirmed account closure.
 - Lottery draws, owned tickets/details and results, using the existing read-only API.
 
-No casino, deposits, withdrawals or paid game access. Download/giveaway catalogs and local games open provider/website pages; website login remains separate. WebViews receive no bearer token, JavaScript bridge or application cookies. Main-frame game navigation is restricted to the GameMonetize HTTPS host. Historical lottery/website records remain retained after account closure.
+No casino, deposits, withdrawals or paid game access. Download/giveaway catalogs and website-only games are excluded from the mobile UI. Games never launch an external browser. WebViews receive no bearer token, JavaScript bridge or application cookies. Main-frame game navigation is restricted to the GameMonetize HTTPS host. Historical lottery/website records remain retained after account closure.
 
 ## Run
 
@@ -48,7 +48,7 @@ Release configuration intentionally fails without these keys. Never commit signi
 
 ## Verification
 
-Current source: Flutter analyzer clean; 17 unit/widget tests passed. Coverage includes provider identity, public/private bearer handling, invalid/expired sessions, late unauthorized responses after a newer login, server validation messages, server-path isolation, navigation at 320/390/768 widths, registration, failed preferences loading and temporary authenticator secrets. Laravel: 70 tests passed, 904 assertions. The earlier development APK compiled successfully; it does not include this UI refresh. The development APK targets the Android emulator/local API; these checks are not real-device certification.
+Current source: Flutter analyzer clean; 17 unit/widget tests passed. Coverage includes provider identity, public/private bearer handling, invalid/expired sessions, late unauthorized responses after a newer login, server validation messages, server-path isolation, navigation at 320/390/768 widths, registration, failed preferences loading and temporary authenticator secrets. Laravel: 71 tests passed, 910 assertions. The earlier development APK compiled successfully; it does not include this UI refresh. The development APK targets the Android emulator/local API; these checks are not real-device certification.
 
 Before publishing, set the live HTTPS API URL and release signing; validate actual mail delivery, games, provider ads/audio/orientation, keyboard and sessions on real Android/iOS devices. Universal/deep links for email recovery are not configured; the app accepts a pasted email reset link/token or browser completion.
 

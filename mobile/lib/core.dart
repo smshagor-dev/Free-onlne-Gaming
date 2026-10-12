@@ -237,7 +237,7 @@ class AppState extends ChangeNotifier {
           final g = Game.fromJson(
             Map<String, dynamic>.from(row['snapshot'] as Map),
           );
-          next[g.key] = g;
+          if (g.playable) next[g.key] = g;
         }
       }
       if ((res['meta'] as Map)['has_more'] != true) break;
@@ -263,7 +263,7 @@ class AppState extends ChangeNotifier {
     if (saved) {
       favorites.remove(g.key);
     } else {
-      favorites[g.key] = g;
+      if (g.playable) favorites[g.key] = g;
     }
     notifyListeners();
   }

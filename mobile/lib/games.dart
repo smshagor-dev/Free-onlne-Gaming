@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import 'core.dart';
@@ -11,9 +10,7 @@ Future<void> openGame(BuildContext context, AppState state, Game g) =>
     Navigator.push(
       context,
       MaterialPageRoute<void>(
-        builder: (_) => g.playable
-            ? PlayerScreen(state: state, game: g)
-            : GameDetails(state: state, game: g),
+        builder: (_) => PlayerScreen(state: state, game: g),
       ),
     );
 
@@ -207,6 +204,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
           'provider': provider,
           'page': '$page',
           'per_page': '30',
+          'playable_only': '1',
           if (search.text.trim().isNotEmpty) 'q': search.text.trim(),
           if (category != null && provider == 'gamemonetize')
             'category': category!,
@@ -218,6 +216,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
         games.addAll(
           (r['data'] as List)
               .map((e) => Game.fromJson(Map<String, dynamic>.from(e as Map)))
+              .where((g) => g.playable)
               .where((g) => seen.add(g.key)),
         );
         more = (r['meta'] as Map)['has_more'] == true;
@@ -284,64 +283,6 @@ class _CatalogScreenState extends State<CatalogScreen> {
                                         size: 20),
                                     label: const Text('Start playing'))
                               ])),
-                    if (widget.discover) ...[
-                      const Text('Explore games',
-                          style: TextStyle(
-                              fontSize: 26, fontWeight: FontWeight.w700)),
-                      const SizedBox(height: 6),
-                      const Text('Find something you’ll love playing.',
-                          style: TextStyle(color: Color(0xff9fb1c7)))
-                    ],
-                    const SizedBox(height: 20),
-                    TextField(
-                      controller: search,
-                      textInputAction: TextInputAction.search,
-                      onSubmitted: (_) => load(reset: true),
-                      decoration: InputDecoration(
-                        hintText: 'Find your next game',
-                        prefixIcon: const Icon(Icons.search),
-                        suffixIcon: IconButton(
-                          tooltip: 'Search games',
-                          onPressed: () => load(reset: true),
-                          icon: const Icon(Icons.arrow_forward),
-                        ),
-                      ),
-                    ),
-                    if (widget.discover) ...[
-                      const SizedBox(height: 16),
-                      DropdownButtonFormField<String>(
-                        initialValue: provider,
-                        isExpanded: true,
-                        decoration: const InputDecoration(
-                          labelText: 'Game collection',
-                        ),
-                        items: const [
-                          DropdownMenuItem(
-                            value: 'gamemonetize',
-                            child: Text('Play in the app'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'freetogame',
-                            child: Text('Free-to-play catalog'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'gamerpower',
-                            child: Text('Free giveaways'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'local',
-                            child: Text('Website games'),
-                          ),
-                        ],
-                        onChanged: (v) {
-                          if (v != null) {
-                            provider = v;
-                            category = null;
-                            load(reset: true);
-                          }
-                        },
-                      ),
-                    ],
                     const SizedBox(height: 16),
                     SizedBox(
                       height: 40,
@@ -682,31 +623,16 @@ class _GameDetailsState extends State<GameDetails> {
                       const SizedBox(height: 12),
                       Text(game!.description),
                       const SizedBox(height: 20),
-                      const Text(
-                        'This collection opens on the provider website. Website login is separate from app login.',
-                      ),
+                      Text(game!.playable
+                          ? 'Play directly in the app.'
+                          : 'This game does not support in-app play.'),
                       const SizedBox(height: 16),
                       FilledButton.icon(
-                        icon: const Icon(Icons.open_in_new),
-                        label: const Text('Open provider website'),
-                        onPressed: () async {
-                          final uri = Uri.tryParse(game!.websiteUrl ?? '');
-                          try {
-                            if (uri == null ||
-                                uri.scheme != 'https' ||
-                                !await launchUrl(
-                                  uri,
-                                  mode: LaunchMode.externalApplication,
-                                )) {
-                              throw ApiException(
-                                'No secure provider link is available.',
-                                0,
-                              );
-                            }
-                          } catch (e) {
-                            if (context.mounted) showError(context, e);
-                          }
-                        },
+                        icon: const Icon(Icons.play_arrow_rounded),
+                        label: const Text('Play now'),
+                        onPressed: game!.playable
+                            ? () => openGame(context, widget.state, game!)
+                            : null,
                       ),
                       OutlinedButton.icon(
                         icon: const Icon(Icons.favorite_border),

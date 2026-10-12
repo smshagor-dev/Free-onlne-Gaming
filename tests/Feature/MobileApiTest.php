@@ -30,6 +30,21 @@ class MobileApiTest extends TestCase
         Http::preventStrayRequests();
     }
 
+    public function test_playable_filter_runs_before_pagination(): void
+    {
+        $this->mock(\App\Services\MobileGameCatalog::class, function ($mock) {
+            $mock->shouldReceive('list')->with('local')->andReturn([
+                ['id' => '1', 'title' => 'Download only', 'playable' => false],
+                ['id' => '2', 'title' => 'Browser puzzle', 'playable' => true],
+            ]);
+        });
+        $this->getJson('/api/v1/games?provider=local&playable_only=1&per_page=1')
+            ->assertOk()->assertJsonPath('data.0.id', '2')
+            ->assertJsonPath('meta.total', 1)->assertJsonPath('meta.has_more', false);
+        $this->getJson('/api/v1/games?provider=local&per_page=1')
+            ->assertOk()->assertJsonPath('meta.total', 2);
+    }
+
     private function player(array $extra = []): User
     {
         return User::factory()->create([...['is_verified' => true, 'password' => Hash::make('correct-password')], ...$extra]);

@@ -119,3 +119,5 @@ General v1 limit: 120 requests/minute/IP. Auth: 30/minute/IP and 5/minute per en
 | PUT | `/me/preferences` | Bearer |
 | GET | `/me/recent` | Bearer |
 | DELETE | `/me/recent` | Bearer |
+
+Mobile game lists accept `playable_only=1` to exclude catalog-only entries before pagination. The Flutter client uses this filter and launches games only inside its isolated HTML5 player.

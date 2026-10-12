@@ -17,9 +17,9 @@ class MobileGameController extends Controller
 
     public function index(Request $r)
     {
-        $d = $r->validate(['provider' => 'sometimes|in:gamemonetize,local,freetogame,gamerpower', 'q' => 'sometimes|string|max:120', 'category' => 'sometimes|string|max:80', 'page' => 'sometimes|integer|min:1|max:100000', 'per_page' => 'sometimes|integer|min:1|max:30']);
+        $d = $r->validate(['playable_only' => 'sometimes|boolean', 'provider' => 'sometimes|in:gamemonetize,local,freetogame,gamerpower', 'q' => 'sometimes|string|max:120', 'category' => 'sometimes|string|max:80', 'page' => 'sometimes|integer|min:1|max:100000', 'per_page' => 'sometimes|integer|min:1|max:30']);
         $games = collect($this->catalog->list($d['provider'] ?? 'gamemonetize'))->filter(function ($g) use ($d) {
-            return (! isset($d['q']) || str_contains(mb_strtolower($g['title']), mb_strtolower($d['q']))) && (! isset($d['category']) || strcasecmp($g['category'] ?? implode(',', $g['genres'] ?? []), $d['category']) === 0);
+            return (empty($d['playable_only']) || ($g['playable'] ?? false)) && (! isset($d['q']) || str_contains(mb_strtolower($g['title']), mb_strtolower($d['q']))) && (! isset($d['category']) || strcasecmp($g['category'] ?? implode(',', $g['genres'] ?? []), $d['category']) === 0);
         })->values();
         $page = $d['page'] ?? 1;
         $size = $d['per_page'] ?? 30;
