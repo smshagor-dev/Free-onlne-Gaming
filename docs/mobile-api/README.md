@@ -22,7 +22,7 @@ Do not run `migrate:fresh` on an existing database. The migration adds two table
 2. `POST /auth/verify-email`: email, code. Successful verification consumes the challenge. Resend with `/auth/resend-verification`.
 3. `POST /auth/login`: email, password, device_name; add otp if existing account 2FA is enabled. Returns `data.access_token`, `token_type`, `expires_at` and a safe user profile. Never returns password hashes or 2FA secrets.
 4. Send `Authorization: Bearer TOKEN` on private endpoints. No cookies or CSRF token are needed. Store tokens in Android Keystore/iOS Keychain-backed secure storage.
-5. Tokens expire after 30 days. `/auth/refresh` atomically rotates the current token; replace it in secure storage. `/auth/logout` revokes the current device; `/auth/logout-all` revokes all mobile devices. Device listing/revocation is under `/me/devices`.
+5. Tokens expire after 30 days. `/auth/refresh` atomically rotates the current token; replace it in secure storage. `/auth/logout` revokes the current device; `/auth/logout-all` revokes all mobile devices. Device listing/revocation is under `/me/devices`; `current` identifies the requesting session.
 6. Password changes/resets and 2FA changes revoke mobile sessions. Tokens also detect password/2FA changes made through the website. A revoked, expired or security-invalidated token returns 401; clear it and prompt login. Restricted/unverified accounts return 403.
 
 Tokens are random 256-bit values stored as SHA-256 hashes. Login validates existing 2FA and rejects reuse of the same authenticator code for two minutes. Account creation does not automatically authenticate the player.
@@ -49,7 +49,7 @@ Provider failures may return an empty cached catalog. Unknown/unavailable detail
 
 ## Personalization
 
-- `GET /me/dashboard`: current player, favorite count, mobile browser play count, lottery ticket/win count and 2FA status.
+- `GET /me/dashboard`: current player, favorite count, mobile browser play count, lottery ticket/win count and 2FA status. `unread_notifications` returns the current user’s unread count for the mobile header badge.
 - `PUT /me/games/{provider}/{id}/favorite`: save; DELETE removes it. Writes are idempotent. GET `/me/favorites` returns provider/game_id plus cached `snapshot` for cards and pagination metadata.
 - Website local Favorites and catalog My Library are visible in mobile favorites. Saving/removing those providers in the app updates the corresponding website collections. Browser favorites use the new mobile state table; the website has no browser-favorites screen yet.
 - `POST /me/games/gamemonetize/{id}/played`: record browser play; GET `/me/recent` returns distinct mobile browser games ordered by last play. DELETE clears mobile browser history. Legacy website local-game history stays separate and is preserved.
@@ -59,7 +59,7 @@ Favorite snapshots may become stale when a provider removes a game; resolve deta
 
 ## Account, notifications and lottery
 
-`GET/PATCH /me` reads/edits safe account fields (name, country, mobile_number). Email cannot be changed through this endpoint. No balance or privilege field can be edited. PUT `/me/password` requires current_password and confirmed new password.
+`GET/PATCH /me` reads/edits safe account fields (name, country, mobile_number). Safe user responses also return mobile_number. Email cannot be changed through this endpoint. No balance or privilege field can be edited. PUT `/me/password` requires current_password and confirmed new password.
 
 `GET /me/notifications`, PATCH `/me/notifications/{id}/read`, and PATCH `/me/notifications/read-all` operate only on the authenticated user's notifications.
 
@@ -75,7 +75,7 @@ General v1 limit: 120 requests/minute/IP. Auth: 30/minute/IP and 5/minute per en
 
 ## Local checks
 
-`php artisan test --filter=MobileApiTest` exercises hashing/rotation/revocation, JSON failures, registration verification, expiry/security changes, 2FA/replay protection, pagination/casino filtering, user isolation, mass assignment protection, preferences, password-reset invalidation and rate limiting. These are backend tests, not physical Android/iOS app certification. The mobile application itself is not included.
+`php artisan test --filter=MobileApiTest` exercises hashing/rotation/revocation, JSON failures, registration verification, expiry/security changes, 2FA/replay protection, pagination/casino filtering, user isolation, mass assignment protection, preferences, password-reset invalidation and rate limiting. These are backend tests, not physical Android/iOS app certification. The Flutter client is included under `mobile/`; see its README for setup and platform validation.
 
 ## Endpoint reference
 
@@ -119,3 +119,5 @@ General v1 limit: 120 requests/minute/IP. Auth: 30/minute/IP and 5/minute per en
 | PUT | `/me/preferences` | Bearer |
 | GET | `/me/recent` | Bearer |
 | DELETE | `/me/recent` | Bearer |
+
+Mobile game lists accept `playable_only=1` to exclude catalog-only entries before pagination. The Flutter client uses this filter and launches games only inside its isolated HTML5 player.
