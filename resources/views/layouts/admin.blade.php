@@ -42,6 +42,9 @@
             ['Lottery', 'admin.lottaries.index', 'admin.lottaries.*', '◈'],
             ['Lottery tickets', 'admin.lottaries.transactions', 'admin.lottaries.transactions*', '▤'],
         ],
+        'Finance' => [
+            ['Financial records', 'admin.finance.index', 'admin.finance.*', '¤'],
+        ],
         'Management' => [
             ['Countries & currencies', 'admin.countries.index', 'admin.countries.*', '◎'],
             ['Site / SMTP / SEO', 'admin.setting.edit', 'admin.setting.*', '⚙'],
