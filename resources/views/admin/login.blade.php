@@ -1,99 +1,37 @@
 @extends('layouts.app')
-@section('title', 'Admin Login')
-@push('head')
-
-
-
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-
-
-<style>
-        .auth-page {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        .auth-page .login-container {
-            max-width: 400px;
-            width: 100%;
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
-            text-align: center;
-        }
-        .auth-page .login-container h2 {
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 20px;
-        }
-        .auth-page .form-control {
-            border-radius: 8px;
-            padding: 10px;
-        }
-        .auth-page .form-check-input {
-            cursor: pointer;
-        }
-        .auth-page .btn-login {
-            width: 100%;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border-radius: 8px;
-            padding: 10px;
-            transition: 0.3s;
-            font-weight: bold;
-        }
-        .auth-page .btn-login:hover {
-            background: linear-gradient(135deg, #5a67d8, #6b46c1);
-        }
-        .auth-page .alert {
-            font-size: 14px;
-        }
-        .auth-page .forgot-password {
-            display: block;
-            margin-top: 10px;
-            color: #6b46c1;
-            text-decoration: none;
-        }
-        .auth-page .forgot-password:hover {
-            text-decoration: underline;
-        }
-    </style>
-@endpush
+@section('title', 'Admin sign in | FreeGames')
 @section('content')
-<div class="auth-page">
-    <div class="login-container">
-        <h2>Admin Login</h2>
-
-        @if(session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
-        @endif
-
-        @if($errors->any())
-            <div class="alert alert-danger">
-                @foreach ($errors->all() as $error)
-                    <p>{{ $error }}</p>
-                @endforeach
-            </div>
-        @endif
-
-        <form method="POST" action="{{ route('admin.login.submit') }}">
-            @csrf
-            <div class="mb-3">
-                <input type="email" name="email" class="form-control" placeholder="Enter your email" required>
-            </div>
-            <div class="mb-3">
-                <input type="password" name="password" class="form-control" placeholder="Enter your password" required>
-            </div>
-            <div class="mb-3 form-check text-start">
-                <input type="checkbox" class="form-check-input" id="remember" name="remember">
-                <label class="form-check-label" for="remember">Remember Me</label>
-            </div>
-            <button type="submit" class="btn btn-login">Login</button>
-        </form>
+<section class="fg-auth-page" aria-labelledby="admin-login-title">
+    <div class="fg-auth-layout">
+        @include('auth.partials.aside', ['heading' => 'Manage FreeGames with confidence.', 'description' => 'Secure access for authorized team members. Use your administrator credentials to continue.'])
+        <div class="fg-auth-panel">
+            <span class="fg-auth-eyebrow">RESTRICTED ACCESS</span>
+            <h1 id="admin-login-title">Admin sign in</h1>
+            <p class="fg-auth-intro">Enter your authorized administrator account details.</p>
+            @if(session('success'))<div class="fg-auth-alert is-success" role="status">{{ session('success') }}</div>@endif
+            @if($errors->any())<div class="fg-auth-alert" role="alert"><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
+            <form class="fg-auth-form" method="POST" action="{{ route('admin.login.submit') }}">
+                @csrf
+                <div class="fg-auth-field">
+                    <label for="admin-email">Admin email</label>
+                    <input id="admin-email" type="email" name="email" value="{{ old('email') }}" required autocomplete="username" placeholder="admin@example.com" autofocus>
+                    @error('email')<span class="fg-auth-error" role="alert">{{ $message }}</span>@enderror
+                </div>
+                <div class="fg-auth-field">
+                    <label for="admin-password">Password</label>
+                    <div class="fg-auth-password">
+                        <input id="admin-password" type="password" name="password" required autocomplete="current-password" placeholder="Enter your password">
+                        <button type="button" data-password-toggle="admin-password" aria-label="Show password" aria-pressed="false">Show</button>
+                    </div>
+                </div>
+                <div class="fg-auth-row">
+                    <label class="fg-auth-check"><input type="checkbox" name="remember" value="1" @checked(old('remember'))> Remember me</label>
+                    <span class="fg-auth-help"><i class="fa-solid fa-lock" aria-hidden="true"></i> Authorized staff only</span>
+                </div>
+                <button class="fg-auth-submit" type="submit">Access dashboard <span aria-hidden="true">→</span></button>
+            </form>
+            <p class="fg-auth-switch"><a class="fg-auth-link" href="{{ route('games.viewIndex') }}">Return to FreeGames</a></p>
+        </div>
     </div>
-</div>
+</section>
 @endsection
