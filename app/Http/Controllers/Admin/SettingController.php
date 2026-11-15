@@ -3,77 +3,102 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Setting;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use App\Models\Country;
+use App\Models\Setting;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class SettingController extends Controller
 {
-    public function edit(Setting $setting)
+    public function edit()
     {
-        $setting = Setting::first();
-
-        $countries = Country::select('id', 'currency_symbol', 'currency')->get();
+        $setting = Setting::first() ?? Setting::create(['name' => 'Free Games']);
+        $countries = Country::query()->select('id', 'currency_symbol', 'currency')
+            ->whereNotNull('currency')->orderBy('currency')->get()->unique('currency');
 
         return view('admin.settings.edit', compact('setting', 'countries'));
     }
 
-    public function update(Request $request, Setting $setting)
+    public function update(Request $request, Setting $setting): RedirectResponse
     {
         $data = $request->validate([
-            'name' => 'nullable|string|max:255',
-            'title' => 'nullable|string|max:255',
-            'description' => 'nullable|string',
-            'seo_title' => 'nullable|string|max:255',
-            'seo_description' => 'nullable|string',
-            'meta_tag' => 'nullable|string|max:255',
-            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'favicon' => 'nullable|image|mimes:ico,png|max:1024',
-            'thumbnail_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'phone' => 'nullable|string|max:50',
-            'email' => 'nullable|email|max:255',
-            'adsense_code' => 'nullable|string',
-            'google_analytics_code' => 'nullable|string',
-            'MAIL_MAILER' => 'nullable|string|max:50',
-            'MAIL_HOST' => 'nullable|string|max:255',
-            'MAIL_PORT' => 'nullable|string|max:10',
-            'MAIL_USERNAME' => 'nullable|string|max:255',
-            'MAIL_PASSWORD' => 'nullable|string|max:255',
-            'MAIL_ENCRYPTION' => 'nullable|string|max:50',
-            'MAIL_FROM_ADDRESS' => 'nullable|email|max:255',
-            'MAIL_FROM_NAME' => 'nullable|string|max:255',
-            'site_currency' => 'nullable|string|max:10',
-            'currency_symble' => 'nullable|string|max:10',
+            'name' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'title' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'description' => ['sometimes', 'nullable', 'string'],
+            'seo_title' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'seo_description' => ['sometimes', 'nullable', 'string'],
+            'meta_tag' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'logo' => ['sometimes', 'nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
+            'favicon' => ['sometimes', 'nullable', 'file', 'mimes:ico,png', 'max:1024'],
+            'thumbnail_image' => ['sometimes', 'nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
+            'phone' => ['sometimes', 'nullable', 'string', 'max:50'],
+            'email' => ['sometimes', 'nullable', 'email', 'max:255'],
+            'adsense_code' => ['sometimes', 'nullable', 'string'],
+            'google_analytics_code' => ['sometimes', 'nullable', 'string'],
+            'MAIL_MAILER' => ['sometimes', 'nullable', 'string', 'max:50'],
+            'MAIL_HOST' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'MAIL_PORT' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:65535'],
+            'MAIL_USERNAME' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'MAIL_PASSWORD' => ['sometimes', 'nullable', 'string', 'max:1024'],
+            'MAIL_ENCRYPTION' => ['sometimes', 'nullable', 'string', 'max:50'],
+            'MAIL_FROM_ADDRESS' => ['sometimes', 'nullable', 'email', 'max:255'],
+            'MAIL_FROM_NAME' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'site_currency' => ['sometimes', 'nullable', 'string', 'max:10'],
+            'currency_symble' => ['sometimes', 'nullable', 'string', 'max:10'],
         ]);
 
-        // Handle file uploads
-        if ($request->hasFile('logo')) {
-            // Delete old logo if exists
-            if ($setting->logo && Storage::exists($setting->logo)) {
-                Storage::delete($setting->logo);
-            }
-            $data['logo'] = $request->file('logo')->store('settings', 'public');
+        // Blank password is not a reset operation: never overwrite the SMTP secret.
+        if (blank($data['MAIL_PASSWORD'] ?? null)) {
+            unset($data['MAIL_PASSWORD']);
         }
 
-        if ($request->hasFile('favicon')) {
-            // Delete old favicon if exists
-            if ($setting->favicon && Storage::exists($setting->favicon)) {
-                Storage::delete($setting->favicon);
+        // Do not delete the previous media file during a normal settings update.
+        // A bad upload or interrupted write must not destroy existing branding.
+        foreach (['logo', 'favicon', 'thumbnail_image'] as $field) {
+            if ($request->hasFile($field)) {
+                $data[$field] = $request->file($field)->store('settings', 'public');
             }
-            $data['favicon'] = $request->file('favicon')->store('settings', 'public');
-        }
-
-        if ($request->hasFile('thumbnail_image')) {
-            // Delete old thumbnail if exists
-            if ($setting->thumbnail_image && Storage::exists($setting->thumbnail_image)) {
-                Storage::delete($setting->thumbnail_image);
-            }
-            $data['thumbnail_image'] = $request->file('thumbnail_image')->store('settings', 'public');
         }
 
         $setting->update($data);
+        Cache::forget('app.settings.first');
 
-        return redirect()->back()->with('success', 'Settings updated successfully.');
+        return back()->with('success', 'Site configuration saved successfully.');
+    }
+
+    public function testMail(Request $request): RedirectResponse
+    {
+        $admin = $request->user('admin');
+        $key = 'admin:smtp-test:'.$admin->id.':'.$request->ip();
+        if (RateLimiter::tooManyAttempts($key, 2)) {
+            throw ValidationException::withMessages([
+                'smtp' => 'Too many test emails. Please try again in a minute.',
+            ]);
+        }
+        RateLimiter::hit($key, 60);
+
+        if (config('mail.default') !== 'smtp') {
+            return back()->with('error', 'Set the mail driver to SMTP and save it before sending a test.');
+        }
+
+        try {
+            // Only the signed-in administrator receives test messages.
+            // Never let arbitrary recipients use the server as an email relay.
+            Mail::raw(
+                'This is a Free Games CMS SMTP connectivity test. No action is required.',
+                static function ($message) use ($admin): void {
+                    $message->to($admin->email)->subject('Free Games SMTP test');
+                }
+            );
+        } catch (Throwable) {
+            return back()->with('error', 'SMTP test failed. Check host, port, encryption and credentials. No secret was changed.');
+        }
+
+        return back()->with('success', 'Test email handed to the configured SMTP mailer for '.$admin->email.'.');
     }
 }

@@ -9,6 +9,7 @@ export default defineConfig({
                 'resources/css/catalog.css',
                 'resources/css/personalization.css',
                 'resources/js/app.js',
+                'resources/js/admin-cms.js',
             ],
             refresh: true,
         }),

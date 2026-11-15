@@ -57,5 +57,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // Never flash credentials into validation sessions or old form inputs.
+        $exceptions->dontFlash(['current_password', 'password', 'password_confirmation', 'MAIL_PASSWORD']);
         $exceptions->shouldRenderJsonWhen(fn (Request $request, \Throwable $e): bool => $request->is('api/*') || $request->expectsJson());
     })->create();

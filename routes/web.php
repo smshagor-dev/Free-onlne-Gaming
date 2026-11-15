@@ -10,6 +10,7 @@ use App\Http\Controllers\Auth\VerificationController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\FinanceOverviewController;
 use App\Http\Controllers\GamesCategoryController;
 use App\Http\Controllers\TagController;
 use App\Http\Controllers\GameController;
@@ -165,6 +166,7 @@ Route::post('/sm-shagor/free-games/admin-main/control-back-office/logout', [Admi
 Route::prefix('/sm-shagor/free-games/admin-main/control-back-office/')->name('admin.')->middleware(['auth:admin'])->group(function () {
 
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+    Route::get('/finance', [FinanceOverviewController::class, 'index'])->name('finance.index');
 
     Route::get('/profile', [AdminController::class, 'viewProfile'])->name('profile');
 
@@ -176,8 +178,11 @@ Route::prefix('/sm-shagor/free-games/admin-main/control-back-office/')->name('ad
 
     Route::get('/settings/edit', [SettingController::class, 'edit'])->name('setting.edit');
     Route::put('/settings/{setting}', [SettingController::class, 'update'])->name('setting.update');
-    
-    Route::view('/global/settings', 'admin.settings_page')->name('settings.global');
+    Route::post('/settings/mail/test', [SettingController::class, 'testMail'])
+        ->middleware('throttle:2,1')->name('setting.mail.test');
+
+    // Keep legacy deep links working; the old view no longer exists.
+    Route::get('/global/settings', fn () => redirect()->route('admin.setting.edit'))->name('settings.global');
 
     Route::get('/countries', [AdminController::class, 'index'])->name('countries.index');
     Route::get('/countries/{id}/edit-currency', [AdminController::class, 'editCurrency'])->name('countries.editCurrency');

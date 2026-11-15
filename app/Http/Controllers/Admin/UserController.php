@@ -44,7 +44,10 @@ class UserController extends Controller
 
     public function userView($id)
     {
-        return view('admin.users.view', ['user' => User::findOrFail($id)]);
+        $user = User::withCount(['favorites', 'game_opens', 'user_logins', 'deposits', 'kycSubmissions'])->findOrFail($id);
+        $recentLogins = $user->user_logins()->latest()->limit(6)->get();
+
+        return view('admin.users.view', compact('user', 'recentLogins'));
     }
 
 
