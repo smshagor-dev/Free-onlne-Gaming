@@ -9,6 +9,7 @@ const STATIC_URLS = [
     OFFLINE_URL,
     "/manifest.json",
     "/favicon.svg",
+    "/favicon.ico",
     "/icons/free-games-192.png",
     "/icons/free-games-512.png"
 ];
