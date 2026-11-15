@@ -57,3 +57,35 @@ jobs:
 
       - name: PHP lint
         run: find app bootstrap config database routes tests -name '*.php' -print0 | xargs -0 -n1 php -l
+
+  production-install:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          tools: composer:v2
+          coverage: none
+
+      - name: Install development dependencies to seed provider caches
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Confirm Pail was discovered in development
+        run: grep -q 'PailServiceProvider' bootstrap/cache/packages.php
+
+      - name: Switch the same checkout to production dependencies
+        run: composer install --no-dev --no-interaction --prefer-dist --no-progress --optimize-autoloader
+
+      - name: Verify Laravel boots without Pail
+        run: |
+          test -f bootstrap/cache/packages.php
+          ! grep -q 'PailServiceProvider' bootstrap/cache/packages.php
+          if test -f bootstrap/cache/services.php; then
+            ! grep -q 'PailServiceProvider' bootstrap/cache/services.php
+          fi
+          php artisan list --raw > /dev/null
