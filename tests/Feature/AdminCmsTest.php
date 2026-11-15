@@ -160,8 +160,8 @@ class AdminCmsTest extends TestCase
 
         $this->get(route('admin.users.view', ['id' => $user->id]))
             ->assertOk()
-            ->assertSee('Identity & account')
-            ->assertSee('Wallet, points & bonuses')
+            ->assertSee('Identity &amp; account', false)
+            ->assertSee('Wallet, points &amp; bonuses', false)
             ->assertSee('Recent account sign-ins')
             ->assertDontSee('PRIVATE-TWOFA-SECRET')
             ->assertDontSee('PRIVATE-RESET-TOKEN');
