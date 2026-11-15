@@ -758,6 +758,89 @@
 @media(max-width:760px){.home-design .fg-hero-layout{padding:30px 0 34px;min-height:0}.home-design .fg-hero h1{font-size:40px}.home-design .fg-badge{margin-bottom:18px}.home-design .fg-hero-btn{min-width:0;padding:0 18px;font-size:16px;height:52px}.home-design .fg-hero-actions{gap:12px}.home-design .fg-search{width:100%}.home-design .fg-main{padding-top:20px}}
 
 @media(max-width:1000px){.home-design .fg-shell{padding:0 16px}}
+
+/* Mobile-first homepage corrections: keep the hero readable and display two games per row. */
+@media (max-width:760px) {
+    .home-design .fg-hero {
+        min-height:0;
+        background:
+            radial-gradient(ellipse at 95% 10%,rgba(20,112,181,.24),transparent 70%),
+            linear-gradient(155deg,#071827 0%,#0b2134 66%,#071420 100%);
+    }
+    .home-design .fg-hero::after {height:48px;opacity:.45}
+    .home-design .fg-hero-layout {
+        display:grid;
+        grid-template-columns:minmax(0,1fr);
+        gap:0;
+        padding:27px 0 30px;
+        min-height:0;
+    }
+    .home-design .fg-hero-layout > div:first-child {min-width:0}
+    .home-design .fg-hero-art {display:none}
+    .home-design .fg-hero h1 {
+        max-width:100%;
+        font-size:clamp(31px,8.2vw,45px);
+        line-height:1.13;
+        letter-spacing:-.035em;
+        overflow-wrap:normal;
+    }
+    .home-design .fg-hero h1 .fg-blue-text {display:inline}
+    .home-design .fg-mobile-only {display:none}
+    .home-design .fg-badge {
+        font-size:11px;
+        padding:8px 11px;
+        margin-bottom:14px;
+        max-width:100%;
+    }
+    .home-design .fg-hero p {
+        margin:13px 0 21px;
+        max-width:420px;
+        font-size:clamp(14px,3.8vw,16px);
+        line-height:1.55;
+    }
+    /* Header search already offers live results; avoid a second search on mobile. */
+    .home-design .fg-hero .fg-search {display:none}
+    .home-design .fg-hero-actions {
+        display:grid;
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:10px;
+    }
+    .home-design .fg-hero-btn {
+        min-width:0;
+        width:100%;
+        height:47px;
+        padding:0 9px;
+        gap:7px;
+        font-size:clamp(12px,3.3vw,15px);
+        white-space:nowrap;
+    }
+    .home-design .fg-main {padding:18px 0 34px}
+    .home-design .fg-categories {gap:10px;margin-bottom:20px}
+    .home-design .fg-category {min-width:128px;padding:10px 12px}
+    .home-design .fg-section {margin-top:23px}
+    .home-design .fg-section-head {gap:9px;margin-bottom:12px}
+    .home-design .fg-section-title {font-size:clamp(17px,4.8vw,21px)}
+    .home-design .fg-view-all {font-size:12px}
+    .home-design .fg-games-grid {
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:10px;
+    }
+    .home-design .fg-game-body {padding:8px}
+    .home-design .fg-game-body h3 {font-size:13px;margin-bottom:6px}
+    .home-design .fg-tags span {font-size:10px;padding:4px 6px;max-width:90px}
+    .home-design .fg-card-play {width:29px;height:29px}
+}
+@media (max-width:430px) {
+    /* Override the legacy single-column breakpoint. */
+    .home-design .fg-games-grid {grid-template-columns:repeat(2,minmax(0,1fr))}
+    .home-design .fg-hero h1 {font-size:clamp(30px,8.1vw,35px)}
+    .home-design .fg-tags span:nth-child(2) {display:none}
+}
+@media (max-width:350px) {
+    .home-design .fg-hero-btn {font-size:12px;gap:5px}
+    .home-design .fg-hero-btn i {font-size:11px}
+}
+
 </style>
 
 <div class="fg-page home-design">
