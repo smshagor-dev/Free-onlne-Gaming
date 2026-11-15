@@ -163,7 +163,7 @@ class RegisterController extends Controller
         $micro = substr(str_replace('.', '', $microtime), 0, 10);
         $username = 'User' . $micro;
 
-        $password = Str::random(8);
+        $password = Str::random(16);
 
         $microtime = microtime(true);
         $milliseconds = sprintf('%03d', ($microtime - floor($microtime)) * 1000);
@@ -190,7 +190,7 @@ class RegisterController extends Controller
         // Create user
         $user = User::create([
             'username' => $username,
-            'password' => $password,
+            'password' => Hash::make($password),
             'email'        => $username . '@mail.com',
             'registration_type' => 'Quick',
             'country' => $data['country'] ?? ($location['country'] ?? null),
