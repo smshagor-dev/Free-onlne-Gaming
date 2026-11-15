@@ -47,6 +47,7 @@ jobs:
         run: |
           sed '1d;$d' resources/views/layouts/menu-script.blade.php > /tmp/free-games-menu.js
           node --check /tmp/free-games-menu.js
+          node --check resources/js/auth-experience.js
 
       - name: Run PHP tests
         run: php artisan test
