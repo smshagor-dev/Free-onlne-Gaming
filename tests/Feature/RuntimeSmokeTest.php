@@ -240,7 +240,7 @@ class RuntimeSmokeTest extends TestCase
             route('admin.games_categories.index'),
             route('admin.lottaries.index'),
         ] as $uri) {
-            $this->actingAs($admin, 'admin')->get($uri)->assertOk()->assertSee('fg-topbar')->assertSee('site-footer');
+            $this->actingAs($admin, 'admin')->get($uri)->assertOk()->assertSee('cms-sidebar')->assertSee('cms-topbar');
         }
     }
 }
