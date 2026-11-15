@@ -14,12 +14,13 @@ use App\Models\UserDeposit;
 use App\Models\Transaction;
 use App\Models\UserLogin;
 use App\Models\Country;
+use App\Services\AdminCmsAnalytics;
 
 class AdminController extends Controller
 {
-    public function dashboard()
+    public function dashboard(AdminCmsAnalytics $analytics)
     {
-        return view('admin.dashboard', ['users_count' => User::count()]);
+        return view('admin.dashboard', $analytics->dashboard());
     }
 
 
