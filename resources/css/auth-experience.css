@@ -76,3 +76,12 @@ body.fg-modal-open{overflow:hidden}
 @media(max-width:1050px){.fg-auth-layout{grid-template-columns:1fr;max-width:650px}.fg-auth-aside{min-height:0;gap:12px;padding:24px 32px}.fg-auth-aside h2{font-size:29px;margin:12px 0}.fg-auth-aside p{max-width:none;margin:0}.fg-auth-points{display:none}.fg-auth-panel{padding:32px}}
 @media(max-width:580px){.fg-auth-page{padding:4px 0 20px}.fg-auth-layout,.fg-auth-center{border-radius:15px}.fg-auth-aside{padding:20px}.fg-auth-aside h2{font-size:26px}.fg-auth-panel,.fg-auth-center{padding:20px}.fg-auth-fields{grid-template-columns:1fr}.fg-auth-row{align-items:flex-start}.fg-auth-modal{padding:9px}.fg-auth-modal-dialog{max-height:96dvh;border-radius:14px;padding:23px 17px}.fg-auth-social{gap:8px}.fg-page .fg-auth-social a{font-size:12px}.fg-auth-modal .fg-auth-fields{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){.fg-auth-submit,.fg-auth-field input,.fg-auth-field select{transition:none}}
+
+/* Keep both guest entry points discoverable on smaller screens. */
+@media(max-width:1000px){
+    .fg-nav .fg-actions .fg-auth-ghost{display:inline-flex;align-items:center;justify-content:center}
+}
+@media(max-width:560px){
+    .fg-nav .fg-actions{display:flex;align-items:center;gap:5px}
+    .fg-nav .fg-actions .fg-auth{font-size:12px;padding:7px 8px;white-space:nowrap}
+}
