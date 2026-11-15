@@ -39,6 +39,7 @@
 </main>
 <footer class="site-footer">Free browser games · <a href="{{ route('contacts.create') }}">Contact</a></footer>
 @include('layouts.menu-script')
+@include('auth.partials.modal')
 @stack('scripts')
 </body>
 </html>
