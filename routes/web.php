@@ -24,7 +24,6 @@ use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\Auth\FacebookController;
-use App\Http\Controllers\Auth\TelegramController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\LottaryController;
 use App\Http\Controllers\User\DashboardController;
@@ -63,9 +62,6 @@ Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallba
 // Facebook Authentication
 Route::get('auth/facebook', [FacebookController::class, 'redirectToFacebook'])->name('facebook.login');
 Route::get('auth/facebook/callback', [FacebookController::class, 'handleFacebookCallback']);
-
-// Telegram Authentication
-Route::get('/auth/telegram/callback', [TelegramController::class, 'handleTelegramCallback'])->name('telegram.callback');
 
 // Bunus View
 
