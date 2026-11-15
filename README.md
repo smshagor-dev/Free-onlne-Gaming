@@ -60,6 +60,31 @@ php artisan migrate --force
 php artisan storage:link
 ```
 
+### Production Composer install and Laravel Pail
+
+`laravel/pail` is a development-only dependency. Production installs using
+`composer install --no-dev --optimize-autoloader` must not load its service provider.
+
+If a checkout previously had development dependencies installed, Laravel's
+`bootstrap/cache/packages.php` or `services.php` can still reference Pail.
+The Composer `post-autoload-dump` script now clears those provider manifests
+**before running any Artisan command**, allowing Laravel to discover only
+installed providers.
+
+To repair a deployment that is already reporting
+`Class "Laravel\\Pail\\PailServiceProvider" not found`, pull the fix and run:
+
+```bash
+php scripts/clear-stale-provider-cache.php
+composer install --no-dev --optimize-autoloader
+php artisan optimize:clear
+php artisan config:cache
+```
+
+Do not copy generated `bootstrap/cache/packages.php` or `services.php` from a
+development machine to production. Keep the document root pointed at
+`public/`; do not expose the project root.
+
 For local development:
 
 ```bash
