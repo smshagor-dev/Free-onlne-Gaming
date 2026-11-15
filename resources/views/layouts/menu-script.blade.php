@@ -79,7 +79,7 @@
                 item.setAttribute('aria-selected', 'false');
                 item.href = game.url;
 
-                if (game.image && /^https?:\\/\\//i.test(game.image)) {
+                if (game.image && game.image.startsWith('https://')) {
                     const thumbnail = document.createElement('img');
                     thumbnail.src = game.image;
                     thumbnail.alt = '';
