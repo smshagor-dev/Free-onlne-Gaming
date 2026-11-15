@@ -66,7 +66,7 @@
 .fg-auth-modal{position:fixed;inset:0;z-index:700;display:grid;place-items:center;padding:18px;overflow:auto}
 .fg-auth-backdrop{position:fixed;inset:0;background:#020912cc;backdrop-filter:blur(8px);border:0;cursor:default}
 .fg-auth-modal-dialog{position:relative;width:min(100%,520px);max-height:min(92vh,850px);overflow-y:auto;overscroll-behavior:contain;background:#102034;border:1px solid #37516a;border-radius:21px;box-shadow:0 25px 90px #0009;padding:clamp(20px,3vw,34px)}
-.fg-auth-modal-dialog:has(.fg-auth-modal-content[data-auth-panel="register"]:not([hidden])){width:100%}
+.fg-auth-modal-dialog:has(.fg-auth-modal-content[data-auth-panel="register"]:not([hidden])){width:min(100%,720px)}
 .fg-auth-modal-content{width:100%}
 .fg-auth-modal-close{position:absolute;right:14px;top:14px;z-index:2;display:grid;place-items:center;width:34px;height:34px;border:1px solid #3d5670;border-radius:9px;background:#1a3047;color:#e1eeff;font-size:21px;cursor:pointer}
 .fg-auth-modal .fg-auth-intro{margin-bottom:20px}
