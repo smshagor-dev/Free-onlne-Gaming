@@ -6,7 +6,14 @@
     <meta name="description" content="{{ $metaDescription ?? 'Discover and play free browser games. Save favorites and explore our lottery.' }}">
     <meta name="csrf-token" content="{{ csrf_token() }}"><meta name="user-id" content="{{ auth()->id() }}">
     <meta name="robots" content="{{ $robots ?? ((auth()->check() || request()->is('user/*', 'admin/*')) ? 'noindex, nofollow' : 'index, follow') }}">
-    <meta name="theme-color" content="#0b1220">
+    <meta name="theme-color" content="#071827">
+    <meta name="application-name" content="Free Games">
+    <meta name="apple-mobile-web-app-title" content="Free Games">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
+    <link rel="icon" type="image/png" sizes="192x192" href="{{ asset('icons/free-games-192.png') }}">
+    <link rel="apple-touch-icon" sizes="192x192" href="{{ asset('icons/free-games-192.png') }}">
     <link rel="canonical" href="{{ url()->current() }}"><link rel="manifest" href="{{ asset('manifest.json') }}">
     <meta property="og:title" content="{{ $pageTitle ?? config('app.name') }}"><meta property="og:url" content="{{ url()->current() }}">
     <meta property="og:description" content="{{ $metaDescription ?? 'Free browser games and giveaways.' }}">

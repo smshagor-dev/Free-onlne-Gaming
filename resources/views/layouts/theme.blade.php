@@ -126,4 +126,110 @@ body{min-height:100vh;display:flex;flex-direction:column;margin:0;background:#0b
     .fg-menu-toggle{font-size:12px;padding:7px 9px}
     .fg-nav-search{height:44px}
 }
+
+/* Compact, predictable mobile header layout for 320px+ screens. */
+@media (max-width:760px) {
+    .fg-topbar>.fg-shell {padding:0 12px}
+    .fg-nav {
+        display:grid;
+        grid-template-columns:minmax(0,1fr) auto auto;
+        column-gap:7px;
+        row-gap:12px;
+        align-items:center;
+        width:100%;
+        min-height:0;
+        padding:12px 0 13px;
+    }
+    .fg-nav .fg-brand {
+        grid-column:1;
+        grid-row:1;
+        display:inline-flex;
+        min-width:0;
+        gap:7px;
+        margin:0;
+        font-size:18px;
+    }
+    .fg-nav .fg-brand-icon {flex:0 0 30px;width:30px;height:30px;border-radius:9px}
+    .fg-nav .fg-brand-icon svg {width:21px;height:21px}
+    .fg-nav .fg-brand-word {font-size:clamp(15px,4.1vw,18px)}
+    .fg-nav .fg-actions {
+        grid-column:2;
+        grid-row:1;
+        display:flex;
+        align-items:center;
+        gap:5px;
+        min-width:0;
+        margin:0;
+    }
+    .fg-nav .fg-actions .fg-auth {
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        white-space:nowrap;
+        padding:8px 9px;
+        font-size:12px;
+        border-radius:9px;
+    }
+    .fg-nav .fg-menu-toggle {
+        grid-column:3;
+        grid-row:1;
+        display:block;
+        margin:0;
+        white-space:nowrap;
+        padding:8px 9px;
+        font-size:12px;
+        border-radius:9px;
+    }
+    .fg-nav .fg-nav-search {
+        grid-column:1/-1;
+        grid-row:2;
+        display:flex;
+        order:unset;
+        margin:0;
+        width:100%;
+        max-width:none;
+        min-width:0;
+        height:45px;
+    }
+    .fg-nav .fg-nav-links {
+        grid-column:1/-1;
+        grid-row:3;
+        order:unset;
+        width:100%;
+        min-width:0;
+        margin:0;
+        padding:0;
+        overflow:visible;
+    }
+    .fg-nav .fg-nav-links.is-open {
+        display:flex;
+        gap:0;
+        padding:8px 0 2px;
+        border-top:1px solid #294058;
+    }
+    .fg-category-bar {
+        display:flex;
+        gap:18px;
+        width:100%;
+        max-width:100%;
+        padding:10px 0;
+        overflow-x:auto;
+        overflow-y:hidden;
+        overscroll-behavior-x:contain;
+        -webkit-overflow-scrolling:touch;
+        scrollbar-width:none;
+    }
+    .fg-category-bar::-webkit-scrollbar {display:none}
+    .fg-category-bar>a {flex:0 0 auto}
+    .fg-nav .fg-category-dropdown {left:0;right:0;max-width:100%;width:100%}
+}
+@media (max-width:370px) {
+    .fg-nav .fg-brand {gap:5px}
+    .fg-nav .fg-brand-icon {flex-basis:27px;width:27px;height:27px}
+    .fg-nav .fg-brand-word {font-size:15px}
+    .fg-nav .fg-actions {gap:3px}
+    .fg-nav .fg-actions .fg-auth {font-size:11px;padding:7px 6px}
+    .fg-nav .fg-menu-toggle {font-size:11px;padding:7px}
+}
+
 </style>

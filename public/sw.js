@@ -1,63 +1,78 @@
 "use strict";
 
-const CACHE_NAME = "offline-cache-v1";
-const OFFLINE_URL = '/offline.html';
-const PRIVATE_PATH_PREFIXES = [
-    '/user/',
-    '/admin/',
-    '/sm-shagor/free-games/admin-main/control-back-office/',
-    '/api/',
-    '/user/transactions',
-    '/private-files/'
+// Cache only public, versioned app-shell assets. Never persist account pages,
+// private documents, API responses, or authenticated HTML.
+const PREFIX = "free-games-static-";
+const CACHE_NAME = PREFIX + "v2";
+const OFFLINE_URL = "/offline.html";
+const STATIC_URLS = [
+    OFFLINE_URL,
+    "/manifest.json",
+    "/favicon.svg",
+    "/favicon.ico",
+    "/icons/free-games-192.png",
+    "/icons/free-games-512.png"
 ];
-
-const filesToCache = [
-    OFFLINE_URL
+const STATIC_PATHS = new Set(STATIC_URLS);
+const PRIVATE_PREFIXES = [
+    "/user/",
+    "/admin/",
+    "/sm-shagor/free-games/admin-main/control-back-office/",
+    "/api/",
+    "/private-files/",
+    "/login",
+    "/registration",
+    "/verify",
+    "/forgot-password",
+    "/password/",
+    "/reset-password",
+    "/2fa/",
 ];
 
 self.addEventListener("install", (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME)
-            .then((cache) => cache.addAll(filesToCache))
+            .then(cache => cache.addAll(STATIC_URLS))
+            .then(() => self.skipWaiting())
+    );
+});
+
+self.addEventListener("activate", (event) => {
+    event.waitUntil(
+        caches.keys()
+            .then(keys => Promise.all(
+                keys.filter(key => key.startsWith(PREFIX) && key !== CACHE_NAME)
+                    .map(key => caches.delete(key))
+            ))
+            .then(() => self.clients.claim())
     );
 });
 
 self.addEventListener("fetch", (event) => {
-    const url = new URL(event.request.url);
-    const isPrivatePath = url.origin === self.location.origin && PRIVATE_PATH_PREFIXES.some((prefix) => url.pathname.startsWith(prefix));
+    const request = event.request;
+    if (request.method !== "GET") return;
 
-    if (isPrivatePath) {
-        event.respondWith(fetch(event.request));
+    const url = new URL(request.url);
+    if (url.origin !== self.location.origin) return;
+
+    if (PRIVATE_PREFIXES.some(prefix => url.pathname.startsWith(prefix))) {
+        // Let the network process authentication and other sensitive pages.
         return;
     }
 
-    if (event.request.mode === 'navigate') {
+    if (request.mode === "navigate") {
         event.respondWith(
-            fetch(event.request)
-                .catch(() => {
-                    return caches.match(OFFLINE_URL);
-                })
+            fetch(request).catch(async () =>
+                (await caches.match(OFFLINE_URL)) ||
+                Response.error()
+            )
         );
-    } else {
+        return;
+    }
+
+    if (STATIC_PATHS.has(url.pathname)) {
         event.respondWith(
-            caches.match(event.request)
-                .then((response) => {
-                    return response || fetch(event.request);
-                })
+            caches.match(url.pathname).then(cached => cached || fetch(request))
         );
     }
-});
-
-self.addEventListener('activate', (event) => {
-    event.waitUntil(
-        caches.keys().then((cacheNames) => {
-            return Promise.all(
-                cacheNames.map((cacheName) => {
-                    if (cacheName !== CACHE_NAME) {
-                        return caches.delete(cacheName);
-                    }
-                })
-            );
-        })
-    );
 });
