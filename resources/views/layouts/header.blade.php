@@ -37,12 +37,13 @@
                     <a class="fg-nav-link {{ request()->routeIs('contacts.create') ? 'is-active' : '' }}" href="{{ route('contacts.create') }}">Contact</a>
                 </div>
 
+                <form class="fg-nav-search" action="{{ route('playable.index') }}" method="GET" role="search" data-suggest-url="{{ route('playable.suggest') }}" autocomplete="off">
+                    <label class="sr-only" for="navigation-search">Search games</label>
+                    <input id="navigation-search" name="search" type="search" placeholder="Search games..." value="{{ request('search') }}" maxlength="80" enterkeyhint="search" aria-autocomplete="list" aria-controls="fg-search-results" aria-expanded="false" role="combobox">
+                    <button type="submit" aria-label="Search games"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 5 5"/></svg></button>
+                    <div class="fg-search-results" id="fg-search-results" role="listbox" aria-label="Matching games" hidden></div>
+                </form>
                 <div class="fg-actions">
-                    <form class="fg-nav-search" action="{{ route('playable.index') }}" method="GET" role="search">
-                        <label class="sr-only" for="navigation-search">Search games</label>
-                        <input id="navigation-search" name="search" type="search" placeholder="Find a game…" value="{{ request('search') }}">
-                        <button type="submit" aria-label="Search games"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 5 5"/></svg></button>
-                    </form>
                     @guest
                         <a class="fg-auth fg-auth-primary" href="{{ route('login.form') }}">Login</a>
                         <a class="fg-auth fg-auth-ghost" href="{{ route('register.form') }}">Sign Up</a>

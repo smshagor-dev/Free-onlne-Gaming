@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\EmbeddableGameCatalog;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 
@@ -19,6 +20,36 @@ class EmbeddableGameController extends Controller
             'html' => view($request->query('layout') === 'home' ? 'playable.home-cards' : 'playable.cards', compact('games'))->render(),
             'has_more' => $offset + count($games) < count($all),
         ]);
+    }
+
+    /**
+     * Lightweight live suggestions for the shared navigation search.
+     * Uses the same filtered embeddable catalog as the full /play-games page.
+     */
+    public function suggestions(Request $request, EmbeddableGameCatalog $catalog): JsonResponse
+    {
+        $validated = $request->validate([
+            'q' => ['required', 'string', 'min:2', 'max:80'],
+        ]);
+        $term = trim($validated['q']);
+
+        if (mb_strlen($term) < 2) {
+            return response()->json(['data' => []]);
+        }
+
+        $results = collect($catalog->all())
+            ->filter(static fn (array $game): bool => mb_stripos((string) ($game['name'] ?? ''), $term) !== false)
+            ->take(8)
+            ->map(static fn (array $game): array => [
+                'name' => (string) $game['name'],
+                'category' => (string) ($game['category'] ?? 'Games'),
+                'image' => $game['image'] ?? null,
+                'url' => route('playable.play', ['id' => $game['id']]),
+            ])
+            ->values()
+            ->all();
+
+        return response()->json(['data' => $results]);
     }
 
     public function index(Request $request, EmbeddableGameCatalog $catalog)
