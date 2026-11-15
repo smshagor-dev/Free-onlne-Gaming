@@ -176,8 +176,11 @@ Route::prefix('/sm-shagor/free-games/admin-main/control-back-office/')->name('ad
 
     Route::get('/settings/edit', [SettingController::class, 'edit'])->name('setting.edit');
     Route::put('/settings/{setting}', [SettingController::class, 'update'])->name('setting.update');
-    
-    Route::view('/global/settings', 'admin.settings_page')->name('settings.global');
+    Route::post('/settings/mail/test', [SettingController::class, 'testMail'])
+        ->middleware('throttle:2,1')->name('setting.mail.test');
+
+    // Keep legacy deep links working; the old view no longer exists.
+    Route::get('/global/settings', fn () => redirect()->route('admin.setting.edit'))->name('settings.global');
 
     Route::get('/countries', [AdminController::class, 'index'])->name('countries.index');
     Route::get('/countries/{id}/edit-currency', [AdminController::class, 'editCurrency'])->name('countries.editCurrency');
