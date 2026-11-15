@@ -10,6 +10,7 @@ use App\Http\Controllers\Auth\VerificationController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\FinanceOverviewController;
 use App\Http\Controllers\GamesCategoryController;
 use App\Http\Controllers\TagController;
 use App\Http\Controllers\GameController;
@@ -165,6 +166,7 @@ Route::post('/sm-shagor/free-games/admin-main/control-back-office/logout', [Admi
 Route::prefix('/sm-shagor/free-games/admin-main/control-back-office/')->name('admin.')->middleware(['auth:admin'])->group(function () {
 
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+    Route::get('/finance', [FinanceOverviewController::class, 'index'])->name('finance.index');
 
     Route::get('/profile', [AdminController::class, 'viewProfile'])->name('profile');
 
