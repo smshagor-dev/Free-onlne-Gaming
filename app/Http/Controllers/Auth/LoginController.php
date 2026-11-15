@@ -74,7 +74,8 @@ class LoginController extends Controller
 
             if (!Auth::user()->is_verified) {
                 Auth::logout();
-                return back()->with('error', 'Your account is not verified. Please check your email.');
+                return back()->with('error', 'Your account is not verified. Please check your email.')
+                    ->withInput($request->only('login', 'auth_context'));
             }
 
             // 🔹 Detect IP and device info
@@ -122,7 +123,8 @@ class LoginController extends Controller
 
         RateLimiter::hit($throttleKey, 60);
 
-        return back()->with('error', 'Invalid credentials.');
+        return back()->with('error', 'Invalid credentials.')
+            ->withInput($request->only('login', 'auth_context'));
     }
 
     public function logout(Request $request)
