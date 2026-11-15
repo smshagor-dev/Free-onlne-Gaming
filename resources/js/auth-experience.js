@@ -15,7 +15,7 @@ function setAuthPanel(panel) {
 
 function openAuthModal(panel, trigger = null) {
     if (!modal) return false;
-    if (trigger) lastTrigger = trigger;
+    if (trigger && !modal.contains(trigger)) lastTrigger = trigger;
     setAuthPanel(panel);
     modal.hidden = false;
     document.body.classList.add('fg-modal-open');
@@ -72,7 +72,7 @@ document.addEventListener('keydown', event => {
         return;
     }
     if (event.key !== 'Tab') return;
-    const focusable = [...modal.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), summary')]
+    const focusable = [...modal.querySelector('.fg-auth-modal-dialog').querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), summary')]
         .filter(el => !el.closest('[hidden]') && el.getClientRects().length);
     if (!focusable.length) return;
     const first = focusable[0];
