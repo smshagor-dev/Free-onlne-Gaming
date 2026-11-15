@@ -1,18 +1,26 @@
 {
-    "name": "Free Games",
-    "short_name": "FreeGames",
-    "background_color": "#0b141d",
-    "display": "standalone",
-    "description": "Online platform for free games with real money prizes. Play skill-based games and win cash rewards without any deposits.",
-    "theme_color": "#0b141d",
-    "start_url": "/games",
-    "scope": "/",
-    "orientation": "any",
-    "icons": [
-        {
-            "src": "/logo.png",
-            "sizes": "512x512",
-            "type": "image/png"
-        }
-    ]
+  "id": "/",
+  "name": "Free Games",
+  "short_name": "Free Games",
+  "description": "Play free browser games, discover new favorites, and explore games anytime.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#071827",
+  "theme_color": "#071827",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/icons/free-games-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/free-games-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
 }
