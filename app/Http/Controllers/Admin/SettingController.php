@@ -17,7 +17,7 @@ class SettingController extends Controller
 {
     public function edit()
     {
-        $setting = Setting::firstOrCreate(['id' => 1], ['name' => 'Free Games']);
+        $setting = Setting::first() ?? Setting::create(['name' => 'Free Games']);
         $countries = Country::query()->select('id', 'currency_symbol', 'currency')
             ->whereNotNull('currency')->orderBy('currency')->get()->unique('currency');
 
