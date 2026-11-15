@@ -40,6 +40,17 @@ document.addEventListener('click', event => {
         return;
     }
     if (event.target.closest('[data-auth-close]')) closeAuthModal();
+    const copyButton = event.target.closest('[data-copy-target]');
+    if (copyButton) {
+        const input = document.getElementById(copyButton.dataset.copyTarget);
+        if (input && navigator.clipboard) {
+            navigator.clipboard.writeText(input.value).then(() => {
+                const label = copyButton.textContent;
+                copyButton.textContent = 'Copied';
+                setTimeout(() => { copyButton.textContent = label; }, 1400);
+            }).catch(() => { copyButton.textContent = 'Copy unavailable'; });
+        }
+    }
 
     const toggle = event.target.closest('[data-password-toggle]');
     if (toggle) {
