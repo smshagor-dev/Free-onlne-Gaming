@@ -19,9 +19,16 @@
     <link rel="icon" type="image/png" sizes="192x192" href="{{ asset('icons/free-games-192.png') }}">
     <link rel="apple-touch-icon" sizes="192x192" href="{{ asset('icons/free-games-192.png') }}">
     <link rel="canonical" href="{{ url()->current() }}"><link rel="manifest" href="{{ asset('manifest.json') }}">
+    @if(!empty($setting->meta_tag))<meta name="keywords" content="{{ $setting->meta_tag }}">@endif
+    @php
+        $cmsOgImage = !empty($setting->thumbnail_image)
+            ? url(\Illuminate\Support\Facades\Storage::disk('public')->url($setting->thumbnail_image))
+            : null;
+        $effectiveOgImage = $ogImage ?? $cmsOgImage;
+    @endphp
     <meta property="og:title" content="{{ $pageTitle ?? ($setting->seo_title ?? config('app.name')) }}"><meta property="og:url" content="{{ url()->current() }}">
     <meta property="og:description" content="{{ $metaDescription ?? ($setting->seo_description ?? 'Free browser games and giveaways.') }}">
-    @if(!empty($ogImage) && filter_var($ogImage, FILTER_VALIDATE_URL) && in_array(parse_url($ogImage, PHP_URL_SCHEME), ['http', 'https'], true))<meta property="og:image" content="{{ $ogImage }}">@endif
+    @if(!empty($effectiveOgImage) && filter_var($effectiveOgImage, FILTER_VALIDATE_URL) && in_array(parse_url($effectiveOgImage, PHP_URL_SCHEME), ['http', 'https'], true))<meta property="og:image" content="{{ $effectiveOgImage }}">@endif
     <meta name="twitter:card" content="summary_large_image">
     @if(!empty($structuredData))<script type="application/ld+json">{!! json_encode($structuredData, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>@endif
     <script src="https://cdn.tailwindcss.com"></script>
