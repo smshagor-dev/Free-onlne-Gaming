@@ -57,16 +57,22 @@ class AppServiceProvider extends ServiceProvider
             // Override app name
             config(['app.name' => $setting->name ?? config('app.name')]);
 
-            // Override mail configuration dynamically
+            // Laravel 12 reads mail.default and mail.mailers.smtp.*,
+            // not the legacy mail.mailer/mail.host configuration keys.
+            // Preserve .env fallbacks whenever a CMS field is not configured.
             config([
-                'mail.mailer' => $setting->MAIL_MAILER ?? config('mail.mailer'),
-                'mail.host' => $setting->MAIL_HOST ?? config('mail.host'),
-                'mail.port' => $setting->MAIL_PORT ?? config('mail.port'),
-                'mail.username' => $setting->MAIL_USERNAME ?? config('mail.username'),
-                'mail.password' => $setting->MAIL_PASSWORD ?? config('mail.password'),
-                'mail.encryption' => $setting->MAIL_ENCRYPTION ?? config('mail.encryption'),
-                'mail.from.address' => $setting->MAIL_FROM_ADDRESS ?? config('mail.from.address'),
-                'mail.from.name' => $setting->MAIL_FROM_NAME ?? config('mail.from.name'),
+                'mail.default' => $setting->MAIL_MAILER ?: config('mail.default'),
+                'mail.mailers.smtp.host' => $setting->MAIL_HOST ?: config('mail.mailers.smtp.host'),
+                'mail.mailers.smtp.port' => $setting->MAIL_PORT ?: config('mail.mailers.smtp.port'),
+                'mail.mailers.smtp.username' => $setting->MAIL_USERNAME ?: config('mail.mailers.smtp.username'),
+                'mail.mailers.smtp.password' => $setting->MAIL_PASSWORD ?: config('mail.mailers.smtp.password'),
+                'mail.mailers.smtp.scheme' => match ($setting->MAIL_ENCRYPTION) {
+                    'ssl' => 'smtps',
+                    'tls', 'none' => 'smtp',
+                    default => config('mail.mailers.smtp.scheme'),
+                },
+                'mail.from.address' => $setting->MAIL_FROM_ADDRESS ?: config('mail.from.address'),
+                'mail.from.name' => $setting->MAIL_FROM_NAME ?: config('mail.from.name'),
             ]);
         }
 
