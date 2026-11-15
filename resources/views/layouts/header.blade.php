@@ -45,8 +45,8 @@
                 </form>
                 <div class="fg-actions">
                     @guest
-                        <a class="fg-auth fg-auth-primary" href="{{ route('login.form') }}">Login</a>
-                        <a class="fg-auth fg-auth-ghost" href="{{ route('register.form') }}">Sign Up</a>
+                        <a class="fg-auth fg-auth-primary" href="{{ route('login.form') }}" data-auth-open="login" aria-haspopup="dialog" aria-controls="fg-auth-dialog">Login</a>
+                        <a class="fg-auth fg-auth-ghost" href="{{ route('register.form') }}" data-auth-open="register" aria-haspopup="dialog" aria-controls="fg-auth-dialog">Sign Up</a>
                     @else
                         <a class="fg-auth fg-auth-primary" href="{{ route('user.dashboard') }}">Account</a>
                         <a class="fg-auth fg-auth-ghost" href="{{ route('user.games.viewFavorites') }}">Favorites</a>
