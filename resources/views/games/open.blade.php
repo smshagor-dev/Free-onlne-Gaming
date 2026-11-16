@@ -66,7 +66,9 @@
 
         <iframe 
             id="gameIframe"
-            src="{{ $game->games_url }}" 
+            src="{{ $embed['url'] }}"
+            data-embed-mode="{{ $embed['mode'] }}"
+            data-owned-ad-cleanup="{{ $embed['cleanup_owned_ads'] ? '1' : '0' }}" 
             scrolling="no"
             class="w-full h-full"
             allowfullscreen
