@@ -158,7 +158,7 @@ class CountryCurrencySeedTest extends TestCase
 
         $this->get(route('admin.setting.edit'))
             ->assertOk()
-            ->assertSee('data-cms-active-tab', false)
+            ->assertSee('name="settings_tab" value="general"', false)
             ->assertSee('Bangladeshi Taka')
             ->assertSee('data-symbol="৳"', false)
             ->assertSee('name="currency_symble"', false);
