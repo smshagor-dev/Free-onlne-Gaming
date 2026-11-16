@@ -2,17 +2,22 @@
 
 @section('content')
 @php
+    $homeCms = \App\Services\SiteCms::section('home');
+    $catalogCms = \App\Services\SiteCms::section('catalog');
+    $newLimit = (int) $catalogCms['new_limit'];
+    $featuredLimit = (int) $catalogCms['featured_limit'];
+    $exploreStart = $newLimit + $featuredLimit;
     $localGames = collect($categories ?? [])->pluck('games')->flatten()->filter()->values();
     $primaryGames = collect($playableGames ?? [])->values();
-    $newGames = $primaryGames->take(6);
-    $trendingGames = $primaryGames->slice(6, 6)->values();
+    $newGames = $primaryGames->take($newLimit);
+    $trendingGames = $primaryGames->slice($newLimit, $featuredLimit)->values();
 
-    if ($trendingGames->count() < 6 && $localGames->isNotEmpty()) {
-        $trendingGames = $trendingGames->concat($localGames->take(6 - $trendingGames->count()))->values();
+    if ($trendingGames->count() < $featuredLimit && $localGames->isNotEmpty()) {
+        $trendingGames = $trendingGames->concat($localGames->take($featuredLimit - $trendingGames->count()))->values();
     }
 
-    if ($newGames->count() < 6 && $localGames->isNotEmpty()) {
-        $newGames = $newGames->concat($localGames->slice(6, 6 - $newGames->count()))->values();
+    if ($newGames->count() < $newLimit && $localGames->isNotEmpty()) {
+        $newGames = $newGames->concat($localGames->slice($featuredLimit, $newLimit - $newGames->count()))->values();
     }
 
     $heroGame = $primaryGames->first() ?: $localGames->first();
@@ -850,17 +855,17 @@
         <div class="fg-shell">
             <div class="fg-hero-layout">
                 <div>
-                    <div class="fg-badge"><i class="fa-solid fa-gamepad" aria-hidden="true"></i>100% FREE TO PLAY</div>
-                    <h1 id="fg-hero-title">Play <span class="fg-blue-text">Free Games</span><br>Online <br class="fg-mobile-only">Anytime</h1>
-                    <p>Discover free browser games. No download required.<br class="fg-desktop-only">Just pure fun!</p>
+                    <div class="fg-badge"><i class="fa-solid fa-gamepad" aria-hidden="true"></i>{{ $homeCms['badge'] }}</div>
+                    <h1 id="fg-hero-title">{{ $homeCms['title_start'] }} <span class="fg-blue-text">{{ $homeCms['title_highlight'] }}</span><br>{{ $homeCms['title_end'] }}</h1>
+                    <p>{{ $homeCms['description'] }}</p>
                     <form class="fg-search" method="GET" action="{{ route('playable.index') }}" style="margin-bottom:20px">
                         <label for="fg-search-input">Search games</label>
                         <input id="fg-search-input" name="search" type="search" placeholder="Search games..." value="{{ $search ?? '' }}">
                         <button type="submit" aria-label="Search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 5 5"/></svg></button>
                     </form>
                     <div class="fg-hero-actions">
-                        <a class="fg-hero-btn fg-hero-btn-primary" href="{{ route('playable.index') }}"><i class="fa-solid fa-play" aria-hidden="true"></i>Play Now</a>
-                        <a class="fg-hero-btn fg-hero-btn-secondary" href="{{ route('playable.index') }}"><i class="fa-solid fa-grip" aria-hidden="true"></i>Browse Games</a>
+                        <a class="fg-hero-btn fg-hero-btn-primary" href="{{ route('playable.index') }}"><i class="fa-solid fa-play" aria-hidden="true"></i>{{ $homeCms['primary_cta'] }}</a>
+                        <a class="fg-hero-btn fg-hero-btn-secondary" href="{{ route('playable.index') }}"><i class="fa-solid fa-grip" aria-hidden="true"></i>{{ $homeCms['secondary_cta'] }}</a>
                     </div>
                 </div>
 
@@ -879,6 +884,7 @@
     <div class="fg-main">
         <div class="fg-shell">
             <span class="sr-only">Explore Games</span>
+            @if($homeCms['show_categories'])
             <section class="fg-categories" aria-label="Game categories">
                 @foreach($categoryTiles as $tile)
                     <a class="fg-category {{ $tile['class'] }}" href="{{ $tile['name'] === 'More' ? route('playable.index') : $findCategoryUrl($tile['name']) }}">
@@ -887,10 +893,12 @@
                     </a>
                 @endforeach
             </section>
+            @endif
 
+            @if($homeCms['show_featured'])
             <section class="fg-section" aria-labelledby="fg-trending-title">
                 <div class="fg-section-head">
-                    <h2 class="fg-section-title" id="fg-trending-title"><i class="fa-solid fa-star star" aria-hidden="true"></i>Featured Games</h2>
+                    <h2 class="fg-section-title" id="fg-trending-title"><i class="fa-solid fa-star star" aria-hidden="true"></i>{{ $homeCms['featured_heading'] }}</h2>
                     <a class="fg-view-all" href="{{ route('playable.index') }}">View All <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
                 </div>
 
@@ -904,10 +912,12 @@
                     <div class="fg-empty">Games are temporarily unavailable. Please try again later.</div>
                 @endif
             </section>
+            @endif
 
+            @if($homeCms['show_new'])
             <section class="fg-section" aria-labelledby="fg-new-title">
                 <div class="fg-section-head">
-                    <h2 class="fg-section-title" id="fg-new-title"><i class="fa-solid fa-gamepad" aria-hidden="true"></i>New Games</h2>
+                    <h2 class="fg-section-title" id="fg-new-title"><i class="fa-solid fa-gamepad" aria-hidden="true"></i>{{ $homeCms['new_heading'] }}</h2>
                     <a class="fg-view-all" href="{{ route('playable.index') }}">View All <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
                 </div>
 
@@ -921,11 +931,13 @@
                     <div class="fg-empty">No new games are available right now. Please try again later.</div>
                 @endif
             </section>
-            @if($primaryGames->count() > 12)
+            @endif
+
+            @if($homeCms['show_explore'] && $primaryGames->count() > $exploreStart)
             <section class="fg-section" aria-labelledby="fg-explore-title">
-                <div class="fg-section-head"><h2 class="fg-section-title" id="fg-explore-title">Explore More Games</h2></div>
+                <div class="fg-section-head"><h2 class="fg-section-title" id="fg-explore-title">{{ $homeCms['explore_heading'] }}</h2></div>
                 <div class="fg-games-grid" id="fg-more-games">
-                    @foreach($primaryGames->slice(12) as $game)
+                    @foreach($primaryGames->slice($exploreStart) as $game)
                         @include('components.home-game-card', ['game' => $game, 'fallbackTag' => 'Free'])
                     @endforeach
                 </div>
