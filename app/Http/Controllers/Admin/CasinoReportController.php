@@ -106,7 +106,6 @@ class CasinoReportController extends Controller
             'sessions' => DB::table('casino_game_sessions')->count(),
             'games' => DB::table('casino_game_sessions')->distinct()->count('game_name'),
             'players' => DB::table('casino_game_sessions')->distinct()->count('user_id'),
-            'local_opens' => (int) $localGames->sum('play_time'), // current page only; UI does not present a sitewide total
         ];
 
         $moneyTotals = DB::query()->fromSub($gameMoney, 'money')
