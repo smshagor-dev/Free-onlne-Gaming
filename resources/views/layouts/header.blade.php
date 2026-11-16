@@ -1,6 +1,15 @@
 @php
     $availableCategories = collect(\Illuminate\Support\Facades\Cache::get('gamemonetize.embeddable.all', []))->pluck('category')->filter()->unique()->sort()->values();
+    $navCms = \App\Services\SiteCms::section('navigation');
+    $catalogCms = \App\Services\SiteCms::section('catalog');
     $menuCategories = ['Action' => '✦', 'Adventure' => '◇', 'Racing' => '➜', 'Shooting' => '◎', 'Sports' => '◉', 'Puzzle' => '▦', 'Multiplayer' => '♧', 'Simulation' => '◈', 'Arcade' => '▣', 'Strategy' => '♜'];
+    $selectedMenuCategories = collect(explode(',', $navCms['category_labels']))
+        ->map(fn ($name) => trim($name))->filter()
+        ->reject(fn ($name) => preg_match('/casino|slots?|roulette|blackjack|baccarat|poker|gambling/i', $name))
+        ->unique(fn ($name) => mb_strtolower($name));
+    $menuCategories = collect($menuCategories)
+        ->filter(fn ($icon, $name) => $selectedMenuCategories->contains(fn ($item) => strcasecmp($item, $name) === 0))
+        ->all();
     $categoryDestination = function ($category) use ($availableCategories) {
         $aliases = ['Shooting' => 'Shooter', 'Simulation' => 'Sim'];
         $actual = $availableCategories->first(fn ($name) => strcasecmp($name, $category) === 0 || strcasecmp($name, $aliases[$category] ?? $category) === 0);
@@ -23,10 +32,11 @@
 
                 <button class="fg-menu-toggle" type="button" aria-expanded="false" aria-controls="fg-menu">Menu</button>
                 <div class="fg-nav-links" id="fg-menu">
-                    <a class="fg-nav-link {{ request()->routeIs('games.viewIndex') ? 'is-active' : '' }}" @if(request()->routeIs('games.viewIndex')) aria-current="page" @endif href="{{ route('games.viewIndex') }}">Home</a>
-                    <a class="fg-nav-link {{ request()->routeIs('playable.*', 'catalog.*') ? 'is-active' : '' }}" href="{{ route('playable.index') }}">Games</a>
+                    @if($navCms['show_home'])<a class="fg-nav-link {{ request()->routeIs('games.viewIndex') ? 'is-active' : '' }}" @if(request()->routeIs('games.viewIndex')) aria-current="page" @endif href="{{ route('games.viewIndex') }}">{{ $navCms['home_label'] }}</a>@endif
+                    @if($navCms['show_games'])<a class="fg-nav-link {{ request()->routeIs('playable.*', 'catalog.*') ? 'is-active' : '' }}" href="{{ route('playable.index') }}">{{ $navCms['games_label'] }}</a>@endif
+                    @if($navCms['show_categories'])
                     <details class="fg-category-menu">
-                        <summary class="fg-nav-link"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" aria-hidden="true"><rect x="2" y="2" width="6" height="6" rx="1"/><rect x="12" y="2" width="6" height="6" rx="1"/><rect x="2" y="12" width="6" height="6" rx="1"/><rect x="12" y="12" width="6" height="6" rx="1"/></svg> Categories <span class="fg-chevron" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="m4 6 4 4 4-4"/></svg></span></summary>
+                        <summary class="fg-nav-link"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" aria-hidden="true"><rect x="2" y="2" width="6" height="6" rx="1"/><rect x="12" y="2" width="6" height="6" rx="1"/><rect x="2" y="12" width="6" height="6" rx="1"/><rect x="12" y="12" width="6" height="6" rx="1"/></svg> {{ $navCms['categories_label'] }} <span class="fg-chevron" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="m4 6 4 4 4-4"/></svg></span></summary>
                         <div class="fg-category-dropdown">
                             <div class="fg-dropdown-heading"><strong>Explore categories</strong><a href="{{ route('playable.index') }}">All games →</a></div>
                             <div class="fg-category-options">
@@ -39,8 +49,9 @@
                             </div>
                         </div>
                     </details>
-                    <a class="fg-nav-link {{ request()->routeIs('user.lottaries.*') ? 'is-active' : '' }}" href="{{ route('user.lottaries.view') }}">Lottery</a>
-                    <a class="fg-nav-link {{ request()->routeIs('contacts.create') ? 'is-active' : '' }}" href="{{ route('contacts.create') }}">Contact</a>
+                    @endif
+                    @if($navCms['show_lottery'])<a class="fg-nav-link {{ request()->routeIs('user.lottaries.*') ? 'is-active' : '' }}" href="{{ route('user.lottaries.view') }}">{{ $navCms['lottery_label'] }}</a>@endif
+                    @if($navCms['show_contact'])<a class="fg-nav-link {{ request()->routeIs('contacts.create') ? 'is-active' : '' }}" href="{{ route('contacts.create') }}">{{ $navCms['contact_label'] }}</a>@endif
                 </div>
 
                 <form class="fg-nav-search" action="{{ route('playable.index') }}" method="GET" role="search" data-suggest-url="{{ route('playable.suggest') }}" autocomplete="off">
@@ -59,12 +70,14 @@
                     @endguest
                 </div>
             </nav>
+            @if($navCms['show_categories'])
             <nav class="fg-category-bar" aria-label="Popular game categories">
                 <span class="fg-category-label">EXPLORE</span>
-                @foreach(array_slice($menuCategories, 0, 8, true) as $category => $icon)
+                @foreach(array_slice($menuCategories, 0, $catalogCms['category_bar_count'], true) as $category => $icon)
                     <a class="{{ request('category') === $category ? 'is-active' : '' }}" href="{{ $categoryDestination($category) }}"><span aria-hidden="true">{{ $icon }}</span>{{ $category }}</a>
                 @endforeach
                 <a href="{{ route('playable.index') }}" class="fg-all-games">All games →</a>
             </nav>
+            @endif
         </div>
     </header>
