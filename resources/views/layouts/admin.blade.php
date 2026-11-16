@@ -61,37 +61,14 @@
 @endphp
 <div class="cms-shell">
     <button class="cms-mobile-backdrop" type="button" data-cms-backdrop aria-label="Close navigation"></button>
-    <aside class="cms-sidebar" id="cms-sidebar" data-cms-sidebar aria-label="CMS navigation">
-        <a href="{{ route('admin.dashboard') }}" class="cms-sidebar-head" aria-label="Free Games CMS dashboard">
-            <span class="cms-mark" aria-hidden="true"><i class="fa-solid fa-gamepad"></i></span>
-            <span class="cms-brand">Free Games<small>ADMIN COMMAND CENTER</small></span>
-        </a>
-        <div class="cms-sidebar-scroll">
-            <nav aria-label="Admin sections">
-                @foreach($groups as $groupTitle => $entries)
-                    <section class="cms-nav-group" aria-label="{{ $groupTitle }}">
-                        <div class="cms-nav-group-title">{{ $groupTitle }}</div>
-                        @foreach($entries as [$label,$routeName,$active,$glyph])
-                            @if(Route::has($routeName))
-                                <a href="{{ route($routeName) }}"
-                                    class="cms-nav-link {{ request()->routeIs($active) ? 'is-active' : '' }}"
-                                    @if(request()->routeIs($active)) aria-current="page" @endif>
-                                    <span class="cms-nav-icon" aria-hidden="true">{{ $glyph }}</span>
-                                    <span>{{ $label }}</span>
-                                </a>
-                            @endif
-                        @endforeach
-                    </section>
-                @endforeach
-            </nav>
-        </div>
-        <div class="cms-sidebar-foot">
-            <form method="POST" action="{{ route('admin.logout') }}">
-                @csrf
-                <button class="cms-logout" type="submit"><i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i> Sign out securely</button>
-            </form>
-        </div>
-    </aside>
+    @include('layouts.partials.portal-sidebar', [
+        'portalRole' => 'admin',
+        'portalHomeRoute' => 'admin.dashboard',
+        'portalTitle' => 'Free Games',
+        'portalSubtitle' => 'ADMIN COMMAND CENTER',
+        'portalLogoutRoute' => 'admin.logout',
+        'portalGroups' => $groups,
+    ])
     <div class="cms-stage">
         <header class="cms-topbar">
             <div class="cms-top-title">
