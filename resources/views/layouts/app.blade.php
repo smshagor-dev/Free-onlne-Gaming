@@ -18,6 +18,9 @@
         $siteFaviconUrl = filled($setting?->favicon ?? null)
             ? \Illuminate\Support\Facades\Storage::disk('public')->url($setting->favicon)
             : asset('favicon.svg');
+        $siteFaviconType = filled($setting?->favicon ?? null)
+            ? (str_ends_with(strtolower($setting->favicon), '.ico') ? 'image/x-icon' : 'image/png')
+            : 'image/svg+xml';
 
         $siteKeywordsTag = filled($setting?->meta_tag ?? null)
             ? '<meta name="keywords" content="'.e($setting->meta_tag).'">'
@@ -51,7 +54,7 @@
     <meta name="apple-mobile-web-app-title" content="{{ $pwaConfig['short_name'] }}">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="icon" href="{{ $siteFaviconUrl }}">
+    <link rel="icon" type="{{ $siteFaviconType }}" href="{{ $siteFaviconUrl }}">
     <link rel="icon" type="image/png" sizes="192x192" href="{{ asset('icons/free-games-192.png') }}">
     <link rel="apple-touch-icon" sizes="192x192" href="{{ asset('icons/free-games-192.png') }}">
     <link rel="canonical" href="{{ url()->current() }}"><link rel="manifest" href="{{ route('site.manifest') }}">
