@@ -55,6 +55,10 @@ class SiteCms
             'category_bar_count' => 8,
             'provider_enabled' => true,
         ],
+        'embeds' => [
+            'owned_ad_cleanup_enabled' => false,
+            'prefer_provider_ad_free' => false,
+        ],
         'pwa' => [
             'name' => 'Free Games',
             'short_name' => 'Free Games',
