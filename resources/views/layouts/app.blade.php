@@ -30,9 +30,9 @@
     <link rel="icon" type="image/png" sizes="192x192" href="{{ asset('icons/free-games-192.png') }}">
     <link rel="apple-touch-icon" sizes="192x192" href="{{ asset('icons/free-games-192.png') }}">
     <link rel="canonical" href="{{ url()->current() }}"><link rel="manifest" href="{{ route('site.manifest') }}">
-    @if(filled($setting->meta_tag ?? null))
-        <meta name="keywords" content="<?php echo e($setting->meta_tag); ?>">
-    @endif
+    <?php if (filled($setting?->meta_tag ?? null)): ?>
+        <meta name="keywords" content="<?php echo e($setting?->meta_tag ?? ''); ?>">
+    <?php endif; ?>
     @php
         $cmsOgImage = !empty($setting->thumbnail_image)
             ? url(\Illuminate\Support\Facades\Storage::disk('public')->url($setting->thumbnail_image))
