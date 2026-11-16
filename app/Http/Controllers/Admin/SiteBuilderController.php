@@ -56,6 +56,10 @@ class SiteBuilderController extends Controller
             'category_bar_count' => ['required', 'integer', 'between:1,10'],
             'provider_enabled' => ['required', 'boolean'],
         ],
+        'embeds' => [
+            'owned_ad_cleanup_enabled' => ['required', 'boolean'],
+            'prefer_provider_ad_free' => ['required', 'boolean'],
+        ],
         'pwa' => [
             'name' => ['required', 'string', 'max:45'],
             'short_name' => ['required', 'string', 'max:24'],
