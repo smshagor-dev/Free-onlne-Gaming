@@ -164,8 +164,12 @@ class SeoSettingsPersistenceTest extends TestCase
         // setting after cache invalidation, without recreating the database.
         Cache::forget('app.settings.first');
 
-        $this->get(route('games.viewIndex'))->assertOk()
-            ->assertSee('<title>Play Free Browser Games - Free Games</title>', false)
+        $response = $this->get(route('games.viewIndex'))->assertOk();
+        // Give a focused head dump if this check fails, so the exact HTML
+        // returned by the test server can be diagnosed without guessing.
+        $head = strstr($response->getContent(), '</head>', true) ?: substr($response->getContent(), 0, 4500);
+        $this->assertStringContainsString('name="keywords"', $head, $head);
+        $response->assertSee('<title>Play Free Browser Games - Free Games</title>', false)
             ->assertSee('<meta name="description" content="Fast free HTML5 games in your browser.">', false)
             ->assertSee('<meta property="og:title" content="Play Free Browser Games - Free Games">', false)
             ->assertSee('<meta property="og:description" content="Fast free HTML5 games in your browser.">', false)
