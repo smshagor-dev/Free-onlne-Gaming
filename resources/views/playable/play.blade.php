@@ -9,6 +9,11 @@
         </div>
         <button type="button" onclick="document.getElementById('game-frame').requestFullscreen()" class="shrink-0 px-3 py-2 bg-slate-700 rounded text-sm" title="Fullscreen game"><i class="fas fa-expand mr-1"></i> Fullscreen</button>
     </div>
-    <iframe id="game-frame" src="{{ $game['url'] }}" title="Play {{ $game['name'] }}" class="block w-full border-0 bg-black" style="height: min(78vh, 900px); min-height: 420px" allow="autoplay; fullscreen; gamepad" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+    <iframe id="game-frame" src="{{ $embed['url'] }}" title="Play {{ $game['name'] }}"
+        data-embed-mode="{{ $embed['mode'] }}"
+        data-owned-ad-cleanup="{{ $embed['cleanup_owned_ads'] ? '1' : '0' }}"
+        class="block w-full border-0 bg-black" style="height: min(78vh, 900px); min-height: 420px"
+        allow="autoplay; fullscreen; gamepad" allowfullscreen
+        referrerpolicy="strict-origin-when-cross-origin"></iframe>
 </div>
 @endsection
