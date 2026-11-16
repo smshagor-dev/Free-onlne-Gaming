@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Country;
+use App\Models\Currency;
+use Illuminate\Support\Facades\Schema;
 use App\Models\Setting;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -20,8 +22,13 @@ class SettingController extends Controller
         $setting = Setting::first() ?? Setting::create(['name' => 'Free Games']);
         $countries = Country::query()->select('id', 'currency_symbol', 'currency')
             ->whereNotNull('currency')->orderBy('currency')->get()->unique('currency');
+        // Fallback while deployments migrate: the existing country list remains
+        // available even before the new canonical currency table is installed.
+        $currencies = Schema::hasTable('currencies')
+            ? Currency::query()->orderBy('code')->get()
+            : collect();
 
-        return view('admin.settings.edit', compact('setting', 'countries'));
+        return view('admin.settings.edit', compact('setting', 'countries', 'currencies'));
     }
 
     public function update(Request $request, Setting $setting): RedirectResponse
