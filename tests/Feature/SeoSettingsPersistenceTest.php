@@ -172,8 +172,9 @@ class SeoSettingsPersistenceTest extends TestCase
         $response->assertSee('<title>Play Free Browser Games - Free Games</title>', false)
             ->assertSee('<meta name="description" content="Fast free HTML5 games in your browser.">', false)
             ->assertSee('<meta property="og:title" content="Play Free Browser Games - Free Games">', false)
-            ->assertSee('<meta property="og:description" content="Fast free HTML5 games in your browser.">', false)
-            ->assertSee('<meta name="keywords" content="free games, HTML5 games">', false);
+            ->assertSee('<meta property="og:description" content="Fast free HTML5 games in your browser.">', false);
+        preg_match('/<meta\\s+name="keywords"[^>]*>/', $response->getContent(), $matches);
+        $this->assertSame('<meta name="keywords" content="free games, HTML5 games">', $matches[0] ?? '');
     }
 
     public function test_admin_settings_renders_five_isolated_forms(): void
