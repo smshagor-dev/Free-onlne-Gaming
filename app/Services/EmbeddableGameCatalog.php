@@ -9,6 +9,10 @@ class EmbeddableGameCatalog
 {
     public function all(): array
     {
+        if (!SiteCms::section('catalog')['provider_enabled']) {
+            return [];
+        }
+
         $cached = Cache::get('gamemonetize.embeddable.all');
         if (is_array($cached)) {
             return $this->withoutCasinoGames($cached);

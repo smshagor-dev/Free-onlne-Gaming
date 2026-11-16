@@ -27,9 +27,11 @@
             ['Tags', 'admin.tags.index', 'admin.tags.*', '#'],
             ['Banners', 'admin.banners.index', 'admin.banners.*', '▧'],
             ['Pages', 'admin.pages.index', 'admin.pages.*', '▤'],
+            ['Dynamic site builder', 'admin.site-builder.edit', 'admin.site-builder.*', '✎'],
         ],
         'Community' => [
             ['All users', 'admin.users.index', 'admin.users.index', '♙'],
+            ['User activity reports', 'admin.user-activity.index', 'admin.user-activity.*', '◷'],
             ['Active users', 'admin.users.active', 'admin.users.active', '✓'],
             ['Pending users', 'admin.users.pending', 'admin.users.pending', '◷'],
             ['Banned users', 'admin.users.banned', 'admin.users.banned', '⊘'],
