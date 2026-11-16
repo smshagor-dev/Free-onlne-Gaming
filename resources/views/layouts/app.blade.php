@@ -40,16 +40,24 @@
     @yield('styles')
     @include('layouts.theme')
 </head>
-<body class="fg-page">
+<body class="fg-page {{ request()->routeIs('user.dashboard') ? 'player-dashboard-route' : '' }}">
 <a class="skip-link" href="#main-content">Skip to content</a>
 @include('layouts.header')
 <main id="main-content" class="site-main {{ request()->routeIs('games.viewIndex') ? 'home-main' : '' }}">
     @yield('workspace-navigation')
     @if(auth()->check() && !request()->is('admin/*'))
         <nav class="account-nav" aria-label="Account navigation">
-            <a href="{{ route('user.dashboard') }}">My Account</a><a href="{{ route('user.profile') }}">Profile</a>
-            <a href="{{ route('user.games.viewFavorites') }}">Favorites</a><a href="{{ route('catalog.user.library') }}">My Library</a>
-            <form method="POST" action="{{ route('logout') }}">@csrf<button type="submit">Logout</button></form>
+            @if(request()->routeIs('user.dashboard'))
+                <a class="is-active" aria-current="page" href="{{ route('user.dashboard') }}"><i class="fa-regular fa-user" aria-hidden="true"></i> My Account</a>
+                <a href="{{ route('user.profile') }}"><i class="fa-regular fa-user" aria-hidden="true"></i> Profile</a>
+                <a href="{{ route('user.games.viewFavorites') }}"><i class="fa-regular fa-heart" aria-hidden="true"></i> Favorites</a>
+                <a href="{{ route('catalog.user.library') }}"><i class="fa-solid fa-layer-group" aria-hidden="true"></i> My Library</a>
+                <form method="POST" action="{{ route('logout') }}">@csrf<button type="submit"><i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i> Logout</button></form>
+            @else
+                <a href="{{ route('user.dashboard') }}">My Account</a><a href="{{ route('user.profile') }}">Profile</a>
+                <a href="{{ route('user.games.viewFavorites') }}">Favorites</a><a href="{{ route('catalog.user.library') }}">My Library</a>
+                <form method="POST" action="{{ route('logout') }}">@csrf<button type="submit">Logout</button></form>
+            @endif
         </nav>
     @endif
     @if(session('success'))<p class="status-message" role="status">{{ session('success') }}</p>@endif
@@ -57,9 +65,19 @@
     @yield('content')
 </main>
 @php($cmsFooter = \App\Services\SiteCms::section('footer'))
-<footer class="site-footer">{{ $cmsFooter['text'] }}
-    @if($cmsFooter['show_games']) · <a href="{{ route('playable.index') }}">Games</a> @endif
-    @if($cmsFooter['show_contact']) · <a href="{{ route('contacts.create') }}">{{ $cmsFooter['contact_label'] }}</a> @endif
+<footer class="site-footer">
+    @if(request()->routeIs('user.dashboard'))
+        <span class="dashboard-footer-brand"><i class="fa-solid fa-gamepad" aria-hidden="true"></i> Free<span>Games</span></span>
+        <span class="dashboard-footer-separator" aria-hidden="true"></span>
+        <span class="dashboard-footer-links">{{ $cmsFooter['text'] }}
+            @if($cmsFooter['show_games']) · <a href="{{ route('playable.index') }}">Games</a> @endif
+            @if($cmsFooter['show_contact']) · <a href="{{ route('contacts.create') }}">{{ $cmsFooter['contact_label'] }}</a> @endif
+        </span>
+    @else
+        {{ $cmsFooter['text'] }}
+        @if($cmsFooter['show_games']) · <a href="{{ route('playable.index') }}">Games</a> @endif
+        @if($cmsFooter['show_contact']) · <a href="{{ route('contacts.create') }}">{{ $cmsFooter['contact_label'] }}</a> @endif
+    @endif
 </footer>
 @include('layouts.menu-script')
 @include('auth.partials.modal')
