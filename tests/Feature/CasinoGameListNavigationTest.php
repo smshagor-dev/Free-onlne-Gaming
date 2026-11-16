@@ -166,7 +166,12 @@ class CasinoGameListNavigationTest extends TestCase
         $this->assertSame(2, substr_count($html, '>Matching Roulette</strong>'));
         $this->assertStringContainsString('Locally managed game', $html);
         $this->assertStringContainsString('Recorded provider session', $html);
-        $this->assertSame(1, substr_count($html, '>50.00<'));
+        $response->assertSee('50.00');
+        // The local entry is not assigned the provider's gross bet amount
+        // just because the two sources happen to share a game name.
+        preg_match('/<tr>\\s*<td>[\\s\\S]*?<strong>Matching Roulette<\\/strong>[\\s\\S]*?Locally managed game[\\s\\S]*?<\\/tr>/', $html, $matches);
+        $this->assertNotEmpty($matches, 'The local-source row should exist.');
+        $this->assertStringNotContainsString('50.00', $matches[0]);
     }
 
     public function test_public_casino_search_does_not_expose_other_game_categories(): void
