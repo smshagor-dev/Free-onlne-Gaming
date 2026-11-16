@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\SiteBuilderController;
 use App\Http\Controllers\Admin\UserActivityController;
+use App\Http\Controllers\Admin\CasinoReportController;
 use App\Http\Controllers\SiteManifestController;
 use App\Http\Controllers\Admin\FinanceOverviewController;
 use App\Http\Controllers\GamesCategoryController;
@@ -174,6 +175,7 @@ Route::prefix('/sm-shagor/free-games/admin-main/control-back-office/')->name('ad
     Route::get('/site-builder', [SiteBuilderController::class, 'edit'])->name('site-builder.edit');
     Route::put('/site-builder/{section}', [SiteBuilderController::class, 'update'])->name('site-builder.update');
     Route::get('/user-activity', [UserActivityController::class, 'index'])->name('user-activity.index');
+    Route::get('/casino/activity', [CasinoReportController::class, 'index'])->name('casino.index');
 
     Route::get('/profile', [AdminController::class, 'viewProfile'])->name('profile');
 

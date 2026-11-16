@@ -39,6 +39,7 @@
             ['Messages', 'admin.contacts.index', 'admin.contacts.*', '✉'],
         ],
         'Games & rewards' => [
+            ['Casino games & activity', 'admin.casino.index', 'admin.casino.*', '♠'],
             ['Game points', 'admin.points.index', 'admin.points.*', '✦'],
             ['Player levels', 'admin.levels.index', 'admin.levels.*', '♜'],
             ['Lottery', 'admin.lottaries.index', 'admin.lottaries.*', '◈'],
