@@ -69,20 +69,27 @@ class LiveGameSearchTest extends TestCase
             ->assertJsonValidationErrors('q');
     }
 
-    public function test_navigation_search_is_after_the_menu_and_keeps_a_get_fallback(): void
+    public function test_navigation_search_is_grouped_at_the_right_with_login_and_keeps_a_get_fallback(): void
     {
         Cache::put('gamemonetize.embeddable.all', [], 60);
         $response = $this->get(route('playable.index'))->assertOk();
         $html = $response->getContent();
 
         $menuPos = strpos($html, 'class="fg-nav-links"');
+        $controlsPos = strpos($html, 'class="fg-header-controls"');
         $searchPos = strpos($html, 'class="fg-nav-search"');
         $actionsPos = strpos($html, 'class="fg-actions"');
+        $togglePos = strpos($html, 'class="fg-search-toggle"');
 
         $this->assertNotFalse($menuPos);
+        $this->assertNotFalse($controlsPos);
         $this->assertNotFalse($searchPos);
         $this->assertNotFalse($actionsPos);
-        $this->assertTrue($menuPos < $searchPos && $searchPos < $actionsPos);
+        $this->assertNotFalse($togglePos);
+        // The search is physically grouped with the account links at the right.
+        $this->assertTrue($menuPos < $controlsPos && $controlsPos < $togglePos
+            && $togglePos < $searchPos && $searchPos < $actionsPos);
+        $response->assertSee('aria-controls="fg-header-search"', false);
         $response->assertSee('data-suggest-url="'.route('playable.suggest').'"', false)
             ->assertSee('aria-autocomplete="list"', false)
             ->assertSee('method="GET"', false);
