@@ -158,6 +158,8 @@ class SeoSettingsPersistenceTest extends TestCase
             'meta_tag' => 'free games, HTML5 games',
         ]);
 
+        $this->assertSame('free games, HTML5 games', $setting->fresh()->meta_tag);
+
         // In a long-lived worker the next render should see the updated
         // setting after cache invalidation, without recreating the database.
         Cache::forget('app.settings.first');
