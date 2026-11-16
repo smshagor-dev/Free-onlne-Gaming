@@ -160,7 +160,7 @@ class CasinoAdminReportTest extends TestCase
     public function test_locally_managed_casino_game_uses_existing_open_counter_not_fake_bets(): void
     {
         $category = GamesCategory::create(['name' => 'Casino']);
-        $tag = Tag::create(['category_id' => $category->id, 'tag_name' => 'Card']);
+        $tag = Tag::create(['category_id' => $category->id, 'tag_name' => 'Card', 'slug' => 'card']);
         $game = Game::create([
             'name' => 'Classic Blackjack',
             'category_id' => $category->id,
