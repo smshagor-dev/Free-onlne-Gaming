@@ -7,7 +7,7 @@
         // from the settings table, then the existing site identity.
         $siteSeoTitle = filled($setting->seo_title ?? null)
             ? $setting->seo_title
-            : ($setting->title ?: ($setting->name ?: config('app.name', 'Free Games')));
+            : ($setting?->title ?: ($setting?->name ?: config('app.name', 'Free Games')));
         $siteSeoDescription = filled($setting->seo_description ?? null)
             ? $setting->seo_description
             : 'Discover and play free browser games online.';
