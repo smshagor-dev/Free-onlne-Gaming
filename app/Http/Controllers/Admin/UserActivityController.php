@@ -21,7 +21,7 @@ class UserActivityController extends Controller
         ]);
         $from = CarbonImmutable::parse($filters['from'] ?? now()->subDays(13)->toDateString())->startOfDay();
         $to = CarbonImmutable::parse($filters['to'] ?? now()->toDateString())->endOfDay();
-        if ($from->greaterThan($to) || $from->diffInDays($to) > 90 || $to->greaterThan(now()->endOfDay())) {
+        if ($from->greaterThan($to) || $from->diffInDays($to->startOfDay()) > 89 || $to->greaterThan(now()->endOfDay())) {
             throw ValidationException::withMessages(['from' => 'Choose a valid reporting range of 90 days or less, ending no later than today.']);
         }
 
