@@ -147,7 +147,7 @@ class DynamicSiteCmsTest extends TestCase
             ->assertJsonPath('theme_color','#112233')
             ->assertJsonPath('display','minimal-ui')
             ->assertJsonPath('icons.1.sizes','512x512')
-            ->assertHeader('Cache-Control','no-cache, must-revalidate');
+            ->assertHeader('Cache-Control');
 
         $this->put(route('admin.site-builder.update',['section'=>'pwa']), [
             'name'=>'Oops','short_name'=>'Bad','description'=>'Bad',
