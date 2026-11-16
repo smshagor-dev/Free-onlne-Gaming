@@ -111,8 +111,8 @@ class SharedPortalSidebarTest extends TestCase
         $adminJs = file_get_contents(resource_path('js/admin-cms.js'));
 
         $this->assertStringContainsString("@vite('resources/js/admin-cms.js')", $layout);
-        $this->assertStringContainsString("layouts.partials.portal-sidebar", $layout) === false
-            ?: $this->assertTrue(true);
+        $this->assertStringContainsString("layouts.partials.player-portal", $layout);
+        $this->assertStringContainsString("layouts.partials.portal-sidebar", file_get_contents(resource_path('views/layouts/partials/player-portal.blade.php')));
         $this->assertStringContainsString("class=\"cms-sidebar\"", $partial);
         $this->assertStringContainsString("position:fixed", file_get_contents(resource_path('css/admin-cms.css')));
         $this->assertStringContainsString("cms-menu-open", $adminJs);
