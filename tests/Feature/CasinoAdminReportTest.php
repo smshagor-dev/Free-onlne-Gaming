@@ -35,7 +35,7 @@ class CasinoAdminReportTest extends TestCase
         $this->actingAs($admin, 'admin');
     }
 
-    private function session(User $user, string $game, string $sessionId): int
+    private function recordCasinoSession(User $user, string $game, string $sessionId): int
     {
         return DB::table('casino_game_sessions')->insertGetId([
             'user_id' => $user->id,
@@ -46,7 +46,7 @@ class CasinoAdminReportTest extends TestCase
         ]);
     }
 
-    private function transaction(User $user, ?int $sessionId, string $action, string $amount, string $status = 'approved', bool $verified = true): void
+    private function recordCasinoTransaction(User $user, ?int $sessionId, string $action, string $amount, string $status = 'approved', bool $verified = true): void
     {
         static $nextId = 0;
         $nextId++;
@@ -97,24 +97,24 @@ class CasinoAdminReportTest extends TestCase
     {
         $memberA = User::factory()->create(['name' => 'Casino Member A']);
         $memberB = User::factory()->create(['name' => 'Casino Member B']);
-        $s1 = $this->session($memberA, 'Sample Roulette', 's1');
-        $s2 = $this->session($memberA, 'Sample Roulette', 's2');
-        $s3 = $this->session($memberB, 'Sample Roulette', 's3');
-        $this->session($memberB, 'Sample Slots', 's4');
+        $s1 = $this->recordCasinoSession($memberA, 'Sample Roulette', 's1');
+        $s2 = $this->recordCasinoSession($memberA, 'Sample Roulette', 's2');
+        $s3 = $this->recordCasinoSession($memberB, 'Sample Roulette', 's3');
+        $this->recordCasinoSession($memberB, 'Sample Slots', 's4');
 
-        $this->transaction($memberA, $s1, 'bet', '10.50');
-        $this->transaction($memberA, $s1, 'bet', '2.00');
-        $this->transaction($memberA, $s1, 'win', '7.25');
-        $this->transaction($memberA, $s2, 'bet', '3.00');
-        $this->transaction($memberB, $s3, 'win', '1.00');
+        $this->recordCasinoTransaction($memberA, $s1, 'bet', '10.50');
+        $this->recordCasinoTransaction($memberA, $s1, 'bet', '2.00');
+        $this->recordCasinoTransaction($memberA, $s1, 'win', '7.25');
+        $this->recordCasinoTransaction($memberA, $s2, 'bet', '3.00');
+        $this->recordCasinoTransaction($memberB, $s3, 'win', '1.00');
 
         // Not confirmed provider wager actions; must be excluded.
-        $this->transaction($memberA, $s1, 'bet', '600.00', 'pending');
-        $this->transaction($memberA, $s1, 'win', '500.00', 'reject');
-        $this->transaction($memberA, $s1, 'bet', '400.00', 'approved', false);
-        $this->transaction($memberA, $s1, 'rollback', '100.00');
-        $this->transaction($memberA, null, 'bet', '200.00');
-        $this->transaction($memberB, $s1, 'bet', '100.00'); // wrong session owner
+        $this->recordCasinoTransaction($memberA, $s1, 'bet', '600.00', 'pending');
+        $this->recordCasinoTransaction($memberA, $s1, 'win', '500.00', 'reject');
+        $this->recordCasinoTransaction($memberA, $s1, 'bet', '400.00', 'approved', false);
+        $this->recordCasinoTransaction($memberA, $s1, 'rollback', '100.00');
+        $this->recordCasinoTransaction($memberA, null, 'bet', '200.00');
+        $this->recordCasinoTransaction($memberB, $s1, 'bet', '100.00'); // wrong session owner
 
         $this->loginAdmin();
         $response = $this->get(route('admin.casino.index'))->assertOk();
@@ -141,8 +141,8 @@ class CasinoAdminReportTest extends TestCase
     public function test_filters_are_read_only_and_do_not_change_database_rows(): void
     {
         $member = User::factory()->create(['name' => 'Filter Member']);
-        $this->session($member, 'Demo Poker', 'first');
-        $this->session($member, 'Demo Blackjack', 'second');
+        $this->recordCasinoSession($member, 'Demo Poker', 'first');
+        $this->recordCasinoSession($member, 'Demo Blackjack', 'second');
         $this->loginAdmin();
 
         $this->get(route('admin.casino.index', ['search' => 'Poker', 'user_id' => $member->id]))
@@ -185,7 +185,7 @@ class CasinoAdminReportTest extends TestCase
     {
         $user = User::factory()->create();
         $name = '<script>alert("casino")</script>';
-        $this->session($user, $name, 'escaped');
+        $this->recordCasinoSession($user, $name, 'escaped');
         $this->loginAdmin();
 
         $this->get(route('admin.casino.index'))
