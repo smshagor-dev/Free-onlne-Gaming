@@ -13,7 +13,7 @@
             : 'Discover and play free browser games online.';
 
         // Precompute optional head tags in one place. This avoids interleaving
-        // native PHP tags, Blade conditionals and @php blocks inside <head>.
+        // native PHP tags and directive-heavy conditionals inside the document head.
         // Every attribute containing admin-provided text is HTML escaped.
         $siteFaviconUrl = filled($setting?->favicon ?? null)
             ? \Illuminate\Support\Facades\Storage::disk('public')->url($setting->favicon)
