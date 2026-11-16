@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\EmbeddableGameCatalog;
+use App\Services\GameEmbedPolicy;
 use App\Services\SiteCms;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -76,11 +77,14 @@ class EmbeddableGameController extends Controller
         return view('playable.index', compact('games', 'categories', 'category', 'search'));
     }
 
-    public function play(string $id, EmbeddableGameCatalog $catalog)
+    public function play(string $id, EmbeddableGameCatalog $catalog, GameEmbedPolicy $policy)
     {
         $game = $catalog->find($id);
         abort_unless($game, 404);
 
-        return view('playable.play', compact('game'));
+        $embed = $policy->resolve((string) ($game['url'] ?? ''));
+        abort_if($embed['mode'] === 'blocked', 404);
+
+        return view('playable.play', compact('game', 'embed'));
     }
 }
