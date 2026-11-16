@@ -50,8 +50,8 @@ class SiteBuilderController extends Controller
             'show_games' => ['required', 'boolean'],
         ],
         'catalog' => [
-            'featured_limit' => ['required', 'integer', 'between:1,18'],
-            'new_limit' => ['required', 'integer', 'between:1,18'],
+            'featured_limit' => ['required', 'integer', 'between:1,12'],
+            'new_limit' => ['required', 'integer', 'between:1,12'],
             'page_size' => ['required', 'integer', 'between:12,96'],
             'suggestion_limit' => ['required', 'integer', 'between:1,12'],
             'category_bar_count' => ['required', 'integer', 'between:1,10'],
