@@ -48,7 +48,15 @@
                                 @foreach($menuCategories as $category => $icon)
                                     <a href="{{ $categoryDestination($category) }}"><span aria-hidden="true">{{ $icon }}</span>{{ $category }}</a>
                                 @endforeach
-                                @foreach($availableCategories->reject(fn ($category) => array_key_exists($category, $menuCategories) || preg_match('/casino|slots?|roulette|blackjack|baccarat|poker|gambling/i', $category)) as $category)
+                                @foreach($availableCategories->reject(fn ($category) =>
+                                    preg_match('/casino|slots?|roulette|blackjack|baccarat|poker|gambling/i', $category)
+                                    || !$selectedMenuCategories->contains(fn ($name) =>
+                                        strcasecmp($name, $category) === 0 ||
+                                        (strcasecmp($name, 'Shooting') === 0 && strcasecmp($category, 'Shooter') === 0) ||
+                                        (strcasecmp($name, 'Simulation') === 0 && strcasecmp($category, 'Sim') === 0)
+                                    )
+                                    || array_key_exists($category, $menuCategories)
+                                ) as $category)
                                     @if(!in_array($category, ['Shooter', 'Sim']))<a href="{{ $categoryDestination($category) }}"><span aria-hidden="true">◇</span>{{ $category }}</a>@endif
                                 @endforeach
                             </div>
