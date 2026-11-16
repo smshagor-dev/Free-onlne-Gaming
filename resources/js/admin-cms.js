@@ -34,6 +34,9 @@ function activateTab(name, focus = false) {
         if (selected && focus) tab.focus();
     });
     panels.forEach(panel => panel.hidden = panel.dataset.cmsPanel !== name);
+    // Only the visible settings section may be saved by the backend.
+    const activeTabField = document.querySelector('[data-cms-active-tab]');
+    if (activeTabField) activeTabField.value = name;
     try { sessionStorage.setItem('cms-settings-tab', name); } catch (_) {}
 }
 if (tabs.length) {
@@ -54,3 +57,12 @@ if (tabs.length) {
         });
     });
 }
+
+/* Suggest a symbol ONLY when the admin explicitly changes currency.
+   Loading the SMTP tab must never reset the saved currency symbol. */
+const siteCurrency = document.getElementById('site-currency');
+const currencySymbol = document.getElementById('currency-symbol');
+siteCurrency?.addEventListener('change', () => {
+    const symbol = siteCurrency.selectedOptions?.[0]?.dataset.symbol;
+    if (currencySymbol && symbol) currencySymbol.value = symbol;
+});
