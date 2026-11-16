@@ -25,9 +25,10 @@
                 tabindex="{{ $loop->first ? 0 : -1 }}">{{ $label }}</button>
         @endforeach
     </div>
-    <form action="{{ route('admin.setting.update', $setting->id) }}" method="POST" enctype="multipart/form-data">
+    <form action="{{ route('admin.setting.update', $setting->id) }}" method="POST" enctype="multipart/form-data" data-cms-settings-form>
         @csrf
         @method('PUT')
+        <input type="hidden" name="settings_tab" value="{{ old('settings_tab','general') }}" data-cms-active-tab>
 
         <section id="cms-panel-general" data-cms-panel="general" class="cms-settings-panel" role="tabpanel" aria-labelledby="cms-tab-general">
             <h2>Website identity & contact</h2>
@@ -52,14 +53,26 @@
                 <div class="cms-field"><label for="site-currency">Site currency</label>
                     <select id="site-currency" name="site_currency">
                         @php($currentCurrency = old('site_currency',$setting->site_currency ?: 'USD'))
-                        <option value="{{ $currentCurrency }}">{{ $currentCurrency }}</option>
-                        @foreach($countries as $country)
-                            @if($country->currency !== $currentCurrency)<option value="{{ $country->currency }}">{{ $country->currency }}</option>@endif
-                        @endforeach
+                        @php($activeCurrency = $currencies->firstWhere('code', $currentCurrency))
+                        <option value="{{ $currentCurrency }}" data-symbol="{{ $activeCurrency?->symbol ?? $setting->currency_symble ?? '' }}">{{ $currentCurrency }}{{ $activeCurrency ? ' — '.$activeCurrency->name : '' }}</option>
+                        @forelse($currencies as $currency)
+                            @if($currency->code !== $currentCurrency)
+                                <option value="{{ $currency->code }}" data-symbol="{{ $currency->symbol }}">
+                                    {{ $currency->code }} — {{ $currency->name }} ({{ $currency->symbol }})
+                                </option>
+                            @endif
+                        @empty
+                            @foreach($countries as $country)
+                                @if($country->currency !== $currentCurrency)
+                                    <option value="{{ $country->currency }}" data-symbol="{{ $country->currency_symbol }}">{{ $country->currency }}</option>
+                                @endif
+                            @endforeach
+                        @endforelse
                     </select>
                 </div>
                 <div class="cms-field"><label for="currency-symbol">Currency symbol</label>
                     <input id="currency-symbol" name="currency_symble" type="text" maxlength="10" value="{{ old('currency_symble',$setting->currency_symble) }}">
+                    <small>Blank keeps the saved symbol. Selecting a different currency fills its suggested symbol.</small>
                 </div>
             </div>
         </section>
