@@ -11,6 +11,11 @@
     <a href="{{ route('admin.dashboard') }}" class="cms-button">Back to dashboard</a>
 </div>
 
+@php
+    $requestedTab = old('settings_tab', request()->query('tab', 'general'));
+    $activeSettingsTab = in_array($requestedTab, ['general', 'brand', 'seo', 'analytics', 'mail'], true)
+        ? $requestedTab : 'general';
+@endphp
 <div class="cms-card">
     <div class="cms-settings-tabs" role="tablist" aria-label="Site settings sections">
         @foreach([
@@ -21,11 +26,11 @@
             'mail'=>'SMTP & email',
         ] as $key=>$label)
             <button id="cms-tab-{{ $key }}" type="button" data-cms-tab="{{ $key }}"
-                role="tab" aria-controls="cms-panel-{{ $key }}" aria-selected="{{ $loop->first ? 'true' : 'false' }}"
-                tabindex="{{ $loop->first ? 0 : -1 }}">{{ $label }}</button>
+                role="tab" aria-controls="cms-panel-{{ $key }}" aria-selected="{{ $key === $activeSettingsTab ? 'true' : 'false' }}"
+                tabindex="{{ $key === $activeSettingsTab ? 0 : -1 }}">{{ $label }}</button>
         @endforeach
     </div>
-        <section id="cms-panel-general" data-cms-panel="general" class="cms-settings-panel" role="tabpanel" aria-labelledby="cms-tab-general">
+        <section id="cms-panel-general" data-cms-panel="general" class="cms-settings-panel" role="tabpanel" aria-labelledby="cms-tab-general" @if($activeSettingsTab !== 'general') hidden @endif>
         <form action="{{ route('admin.setting.update', $setting->id) }}" method="POST" data-cms-settings-form="general">
             @csrf
             @method('PUT')
@@ -81,7 +86,7 @@
         </form>
         </section>
 
-        <section id="cms-panel-brand" data-cms-panel="brand" class="cms-settings-panel" role="tabpanel" aria-labelledby="cms-tab-brand" hidden>
+        <section id="cms-panel-brand" data-cms-panel="brand" class="cms-settings-panel" role="tabpanel" aria-labelledby="cms-tab-brand" @if($activeSettingsTab !== 'brand') hidden @endif>
         <form action="{{ route('admin.setting.update', $setting->id) }}" method="POST" enctype="multipart/form-data" data-cms-settings-form="brand">
             @csrf
             @method('PUT')
@@ -118,7 +123,7 @@
         </form>
         </section>
 
-        <section id="cms-panel-seo" data-cms-panel="seo" class="cms-settings-panel" role="tabpanel" aria-labelledby="cms-tab-seo" hidden>
+        <section id="cms-panel-seo" data-cms-panel="seo" class="cms-settings-panel" role="tabpanel" aria-labelledby="cms-tab-seo" @if($activeSettingsTab !== 'seo') hidden @endif>
         <form action="{{ route('admin.setting.update', $setting->id) }}" method="POST" data-cms-settings-form="seo">
             @csrf
             @method('PUT')
@@ -146,7 +151,7 @@
         </form>
         </section>
 
-        <section id="cms-panel-analytics" data-cms-panel="analytics" class="cms-settings-panel" role="tabpanel" aria-labelledby="cms-tab-analytics" hidden>
+        <section id="cms-panel-analytics" data-cms-panel="analytics" class="cms-settings-panel" role="tabpanel" aria-labelledby="cms-tab-analytics" @if($activeSettingsTab !== 'analytics') hidden @endif>
         <form action="{{ route('admin.setting.update', $setting->id) }}" method="POST" data-cms-settings-form="analytics">
             @csrf
             @method('PUT')
@@ -168,7 +173,7 @@
         </form>
         </section>
 
-        <section id="cms-panel-mail" data-cms-panel="mail" class="cms-settings-panel" role="tabpanel" aria-labelledby="cms-tab-mail" hidden>
+        <section id="cms-panel-mail" data-cms-panel="mail" class="cms-settings-panel" role="tabpanel" aria-labelledby="cms-tab-mail" @if($activeSettingsTab !== 'mail') hidden @endif>
         <form action="{{ route('admin.setting.update', $setting->id) }}" method="POST" data-cms-settings-form="mail">
             @csrf
             @method('PUT')
