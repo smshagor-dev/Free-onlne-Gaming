@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Game;
+use App\Services\CasinoGameCatalog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -51,6 +52,8 @@ class CasinoReportController extends Controller
             ->select('s.game_name')
             ->selectRaw("SUM(CASE WHEN t.provider_action = 'bet' THEN t.amount ELSE 0 END) AS total_bet")
             ->selectRaw("SUM(CASE WHEN t.provider_action = 'win' THEN t.amount ELSE 0 END) AS total_win")
+            ->selectRaw("SUM(CASE WHEN t.provider_action = 'bet' THEN 1 ELSE 0 END) AS bet_count")
+            ->selectRaw("SUM(CASE WHEN t.provider_action = 'win' THEN 1 ELSE 0 END) AS win_count")
             ->selectRaw('COUNT(*) AS audited_events')
             ->groupBy('s.game_name');
 
@@ -60,6 +63,32 @@ class CasinoReportController extends Controller
             ->selectRaw("SUM(CASE WHEN t.provider_action = 'win' THEN t.amount ELSE 0 END) AS total_win")
             ->selectRaw('COUNT(*) AS audited_events')
             ->groupBy('s.game_name', 's.user_id');
+
+        // A single list for the Admin UI. Preserve source identity: local
+        // metadata is NOT linked to provider sessions by a mere display-name
+        // match. Therefore local rows have no verified wagers, while
+        // session-only rows may lack image and play URL.
+        $opens = DB::table('game_opens')->select('game_id')
+            ->selectRaw('COUNT(*) AS players')->groupBy('game_id');
+
+        $localRows = CasinoGameCatalog::query()
+            ->leftJoinSub($opens, 'known', fn ($join) => $join->on('games.id', '=', 'known.game_id'))
+            ->selectRaw("'local' AS source, games.id AS record_id, games.name AS game_name, games.image AS image,
+                games.games_url AS play_url, games.play_time AS play_time,
+                COALESCE(known.players, 0) AS players,
+                NULL AS bet_count, NULL AS win_count, NULL AS total_bet, NULL AS total_win, NULL AS audited_events");
+
+        $sessionRows = DB::query()->fromSub($sessionSummary, 'activity')
+            ->leftJoinSub($gameMoney, 'money', fn ($join) => $join->on('activity.game_name', '=', 'money.game_name'))
+            ->selectRaw("'session' AS source, NULL AS record_id, activity.game_name AS game_name,
+                NULL AS image, NULL AS play_url, activity.launches AS play_time,
+                activity.players AS players, money.bet_count AS bet_count, money.win_count AS win_count,
+                money.total_bet AS total_bet, money.total_win AS total_win, money.audited_events AS audited_events");
+
+        $gameList = DB::query()->fromSub($localRows->toBase()->unionAll($sessionRows), 'listed')
+            ->when($search !== '', fn ($query) => $query->where('game_name', 'like', '%'.addcslashes($search, '%_\\').'%'))
+            ->orderByDesc('play_time')->orderBy('game_name')
+            ->paginate(20, ['*'], 'game_list_page')->withQueryString();
 
         $games = DB::query()->fromSub($sessionSummary, 'activity')
             ->leftJoinSub($gameMoney, 'money', fn ($join) => $join->on('activity.game_name', '=', 'money.game_name'))
@@ -116,6 +145,6 @@ class CasinoReportController extends Controller
         $totals['total_bet'] = $moneyTotals->total_bet ?? null;
         $totals['total_win'] = $moneyTotals->total_win ?? null;
 
-        return view('admin.casino.index', compact('games', 'players', 'localGames', 'totals', 'search', 'userId'));
+        return view('admin.casino.index', compact('gameList', 'games', 'players', 'localGames', 'totals', 'search', 'userId'));
     }
 }
