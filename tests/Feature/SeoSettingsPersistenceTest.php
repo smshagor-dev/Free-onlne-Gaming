@@ -158,11 +158,9 @@ class SeoSettingsPersistenceTest extends TestCase
             'meta_tag' => 'free games, HTML5 games',
         ]);
 
-        // Public requests after a deployment boot with the newly stored
-        // setting. The database remains unchanged by the view.
-        $this->refreshApplication();
-        Cache::put('gamemonetize.embeddable.all', [], 60);
-        Http::preventStrayRequests();
+        // In a long-lived worker the next render should see the updated
+        // setting after cache invalidation, without recreating the database.
+        Cache::forget('app.settings.first');
 
         $this->get(route('games.viewIndex'))->assertOk()
             ->assertSee('<title>Play Free Browser Games - Free Games</title>', false)
