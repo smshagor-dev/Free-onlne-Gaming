@@ -47,6 +47,10 @@
             'category_bar_count' => ['label'=>'Popular categories shown in header','type'=>'number','min'=>1,'max'=>10],
             'provider_enabled' => ['label'=>'Use approved external embeddable game catalog','type'=>'checkbox','help'=>'When disabled, externally supplied playable games are hidden. Locally managed games remain in the database.'],
         ],
+        'embeds' => [
+            'owned_ad_cleanup_enabled' => ['label'=>'Hide marked ads inside our own first-party games', 'type'=>'checkbox', 'help'=>'Same-origin only. Removes only [data-owned-ad] and .owned-game-ad elements in games you control.'],
+            'prefer_provider_ad_free' => ['label'=>'Prefer officially licensed third-party ad-free embed mode', 'type'=>'checkbox', 'help'=>'Only applies if the provider has a verified, explicitly configured integration contract on the server. Other iframe ads cannot be removed.'],
+        ],
         'pwa' => [
             'name' => ['label'=>'Installed app name','type'=>'text'],
             'short_name' => ['label'=>'Short app name','type'=>'text'],
@@ -61,6 +65,7 @@
         'navigation' => 'Header & Menu Manager',
         'footer' => 'Footer Manager',
         'catalog' => 'Game Catalog Controls',
+        'embeds' => 'Game Iframe Policy',
         'pwa' => 'PWA App Configuration',
     ];
 @endphp
@@ -125,7 +130,9 @@
             </div>
         </div>
     </form>
-    @if($selected === 'pwa')
+    @if($selected === 'embeds')
+        <div class="cms-secret-hint">For third-party embeds, the browser prohibits reading or removing elements inside a cross-origin iframe. This setting never bypasses browser protection or provider terms. A documented provider-approved contract must be configured and verified on the server first.</div>
+    @elseif($selected === 'pwa')
         <div class="cms-secret-hint">The app name, colors and display mode update the live web manifest. The static gamepad PNG icons remain unchanged; regenerating custom install icons requires a separate icon build.</div>
     @elseif($selected === 'catalog')
         <div class="cms-secret-hint">The external feed remains restricted to safe approved embeds, and prohibited gambling categories stay blocked. These settings do not erase game or user records.</div>
