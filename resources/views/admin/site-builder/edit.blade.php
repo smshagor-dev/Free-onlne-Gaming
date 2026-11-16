@@ -40,8 +40,8 @@
             'show_games' => ['label'=>'Show Games link','type'=>'checkbox'],
         ],
         'catalog' => [
-            'featured_limit' => ['label'=>'Featured games shown on homepage','type'=>'number','min'=>1,'max'=>18],
-            'new_limit' => ['label'=>'New games shown on homepage','type'=>'number','min'=>1,'max'=>18],
+            'featured_limit' => ['label'=>'Featured games shown on homepage','type'=>'number','min'=>1,'max'=>12],
+            'new_limit' => ['label'=>'New games shown on homepage','type'=>'number','min'=>1,'max'=>12],
             'page_size' => ['label'=>'Games per catalog page','type'=>'number','min'=>12,'max'=>96],
             'suggestion_limit' => ['label'=>'Live search suggestion count','type'=>'number','min'=>1,'max'=>12],
             'category_bar_count' => ['label'=>'Popular categories shown in header','type'=>'number','min'=>1,'max'=>10],
