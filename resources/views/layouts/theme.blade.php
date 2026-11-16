@@ -232,4 +232,155 @@ body{min-height:100vh;display:flex;flex-direction:column;margin:0;background:#0b
     .fg-nav .fg-menu-toggle {font-size:11px;padding:7px}
 }
 
+
+/* Right-aligned search and account controls: keep them together, never stretch
+   the search field across the empty space left of Login / Sign Up. */
+.fg-nav .fg-header-controls{
+    display:flex;
+    flex:0 0 auto;
+    align-items:center;
+    justify-content:flex-end;
+    gap:12px;
+    min-width:0;
+    margin-left:auto;
+}
+.fg-nav .fg-header-controls .fg-nav-search{
+    flex:0 1 clamp(170px,19vw,290px);
+    width:clamp(170px,19vw,290px);
+    min-width:0;
+    max-width:290px;
+    height:46px;
+    margin:0;
+    order:initial;
+}
+.fg-nav .fg-header-controls .fg-actions{
+    display:flex;
+    align-items:center;
+    margin:0;
+    gap:10px;
+    order:initial;
+}
+.fg-nav .fg-header-controls .fg-menu-toggle{display:none}
+.fg-nav .fg-search-toggle{display:none}
+@media (min-width:1201px){
+    .fg-nav{flex-wrap:nowrap;column-gap:clamp(13px,1.7vw,26px);row-gap:0}
+    .fg-nav .fg-nav-links{margin-left:0;gap:clamp(10px,1.3vw,20px)}
+    .fg-nav .fg-header-controls .fg-nav-search{margin-bottom:0}
+    .fg-nav .fg-header-controls .fg-actions{margin-bottom:0}
+}
+@media (max-width:1200px){
+    .fg-nav{
+        position:relative;
+        display:flex;
+        flex-wrap:wrap;
+        align-items:center;
+        column-gap:10px;
+        row-gap:0;
+        padding:12px 0;
+        min-height:64px;
+    }
+    .fg-nav .fg-brand{
+        order:1;
+        flex:0 1 auto;
+        min-width:0;
+        margin:0;
+    }
+    .fg-nav .fg-header-controls{
+        order:2;
+        flex:0 0 auto;
+        width:auto;
+        margin-left:auto;
+        gap:7px;
+        position:static;
+    }
+    .fg-nav .fg-header-controls .fg-actions{
+        order:2;
+        margin:0;
+        gap:6px;
+        min-width:0;
+    }
+    .fg-nav .fg-header-controls .fg-actions .fg-auth{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        margin:0;
+        white-space:nowrap;
+    }
+    .fg-nav .fg-header-controls .fg-actions .fg-auth-ghost{display:inline-flex}
+    .fg-nav .fg-header-controls .fg-menu-toggle{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        order:3;
+        margin:0;
+        white-space:nowrap;
+    }
+    .fg-nav .fg-nav-links{
+        order:3;
+        flex:0 0 100%;
+        width:100%;
+        min-width:0;
+        margin:0;
+        display:none;
+        padding:0;
+        overflow:visible;
+    }
+    .fg-nav .fg-nav-links.is-open{
+        display:flex;
+        padding:9px 0;
+        border-top:1px solid #294058;
+    }
+    .fg-nav .fg-header-controls .fg-nav-search{
+        position:absolute;
+        right:0;
+        top:calc(100% + 7px);
+        z-index:90;
+        display:flex;
+        flex:none;
+        width:min(390px,100%);
+        max-width:390px;
+        height:46px;
+        margin:0;
+        box-shadow:0 12px 35px rgba(0,0,0,.35);
+    }
+    .fg-nav.fg-search-enhanced .fg-header-controls .fg-nav-search:not(.is-open){display:none}
+    .fg-nav.fg-search-enhanced .fg-search-toggle{
+        display:grid;
+        order:1;
+        place-items:center;
+        flex:0 0 38px;
+        width:38px;
+        height:38px;
+        padding:0;
+        border:1px solid #36516b;
+        border-radius:10px;
+        background:#14273a;
+        color:#c1d9ee;
+        cursor:pointer;
+    }
+    .fg-nav .fg-search-toggle[aria-expanded="true"]{
+        border-color:#43baff;
+        color:white;
+        background:#1c4566;
+    }
+}
+@media (max-width:600px){
+    .fg-nav{column-gap:5px}
+    .fg-nav .fg-brand{gap:5px}
+    .fg-nav .fg-brand-icon{flex:0 0 28px;width:28px;height:28px}
+    .fg-nav .fg-brand .fg-brand-word{
+        max-width:clamp(55px,16vw,98px)!important;
+        overflow:hidden;
+        text-overflow:ellipsis;
+        white-space:nowrap;
+        font-size:14px;
+    }
+    .fg-nav .fg-header-controls{gap:4px}
+    .fg-nav .fg-header-controls .fg-actions{gap:3px}
+    .fg-nav .fg-header-controls .fg-actions .fg-auth{padding:7px 7px;font-size:11px}
+    .fg-nav .fg-header-controls .fg-menu-toggle{padding:7px;font-size:11px}
+    .fg-nav.fg-search-enhanced .fg-search-toggle{width:34px;height:34px;flex-basis:34px}
+    .fg-nav .fg-header-controls .fg-nav-search{width:100%;max-width:100%}
+}
+
 </style>

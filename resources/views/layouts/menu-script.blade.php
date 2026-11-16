@@ -14,6 +14,50 @@
     const searchForm = document.querySelector('.fg-nav-search[data-suggest-url]');
     const searchInput = searchForm?.querySelector('input[name="search"]');
     const searchList = searchForm?.querySelector('.fg-search-results');
+    const nav = document.querySelector('.fg-nav');
+    const searchToggle = nav?.querySelector('.fg-search-toggle');
+    const compactSearch = window.matchMedia('(max-width: 1200px)');
+
+    const closeCompactSearch = (restoreFocus = false) => {
+        if (!searchForm || !searchToggle || !searchForm.classList.contains('is-open')) return;
+        searchForm.classList.remove('is-open');
+        searchToggle.setAttribute('aria-expanded', 'false');
+        searchToggle.setAttribute('aria-label', 'Open game search');
+        if (restoreFocus && compactSearch.matches) searchToggle.focus();
+    };
+
+    if (nav && searchForm && searchInput && searchToggle) {
+        nav.classList.add('fg-search-enhanced');
+        searchToggle.addEventListener('click', () => {
+            const opening = !searchForm.classList.contains('is-open');
+            searchForm.classList.toggle('is-open', opening);
+            searchToggle.setAttribute('aria-expanded', String(opening));
+            searchToggle.setAttribute('aria-label', opening ? 'Close game search' : 'Open game search');
+            if (opening) {
+                menu?.classList.remove('is-open');
+                menuToggle?.setAttribute('aria-expanded', 'false');
+                if (menuToggle) menuToggle.textContent = 'Menu';
+                searchInput.focus();
+            } else {
+                searchToggle.focus();
+            }
+        });
+        menuToggle?.addEventListener('click', () => closeCompactSearch());
+        document.addEventListener('click', event => {
+            if (!searchForm.contains(event.target) && !searchToggle.contains(event.target)) {
+                closeCompactSearch();
+            }
+        });
+        document.addEventListener('keydown', event => {
+            if (event.key === 'Escape' && searchForm.classList.contains('is-open')) {
+                event.preventDefault();
+                closeCompactSearch(true);
+            }
+        });
+        compactSearch.addEventListener('change', event => {
+            if (!event.matches) closeCompactSearch();
+        });
+    }
 
     if (searchForm && searchInput && searchList) {
         let debounce;
