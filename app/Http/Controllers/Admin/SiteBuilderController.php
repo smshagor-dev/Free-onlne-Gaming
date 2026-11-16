@@ -8,7 +8,6 @@ use App\Services\SiteCms;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class SiteBuilderController extends Controller
@@ -63,7 +62,7 @@ class SiteBuilderController extends Controller
             'description' => ['required', 'string', 'max:160'],
             'theme_color' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'background_color' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
-            'display' => ['required', Rule::in(['standalone', 'minimal-ui', 'browser'])],
+            'display' => ['required', 'in:standalone,minimal-ui,browser'],
         ],
     ];
 
