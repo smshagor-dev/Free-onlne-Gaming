@@ -6,9 +6,10 @@
     <meta name="description" content="{{ $metaDescription ?? ($setting->seo_description ?? 'Discover and play free browser games. Save favorites and explore our lottery.') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}"><meta name="user-id" content="{{ auth()->id() }}">
     <meta name="robots" content="{{ $robots ?? ((auth()->check() || request()->is('user/*', 'admin/*')) ? 'noindex, nofollow' : 'index, follow') }}">
-    <meta name="theme-color" content="#071827">
-    <meta name="application-name" content="Free Games">
-    <meta name="apple-mobile-web-app-title" content="Free Games">
+    @php($pwaConfig = \App\Services\SiteCms::section('pwa'))
+    <meta name="theme-color" content="{{ $pwaConfig['theme_color'] }}">
+    <meta name="application-name" content="{{ $pwaConfig['name'] }}">
+    <meta name="apple-mobile-web-app-title" content="{{ $pwaConfig['short_name'] }}">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     @if(!empty($setting->favicon))
@@ -18,7 +19,7 @@
     @endif
     <link rel="icon" type="image/png" sizes="192x192" href="{{ asset('icons/free-games-192.png') }}">
     <link rel="apple-touch-icon" sizes="192x192" href="{{ asset('icons/free-games-192.png') }}">
-    <link rel="canonical" href="{{ url()->current() }}"><link rel="manifest" href="{{ asset('manifest.json') }}">
+    <link rel="canonical" href="{{ url()->current() }}"><link rel="manifest" href="{{ route('site.manifest') }}">
     @if(!empty($setting->meta_tag))<meta name="keywords" content="{{ $setting->meta_tag }}">@endif
     @php
         $cmsOgImage = !empty($setting->thumbnail_image)
@@ -55,7 +56,11 @@
     @if(session('error'))<p class="status-message" role="alert">{{ session('error') }}</p>@endif
     @yield('content')
 </main>
-<footer class="site-footer">Free browser games · <a href="{{ route('contacts.create') }}">Contact</a></footer>
+@php($cmsFooter = \App\Services\SiteCms::section('footer'))
+<footer class="site-footer">{{ $cmsFooter['text'] }}
+    @if($cmsFooter['show_games']) · <a href="{{ route('playable.index') }}">Games</a> @endif
+    @if($cmsFooter['show_contact']) · <a href="{{ route('contacts.create') }}">{{ $cmsFooter['contact_label'] }}</a> @endif
+</footer>
 @include('layouts.menu-script')
 @include('auth.partials.modal')
 @stack('scripts')
