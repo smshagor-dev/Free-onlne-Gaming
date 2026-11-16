@@ -11,6 +11,38 @@
         $siteSeoDescription = filled($setting->seo_description ?? null)
             ? $setting->seo_description
             : 'Discover and play free browser games online.';
+
+        // Precompute optional head tags in one place. This avoids interleaving
+        // native PHP tags and directive-heavy conditionals inside the document head.
+        // Every attribute containing admin-provided text is HTML escaped.
+        $siteFaviconUrl = filled($setting?->favicon ?? null)
+            ? \Illuminate\Support\Facades\Storage::disk('public')->url($setting->favicon)
+            : asset('favicon.svg');
+        $siteFaviconType = filled($setting?->favicon ?? null)
+            ? (str_ends_with(strtolower($setting->favicon), '.ico') ? 'image/x-icon' : 'image/png')
+            : 'image/svg+xml';
+
+        $siteKeywordsTag = filled($setting?->meta_tag ?? null)
+            ? '<meta name="keywords" content="'.e($setting->meta_tag).'">'
+            : '';
+
+        $siteCmsOgImage = filled($setting?->thumbnail_image ?? null)
+            ? url(\Illuminate\Support\Facades\Storage::disk('public')->url($setting->thumbnail_image))
+            : null;
+        $effectiveOgImage = $ogImage ?? $siteCmsOgImage;
+        $siteOgImageTag = filled($effectiveOgImage)
+            && filter_var($effectiveOgImage, FILTER_VALIDATE_URL)
+            && in_array(parse_url($effectiveOgImage, PHP_URL_SCHEME), ['http', 'https'], true)
+                ? '<meta property="og:image" content="'.e($effectiveOgImage).'">'
+                : '';
+
+        $siteStructuredDataTag = filled($structuredData ?? null)
+            ? '<script type="application/ld+json">'.json_encode(
+                $structuredData,
+                JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE |
+                JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
+            ).'</script>'
+            : '';
     @endphp
     <title>@yield('title', $pageTitle ?? $siteSeoTitle)</title>
     <meta name="description" content="{{ $metaDescription ?? $siteSeoDescription }}">
@@ -22,28 +54,16 @@
     <meta name="apple-mobile-web-app-title" content="{{ $pwaConfig['short_name'] }}">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    @if(!empty($setting->favicon))
-        <link rel="icon" href="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($setting->favicon) }}">
-    @else
-        <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
-    @endif
+    <link rel="icon" type="{{ $siteFaviconType }}" href="{{ $siteFaviconUrl }}">
     <link rel="icon" type="image/png" sizes="192x192" href="{{ asset('icons/free-games-192.png') }}">
     <link rel="apple-touch-icon" sizes="192x192" href="{{ asset('icons/free-games-192.png') }}">
     <link rel="canonical" href="{{ url()->current() }}"><link rel="manifest" href="{{ route('site.manifest') }}">
-    <?php if (filled($setting?->meta_tag ?? null)): ?>
-        <meta name="keywords" content="<?php echo e($setting?->meta_tag ?? ''); ?>">
-    <?php endif; ?>
-    @php
-        $cmsOgImage = !empty($setting->thumbnail_image)
-            ? url(\Illuminate\Support\Facades\Storage::disk('public')->url($setting->thumbnail_image))
-            : null;
-        $effectiveOgImage = $ogImage ?? $cmsOgImage;
-    @endphp
+    {!! $siteKeywordsTag !!}
     <meta property="og:title" content="{{ $pageTitle ?? $siteSeoTitle }}"><meta property="og:url" content="{{ url()->current() }}">
     <meta property="og:description" content="{{ $metaDescription ?? $siteSeoDescription }}">
-    @if(!empty($effectiveOgImage) && filter_var($effectiveOgImage, FILTER_VALIDATE_URL) && in_array(parse_url($effectiveOgImage, PHP_URL_SCHEME), ['http', 'https'], true))<meta property="og:image" content="{{ $effectiveOgImage }}">@endif
+    {!! $siteOgImageTag !!}
     <meta name="twitter:card" content="summary_large_image">
-    @if(!empty($structuredData))<script type="application/ld+json">{!! json_encode($structuredData, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>@endif
+    {!! $siteStructuredDataTag !!}
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>

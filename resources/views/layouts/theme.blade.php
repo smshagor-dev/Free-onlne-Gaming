@@ -383,4 +383,42 @@ body{min-height:100vh;display:flex;flex-direction:column;margin:0;background:#0b
     .fg-nav .fg-header-controls .fg-nav-search{width:100%;max-width:100%}
 }
 
+
+/* A custom CMS logo should NOT inherit the blue rounded icon tile.
+   Keep the blue tile only for the built-in fallback gamepad glyph. */
+.fg-nav .fg-brand-icon.has-custom-logo {
+    flex:0 0 44px;
+    width:44px;
+    height:44px;
+    max-width:44px;
+    max-height:44px;
+    padding:0;
+    border:0;
+    border-radius:0;
+    background:transparent!important;
+    box-shadow:none!important;
+    overflow:visible;
+}
+.fg-nav .fg-brand-icon.has-custom-logo .fg-brand-image {
+    display:block;
+    width:100%;
+    height:100%;
+    max-width:100%;
+    max-height:100%;
+    object-fit:contain;
+    border:0;
+    border-radius:0;
+    background:transparent;
+    box-shadow:none;
+}
+@media(max-width:650px) {
+    .fg-nav .fg-brand-icon.has-custom-logo {
+        flex-basis:36px;
+        width:36px;
+        height:36px;
+        max-width:36px;
+        max-height:36px;
+    }
+}
+
 </style>
