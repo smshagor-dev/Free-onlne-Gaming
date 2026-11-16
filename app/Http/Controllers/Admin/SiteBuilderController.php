@@ -87,6 +87,11 @@ class SiteBuilderController extends Controller
         abort_unless(array_key_exists($section, self::RULES), 404);
         $validated = $request->validate(self::RULES[$section]);
 
+        if ($section === 'embeds') {
+            $validated['owned_ad_cleanup_enabled'] = (bool) $validated['owned_ad_cleanup_enabled'];
+            $validated['prefer_provider_ad_free'] = (bool) $validated['prefer_provider_ad_free'];
+        }
+
         if ($section === 'navigation') {
             $categories = collect(explode(',', $validated['category_labels']))
                 ->map(static fn ($name) => trim($name))
