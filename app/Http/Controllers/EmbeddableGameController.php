@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\EmbeddableGameCatalog;
+use App\Services\SiteCms;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -39,7 +40,7 @@ class EmbeddableGameController extends Controller
 
         $results = collect($catalog->all())
             ->filter(static fn (array $game): bool => mb_stripos((string) ($game['name'] ?? ''), $term) !== false)
-            ->take(8)
+            ->take(SiteCms::section('catalog')['suggestion_limit'])
             ->map(static fn (array $game): array => [
                 'name' => (string) $game['name'],
                 'category' => (string) ($game['category'] ?? 'Games'),
@@ -63,10 +64,11 @@ class EmbeddableGameController extends Controller
             $filtered = $filtered->filter(fn ($game) => mb_stripos($game['name'], $search) !== false)->values();
         }
         $page = max(1, $request->integer('page', 1));
+        $perPage = SiteCms::section('catalog')['page_size'];
         $games = new LengthAwarePaginator(
-            $filtered->forPage($page, 48)->values(),
+            $filtered->forPage($page, $perPage)->values(),
             $filtered->count(),
-            48,
+            $perPage,
             $page,
             ['path' => $request->url(), 'query' => $request->query()]
         );
