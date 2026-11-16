@@ -21,9 +21,9 @@
             <nav class="fg-nav" aria-label="Primary navigation">
                 @php($brandTitle = filled($setting->name ?? null) ? $setting->name : 'Free Games')
                 <a class="fg-brand" href="{{ route('games.viewIndex') }}" aria-label="{{ $brandTitle }} home">
-                    <span class="fg-brand-icon" aria-hidden="true">
-                        @if(!empty($setting->logo))
-                            <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($setting->logo) }}" alt="" width="28" height="28" style="width:28px;height:28px;object-fit:contain;border-radius:5px">
+                    <span class="fg-brand-icon {{ filled($setting?->logo ?? null) ? 'has-custom-logo' : 'has-fallback-logo' }}" aria-hidden="true">
+                        @if(filled($setting?->logo ?? null))
+                            <img class="fg-brand-image" src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($setting->logo) }}" alt="" width="42" height="42" decoding="async">
                         @else
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.7"><path d="M7 6h10c3 0 4 3 5 9s-2 6-5 3l-2-2H9l-2 2c-3 3-6 2-5-3S4 6 7 6Z"/><path d="M7 9v5M4.5 11.5h5"/><circle cx="16" cy="10" r=".8" fill="white"/><circle cx="18" cy="13" r=".8" fill="white"/></svg>
                         @endif
