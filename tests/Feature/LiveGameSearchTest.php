@@ -94,4 +94,19 @@ class LiveGameSearchTest extends TestCase
             ->assertSee('aria-autocomplete="list"', false)
             ->assertSee('method="GET"', false);
     }
+
+    public function test_responsive_right_hand_search_is_toggleable_without_changing_ajax_behavior(): void
+    {
+        $css = file_get_contents(resource_path('views/layouts/theme.blade.php'));
+        $script = file_get_contents(resource_path('views/layouts/menu-script.blade.php'));
+
+        $this->assertStringContainsString('.fg-nav .fg-header-controls', $css);
+        $this->assertStringContainsString('justify-content:flex-end', $css);
+        $this->assertStringContainsString('.fg-nav.fg-search-enhanced .fg-search-toggle', $css);
+        $this->assertStringContainsString('.fg-nav-search:not(.is-open)', $css);
+        $this->assertStringContainsString("nav.classList.add('fg-search-enhanced')", $script);
+        $this->assertStringContainsString("searchForm.classList.toggle('is-open', opening)", $script);
+        $this->assertStringContainsString("const scheduleSearch = () => {", $script);
+        $this->assertStringContainsString("url.searchParams.set('q', query)", $script);
+    }
 }
