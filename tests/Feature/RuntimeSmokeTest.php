@@ -207,10 +207,17 @@ class RuntimeSmokeTest extends TestCase
             route('user.dashboard'),
             route('user.profile'),
             route('user.games.viewFavorites'),
-            route('user.lottaries.view'),
         ] as $uri) {
-            $this->actingAs($user)->get($uri)->assertOk()->assertSee('fg-topbar')->assertSee('site-footer');
+            $this->actingAs($user)->get($uri)
+                ->assertOk()
+                ->assertSee('cms-sidebar')
+                ->assertSee('cms-topbar')
+                ->assertDontSee('class="account-nav"', false);
         }
+
+        // The public lottery listing keeps the public website navigation.
+        $this->actingAs($user)->get(route('user.lottaries.view'))
+            ->assertOk()->assertSee('fg-topbar')->assertSee('site-footer');
     }
 
     public function test_admin_login_and_core_read_pages_are_wired_to_the_admin_guard(): void
