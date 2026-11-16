@@ -66,6 +66,8 @@
         <a href="{{ route('admin.banners.create') }}">+ Add banner</a>
         <a href="{{ route('admin.users.index') }}">Manage members</a>
         <a href="{{ route('admin.contacts.index') }}">Contact inbox</a>
+        <a href="{{ route('admin.site-builder.edit') }}">Dynamic Site Builder</a>
+        <a href="{{ route('admin.user-activity.index') }}">User activity reports</a>
         <a href="{{ route('admin.setting.edit', ['tab'=>'mail']) }}">SMTP configuration</a>
         <a href="{{ route('admin.logs.index') }}">System logs</a>
     </div>
