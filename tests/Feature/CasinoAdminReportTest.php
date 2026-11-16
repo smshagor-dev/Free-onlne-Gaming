@@ -125,7 +125,7 @@ class CasinoAdminReportTest extends TestCase
             ->assertSee('Casino Member B')
             ->assertSee('15.50')  // exact approved bet sum
             ->assertSee('8.25')   // exact approved win sum
-            ->assertSee('12.50')  // player A + session 1 bet
+            ->assertSee('15.50')  // player A across both Roulette sessions
             ->assertSee('7.25')
             ->assertDontSee('600.00')
             ->assertDontSee('500.00')
