@@ -6,6 +6,8 @@
         ],
         'My games' => [
             ['Browse games', 'playable.index', 'playable.*', '▣'],
+            ['Casino games', 'casino.games.index', 'casino.games.*', '♠'],
+            ['My casino activity', 'user.casino.activity', 'user.casino.*', '◷'],
             ['Favorites', 'user.games.viewFavorites', 'user.games.viewFavorites', '♡'],
             ['Saved library', 'catalog.user.library', 'catalog.user.library', '▦'],
             ['Recently played', 'user.games.lastplay', 'user.games.lastplay', '▷'],
