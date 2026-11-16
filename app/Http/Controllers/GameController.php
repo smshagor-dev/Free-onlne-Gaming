@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Services\GameEmbedPolicy;
 
 use App\Models\Game;
 use App\Models\GameOpen;
@@ -240,9 +241,12 @@ class GameController extends Controller
         return view('tags.tag', compact('category', 'tag', 'tags', 'tag_id', 'games'));
     }
 
-    public function open($id)
+    public function open($id, GameEmbedPolicy $policy)
     {
         $game = Game::findOrFail($id);
+        $embed = $policy->resolve((string) $game->games_url);
+        // Reject invalid/untrusted embed schemes before any points are awarded.
+        abort_if($embed['mode'] === 'blocked', 404);
         $user = auth::user();
 
         $pointsToAdd = GamePoint::value('points') ?? 0;
@@ -291,7 +295,7 @@ class GameController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('games.open', compact('game', 'avgRating', 'totalReviews', 'totalLikes', 'totalDislikes', 'comments'));
+        return view('games.open', compact('game', 'embed', 'avgRating', 'totalReviews', 'totalLikes', 'totalDislikes', 'comments'));
     }
 
     // public function open($slug)

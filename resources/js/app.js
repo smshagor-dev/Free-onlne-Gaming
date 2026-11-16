@@ -1,6 +1,7 @@
 import './bootstrap';
 import './auth-experience';
 import './pwa';
+import './game-embed-policy';
 
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
