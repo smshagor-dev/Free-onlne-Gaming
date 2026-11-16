@@ -35,7 +35,6 @@
                     </span>
                 </a>
 
-                <button class="fg-menu-toggle" type="button" aria-expanded="false" aria-controls="fg-menu">Menu</button>
                 <div class="fg-nav-links" id="fg-menu">
                     @if($navCms['show_home'])<a class="fg-nav-link {{ request()->routeIs('games.viewIndex') ? 'is-active' : '' }}" @if(request()->routeIs('games.viewIndex')) aria-current="page" @endif href="{{ route('games.viewIndex') }}">{{ $navCms['home_label'] }}</a>@endif
                     @if($navCms['show_games'])<a class="fg-nav-link {{ request()->routeIs('playable.*', 'catalog.*') ? 'is-active' : '' }}" href="{{ route('playable.index') }}">{{ $navCms['games_label'] }}</a>@endif
@@ -67,7 +66,11 @@
                     @if($navCms['show_contact'])<a class="fg-nav-link {{ request()->routeIs('contacts.create') ? 'is-active' : '' }}" href="{{ route('contacts.create') }}">{{ $navCms['contact_label'] }}</a>@endif
                 </div>
 
-                <form class="fg-nav-search" action="{{ route('playable.index') }}" method="GET" role="search" data-suggest-url="{{ route('playable.suggest') }}" autocomplete="off">
+                <div class="fg-header-controls">
+                    <button class="fg-search-toggle" type="button" aria-controls="fg-header-search" aria-expanded="false" aria-label="Open game search">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 5 5"/></svg>
+                    </button>
+                    <form id="fg-header-search" class="fg-nav-search" action="{{ route('playable.index') }}" method="GET" role="search" data-suggest-url="{{ route('playable.suggest') }}" autocomplete="off">
                     <label class="sr-only" for="navigation-search">Search games</label>
                     <input id="navigation-search" name="search" type="search" placeholder="Search games..." value="{{ request('search') }}" maxlength="80" enterkeyhint="search" aria-autocomplete="list" aria-controls="fg-search-results" aria-expanded="false" role="combobox">
                     <button type="submit" aria-label="Search games"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 5 5"/></svg></button>
@@ -81,6 +84,8 @@
                         <a class="fg-auth fg-auth-primary" href="{{ route('user.dashboard') }}">Account</a>
                         <a class="fg-auth fg-auth-ghost" href="{{ route('user.games.viewFavorites') }}">Favorites</a>
                     @endguest
+                </div>
+                    <button class="fg-menu-toggle" type="button" aria-expanded="false" aria-controls="fg-menu">Menu</button>
                 </div>
             </nav>
             @if($navCms['show_categories'])
