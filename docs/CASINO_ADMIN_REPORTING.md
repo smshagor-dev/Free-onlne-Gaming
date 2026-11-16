@@ -30,3 +30,27 @@ The page supports searching game names, a user-ID filter for player-by-game rows
 - Existing session records are not guaranteed actual completed bets. Provider contracts and applicable local legal/age requirements should be verified before a public casino launch.
 
 Deploy: `git pull origin main`, `php artisan optimize:clear`, `php artisan view:cache`. No schema changes are necessary for these read-only reports.
+
+## Unified nine-column admin casino game list
+
+The main Casino games & activity table shows: Image, Game name, Play URL,
+Play time, Bet, Win, Total bet, Total win, and Admin win / lose.
+
+- Play time means recorded local page opens or session launches, not elapsed minutes.
+- Bet and Win are counts of approved provider-linked transaction events.
+- Total bet and Total win are gross recorded amounts, in unlabelled units.
+- Admin win / lose is gross bets minus wins: green positive / red negative.
+- This is NOT audited operator profit or a currency-aware settlement statement.
+- Local game rows retain their image/URL but are not joined to provider ledger by matching display name.
+- Provider session rows may lack image/URL. Missing values show a dash; no amounts are invented.
+
+## Front website and player menu
+
+- Public header menu links to /casino-games, listing locally managed casino-style games.
+- Player left sidebar links to Casino games and /user/casino/activity.
+- User activity is scoped to the authenticated member's own sessions and verified-provider-linked entries.
+- GameMonetize casino filtering is unchanged; no new external casino provider is connected.
+- The feature does not implement betting, deposits, withdrawal, payouts, or settlement.
+
+To unify provider metadata and settlement in future, require authenticated provider game IDs,
+currency-specific transaction records and documented provider permissions rather than name matching.
