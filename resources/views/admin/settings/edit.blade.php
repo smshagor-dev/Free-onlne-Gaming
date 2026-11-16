@@ -11,6 +11,11 @@
     <a href="{{ route('admin.dashboard') }}" class="cms-button">Back to dashboard</a>
 </div>
 
+@php
+    $requestedTab = old('settings_tab', request()->query('tab', 'general'));
+    $activeSettingsTab = in_array($requestedTab, ['general', 'brand', 'seo', 'analytics', 'mail'], true)
+        ? $requestedTab : 'general';
+@endphp
 <div class="cms-card">
     <div class="cms-settings-tabs" role="tablist" aria-label="Site settings sections">
         @foreach([
@@ -21,16 +26,15 @@
             'mail'=>'SMTP & email',
         ] as $key=>$label)
             <button id="cms-tab-{{ $key }}" type="button" data-cms-tab="{{ $key }}"
-                role="tab" aria-controls="cms-panel-{{ $key }}" aria-selected="{{ $loop->first ? 'true' : 'false' }}"
-                tabindex="{{ $loop->first ? 0 : -1 }}">{{ $label }}</button>
+                role="tab" aria-controls="cms-panel-{{ $key }}" aria-selected="{{ $key === $activeSettingsTab ? 'true' : 'false' }}"
+                tabindex="{{ $key === $activeSettingsTab ? 0 : -1 }}">{{ $label }}</button>
         @endforeach
     </div>
-    <form action="{{ route('admin.setting.update', $setting->id) }}" method="POST" enctype="multipart/form-data" data-cms-settings-form>
-        @csrf
-        @method('PUT')
-        <input type="hidden" name="settings_tab" value="{{ old('settings_tab','general') }}" data-cms-active-tab>
-
-        <section id="cms-panel-general" data-cms-panel="general" class="cms-settings-panel" role="tabpanel" aria-labelledby="cms-tab-general">
+        <section id="cms-panel-general" data-cms-panel="general" class="cms-settings-panel" role="tabpanel" aria-labelledby="cms-tab-general" @if($activeSettingsTab !== 'general') hidden @endif>
+        <form action="{{ route('admin.setting.update', $setting->id) }}" method="POST" data-cms-settings-form="general">
+            @csrf
+            @method('PUT')
+            <input type="hidden" name="settings_tab" value="general">
             <h2>Website identity & contact</h2>
             <p>These values identify the website and its contact details.</p>
             <div class="cms-form-grid">
@@ -75,9 +79,18 @@
                     <small>Blank keeps the saved symbol. Selecting a different currency fills its suggested symbol.</small>
                 </div>
             </div>
+            <div class="cms-settings-actions">
+                <button class="cms-button is-primary" type="submit"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Save General settings</button>
+                <small>Only general fields are updated; other settings remain unchanged.</small>
+            </div>
+        </form>
         </section>
 
-        <section id="cms-panel-brand" data-cms-panel="brand" class="cms-settings-panel" role="tabpanel" aria-labelledby="cms-tab-brand" hidden>
+        <section id="cms-panel-brand" data-cms-panel="brand" class="cms-settings-panel" role="tabpanel" aria-labelledby="cms-tab-brand" @if($activeSettingsTab !== 'brand') hidden @endif>
+        <form action="{{ route('admin.setting.update', $setting->id) }}" method="POST" enctype="multipart/form-data" data-cms-settings-form="brand">
+            @csrf
+            @method('PUT')
+            <input type="hidden" name="settings_tab" value="brand">
             <h2>Branding & media</h2>
             <p>Uploading is optional. Not selecting a new file will keep the saved image.</p>
             <div class="cms-form-grid">
@@ -103,25 +116,46 @@
                 @endforeach
             </div>
             <div class="cms-secret-hint">Installed PWA app icons are distributed with the frontend bundle. Custom site images do not automatically regenerate installed PWA icons.</div>
+            <div class="cms-settings-actions">
+                <button class="cms-button is-primary" type="submit"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Save Brand settings</button>
+                <small>Only brand fields are updated; other settings remain unchanged.</small>
+            </div>
+        </form>
         </section>
 
-        <section id="cms-panel-seo" data-cms-panel="seo" class="cms-settings-panel" role="tabpanel" aria-labelledby="cms-tab-seo" hidden>
+        <section id="cms-panel-seo" data-cms-panel="seo" class="cms-settings-panel" role="tabpanel" aria-labelledby="cms-tab-seo" @if($activeSettingsTab !== 'seo') hidden @endif>
+        <form action="{{ route('admin.setting.update', $setting->id) }}" method="POST" data-cms-settings-form="seo">
+            @csrf
+            @method('PUT')
+            <input type="hidden" name="settings_tab" value="seo">
+            @php($suggestedSeoTitle = $setting->title ?: ($setting->name ?: 'Free Games'))
+            @php($suggestedSeoDescription = $setting->description ?: 'Discover and play free browser games online.')
             <h2>Search metadata</h2>
-            <p>Manage search title and descriptions. Avoid keyword stuffing.</p>
+            <p>SEO values are saved separately from other tabs. When not configured, the fields suggest your existing site name and description; click Save SEO metadata settings to store them.</p>
             <div class="cms-form-grid">
                 <div class="cms-field"><label for="seo_title">SEO title</label>
-                    <input id="seo_title" name="seo_title" type="text" maxlength="255" value="{{ old('seo_title',$setting->seo_title) }}">
+                    <input id="seo_title" name="seo_title" type="text" maxlength="255" value="{{ old('seo_title', filled($setting->seo_title) ? $setting->seo_title : $suggestedSeoTitle) }}" required>
                 </div>
                 <div class="cms-field"><label for="meta_tag">Meta tags</label>
-                    <input id="meta_tag" name="meta_tag" type="text" maxlength="255" value="{{ old('meta_tag',$setting->meta_tag) }}">
+                    <input id="meta_tag" name="meta_tag" type="text" maxlength="255" value="{{ old('meta_tag',$setting->meta_tag) }}" placeholder="free browser games, HTML5 games">
+                    <small>Optional keywords. Search engines typically prioritize the title and description.</small>
                 </div>
                 <div class="cms-field is-wide"><label for="seo_description">SEO description</label>
-                    <textarea id="seo_description" name="seo_description" rows="4">{{ old('seo_description',$setting->seo_description) }}</textarea>
+                    <textarea id="seo_description" name="seo_description" rows="4" maxlength="500" required>{{ old('seo_description', filled($setting->seo_description) ? $setting->seo_description : $suggestedSeoDescription) }}</textarea>
                 </div>
             </div>
+            <div class="cms-settings-actions">
+                <button class="cms-button is-primary" type="submit"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Save SEO metadata settings</button>
+                <small>Only seo metadata fields are updated; other settings remain unchanged.</small>
+            </div>
+        </form>
         </section>
 
-        <section id="cms-panel-analytics" data-cms-panel="analytics" class="cms-settings-panel" role="tabpanel" aria-labelledby="cms-tab-analytics" hidden>
+        <section id="cms-panel-analytics" data-cms-panel="analytics" class="cms-settings-panel" role="tabpanel" aria-labelledby="cms-tab-analytics" @if($activeSettingsTab !== 'analytics') hidden @endif>
+        <form action="{{ route('admin.setting.update', $setting->id) }}" method="POST" data-cms-settings-form="analytics">
+            @csrf
+            @method('PUT')
+            <input type="hidden" name="settings_tab" value="analytics">
             <h2>Marketing integrations</h2>
             <p>These values remain saved in your settings record; use only trusted vendor snippets.</p>
             <div class="cms-form-grid">
@@ -132,9 +166,18 @@
                     <textarea id="adsense_code" name="adsense_code" rows="5" spellcheck="false">{{ old('adsense_code',$setting->adsense_code) }}</textarea>
                 </div>
             </div>
+            <div class="cms-settings-actions">
+                <button class="cms-button is-primary" type="submit"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Save Analytics settings</button>
+                <small>Only analytics fields are updated; other settings remain unchanged.</small>
+            </div>
+        </form>
         </section>
 
-        <section id="cms-panel-mail" data-cms-panel="mail" class="cms-settings-panel" role="tabpanel" aria-labelledby="cms-tab-mail" hidden>
+        <section id="cms-panel-mail" data-cms-panel="mail" class="cms-settings-panel" role="tabpanel" aria-labelledby="cms-tab-mail" @if($activeSettingsTab !== 'mail') hidden @endif>
+        <form action="{{ route('admin.setting.update', $setting->id) }}" method="POST" data-cms-settings-form="mail">
+            @csrf
+            @method('PUT')
+            <input type="hidden" name="settings_tab" value="mail">
             <h2>SMTP & email delivery</h2>
             <p>Mail configuration is applied to Laravel on the next request. Never share your SMTP password in public logs or screenshots.</p>
             <div class="cms-form-grid">
@@ -175,13 +218,14 @@
                 </div>
             </div>
             <div class="cms-secret-hint">Only an explicitly entered new password will replace the saved one. SMTP test emails go only to the signed-in administrator's address.</div>
+            <div class="cms-settings-actions">
+                <button class="cms-button is-primary" type="submit"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Save SMTP & email settings</button>
+                <small>Only smtp & email fields are updated; other settings remain unchanged.</small>
+            </div>
+        </form>
         </section>
 
-        <div class="cms-settings-actions">
-            <button class="cms-button is-primary" type="submit"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Save site settings</button>
-            <span style="font-size:12px;color:#748a9f">Existing data and uploaded assets are preserved unless explicitly replaced.</span>
-        </div>
-    </form>
+
 </div>
 <div class="cms-card" style="max-width:700px">
     <div class="cms-card-head"><div><h2>Send SMTP test</h2><p>Verify the active SMTP configuration without exposing the secret.</p></div></div>

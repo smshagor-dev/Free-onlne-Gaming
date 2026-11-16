@@ -77,5 +77,19 @@ class AppServiceProvider extends ServiceProvider
         }
 
         View::share('setting', $setting);
+
+        // Do not freeze the SEO site settings at worker boot. A settings
+        // update clears the cache key, and the next public layout render
+        // must read the refreshed row even in long-running PHP workers.
+        View::composer('layouts.app', static function (\Illuminate\View\View $view): void {
+            try {
+                $latest = Cache::remember('app.settings.first', now()->addMinutes(10), static fn () => Setting::first());
+                if ($latest instanceof Setting) {
+                    $view->with('setting', $latest);
+                }
+            } catch (Throwable) {
+                // The shared bootstrap defaults render during migrations/outages.
+            }
+        });
     }
 }

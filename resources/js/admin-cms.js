@@ -34,9 +34,8 @@ function activateTab(name, focus = false) {
         if (selected && focus) tab.focus();
     });
     panels.forEach(panel => panel.hidden = panel.dataset.cmsPanel !== name);
-    // Only the visible settings section may be saved by the backend.
-    const activeTabField = document.querySelector('[data-cms-active-tab]');
-    if (activeTabField) activeTabField.value = name;
+    // Each tab now owns a separate server-scoped form. No mutable hidden
+    // field is needed to determine which settings are being saved.
     try { sessionStorage.setItem('cms-settings-tab', name); } catch (_) {}
 }
 if (tabs.length) {

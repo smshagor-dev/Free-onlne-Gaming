@@ -33,7 +33,7 @@ class SettingController extends Controller
 
     public function update(Request $request, Setting $setting): RedirectResponse
     {
-        $data = $request->validate([
+        $rules = [
             'settings_tab' => ['sometimes', 'in:general,brand,seo,analytics,mail'],
             'name' => ['sometimes', 'nullable', 'string', 'max:255'],
             'title' => ['sometimes', 'nullable', 'string', 'max:255'],
@@ -58,14 +58,15 @@ class SettingController extends Controller
             'MAIL_FROM_NAME' => ['sometimes', 'nullable', 'string', 'max:255'],
             'site_currency' => ['sometimes', 'nullable', 'string', 'max:10'],
             'currency_symble' => ['sometimes', 'nullable', 'string', 'max:10'],
-        ]);
+        ];
 
-        // The CMS displays multiple tabs in one form. Only modify the active
-        // section, even if a browser submits stale/empty inputs from other tabs.
-        // Keep compatibility with legacy requests that omit settings_tab.
-        $tab = $data['settings_tab'] ?? null;
-        unset($data['settings_tab']);
+        // A distinct form is submitted for each CMS tab. Validate only that
+        // tab's inputs, so stale values from unrelated sections cannot make
+        // an SEO save silently affect some other configuration.
+        // Requests without settings_tab preserve legacy update behavior.
+        $tab = $request->input('settings_tab');
         if ($tab !== null) {
+            $request->validate(['settings_tab' => ['required', 'in:general,brand,seo,analytics,mail']]);
             $fields = match ($tab) {
                 'general' => ['name', 'title', 'description', 'phone', 'email', 'site_currency', 'currency_symble'],
                 'brand' => ['logo', 'favicon', 'thumbnail_image'],
@@ -77,8 +78,16 @@ class SettingController extends Controller
                     'MAIL_FROM_NAME',
                 ],
             };
-            $data = array_intersect_key($data, array_flip($fields));
+            $rules = array_intersect_key($rules, array_flip($fields));
+            if ($tab === 'seo') {
+                // Do not show a misleading success message for a blank SEO
+                // submission. Keywords remain optional.
+                $rules['seo_title'] = ['required', 'string', 'max:255'];
+                $rules['seo_description'] = ['required', 'string', 'max:500'];
+            }
         }
+        $data = $request->validate($rules);
+        unset($data['settings_tab']);
 
         // These two legacy database columns are NOT NULL. Empty form inputs
         // must never overwrite the saved values with NULL.
@@ -103,6 +112,22 @@ class SettingController extends Controller
 
         $setting->update($data);
         Cache::forget('app.settings.first');
+
+        if ($tab !== null) {
+            $labels = [
+                'general' => 'General',
+                'brand' => 'Brand assets',
+                'seo' => 'SEO metadata',
+                'analytics' => 'Analytics',
+                'mail' => 'SMTP & email',
+            ];
+
+            // The URL tells the frontend which tab was saved. Do not rely on
+            // sessionStorage or on a hidden field updated by bundled JS.
+            return redirect()
+                ->route('admin.setting.edit', ['tab' => $tab])
+                ->with('success', $labels[$tab].' settings saved successfully.');
+        }
 
         return back()->with('success', 'Site configuration saved successfully.');
     }
