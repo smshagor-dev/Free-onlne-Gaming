@@ -134,7 +134,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="9" class="cms-empty">No casino sessions recorded yet and no locally managed casino-style games match. Add approved games via Games Management.</td></tr>
+                <tr><td colspan="9" class="cms-empty">No casino sessions recorded yet. No locally managed casino-style games match. Add approved games via Games Management.</td></tr>
             @endforelse
             </tbody>
         </table>
