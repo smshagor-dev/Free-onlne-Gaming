@@ -2,8 +2,18 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@yield('title', $pageTitle ?? ($setting->title ?? $setting->name ?? config('app.name', 'Free Games')))</title>
-    <meta name="description" content="{{ $metaDescription ?? ($setting->seo_description ?? 'Discover and play free browser games. Save favorites and explore our lottery.') }}">
+    @php
+        // Page-specific titles take precedence. Otherwise use the SEO title
+        // from the settings table, then the existing site identity.
+        $siteSeoTitle = filled($setting->seo_title ?? null)
+            ? $setting->seo_title
+            : ($setting->title ?: ($setting->name ?: config('app.name', 'Free Games')));
+        $siteSeoDescription = filled($setting->seo_description ?? null)
+            ? $setting->seo_description
+            : 'Discover and play free browser games online.';
+    @endphp
+    <title>@yield('title', $pageTitle ?? $siteSeoTitle)</title>
+    <meta name="description" content="{{ $metaDescription ?? $siteSeoDescription }}">
     <meta name="csrf-token" content="{{ csrf_token() }}"><meta name="user-id" content="{{ auth()->id() }}">
     <meta name="robots" content="{{ $robots ?? ((auth()->check() || request()->is('user/*', 'admin/*')) ? 'noindex, nofollow' : 'index, follow') }}">
     @php($pwaConfig = \App\Services\SiteCms::section('pwa'))
@@ -27,8 +37,8 @@
             : null;
         $effectiveOgImage = $ogImage ?? $cmsOgImage;
     @endphp
-    <meta property="og:title" content="{{ $pageTitle ?? ($setting->seo_title ?? config('app.name')) }}"><meta property="og:url" content="{{ url()->current() }}">
-    <meta property="og:description" content="{{ $metaDescription ?? ($setting->seo_description ?? 'Free browser games and giveaways.') }}">
+    <meta property="og:title" content="{{ $pageTitle ?? $siteSeoTitle }}"><meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:description" content="{{ $metaDescription ?? $siteSeoDescription }}">
     @if(!empty($effectiveOgImage) && filter_var($effectiveOgImage, FILTER_VALIDATE_URL) && in_array(parse_url($effectiveOgImage, PHP_URL_SCHEME), ['http', 'https'], true))<meta property="og:image" content="{{ $effectiveOgImage }}">@endif
     <meta name="twitter:card" content="summary_large_image">
     @if(!empty($structuredData))<script type="application/ld+json">{!! json_encode($structuredData, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>@endif
