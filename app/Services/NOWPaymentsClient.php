@@ -68,7 +68,8 @@ class NOWPaymentsClient
         if (! preg_match('/^[0-9]{1,40}$/D', $id)
             || ! is_string($url) || ! $this->trustedCheckoutUrl($url)
             || (isset($data['order_id']) && $data['order_id'] !== $payment->reference)
-            || (isset($data['price_currency']) && strtolower((string) $data['price_currency']) !== strtolower($payment->currency))) {
+            || (isset($data['price_currency']) && strtolower((string) $data['price_currency']) !== strtolower($payment->currency))
+            || (isset($data['price_amount']) && ! $this->sameAmount((string) $payment->amount, $data['price_amount']))) {
             throw new RuntimeException('NOWPayments returned an invalid checkout invoice.');
         }
 
@@ -89,6 +90,22 @@ class NOWPaymentsClient
         }
 
         return $response->json();
+    }
+
+    private function sameAmount(string $expected, mixed $actual): bool
+    {
+        if (! is_string($actual) && ! is_int($actual) && ! is_float($actual)) {
+            return false;
+        }
+        $value = (string) $actual;
+        if (! preg_match('/^\d{1,12}(?:\.\d{1,2})?$/D', $value)) {
+            return false;
+        }
+        [$whole, $decimals] = array_pad(explode('.', $value, 2), 2, '');
+        [$owed, $owedDecimals] = array_pad(explode('.', $expected, 2), 2, '');
+
+        return ((int) $whole) * 100 + (int) str_pad($decimals, 2, '0')
+            === ((int) $owed) * 100 + (int) str_pad($owedDecimals, 2, '0');
     }
 
     public function trustedCheckoutUrl(string $url): bool
