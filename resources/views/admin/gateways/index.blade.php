@@ -12,6 +12,7 @@
 </div>
 <div class="cms-card">
     <div class="cms-secret-hint">
+        <strong>Not integrated:</strong> No provider-hosted checkout is connected yet.
         <strong>Provider eligibility first:</strong> A casino or wager-related merchant needs appropriate licensing and an explicit provider agreement before accepting payments. New records are stored inactive. An existing gateway's status is not changed by this configuration screen; an active database flag alone does not make it a working checkout.
         <br>Never enter API secrets or payment card data in these fields. A separate encrypted credentials store and verified webhook integration are required for live processing.
     </div>
