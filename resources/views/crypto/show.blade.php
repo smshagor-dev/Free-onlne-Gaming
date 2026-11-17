@@ -18,12 +18,12 @@
     <dl>
         <dt>Payment reference</dt><dd>{{ $payment->reference }}</dd>
         <dt>Amount</dt><dd><strong>{{ $payment->amount }} {{ $payment->currency }}</strong></dd>
-        <dt>Provider</dt><dd>BTCPay Server</dd>
+        <dt>Provider</dt><dd>NOWPayments Server</dd>
         <dt>Status</dt><dd><strong style="text-transform:capitalize">{{ $payment->status }}</strong></dd>
         <dt>Last checked</dt><dd>{{ $payment->last_checked_at?->format('Y-m-d H:i') ?: 'Not checked yet' }}</dd>
     </dl>
     @if($payment->checkout_url && in_array($payment->status, ['pending','processing'], true))
-        <a class="crypto-detail-action" href="{{ $payment->checkout_url }}" rel="noopener noreferrer" target="_blank">Continue to BTCPay checkout</a>
+        <a class="crypto-detail-action" href="{{ $payment->checkout_url }}" rel="noopener noreferrer" target="_blank">Continue to NOWPayments checkout</a>
     @endif
     @if($payment->invoice_id)
         <form method="POST" action="{{ route('user.crypto.refresh', ['reference' => $payment->reference]) }}" style="display:inline">
@@ -37,7 +37,7 @@
     @elseif($payment->status === 'review')
         <p class="crypto-detail-note" role="alert">This invoice requires manual review (late, partial, overpaid or other exceptional status). Contact support with your payment reference.</p>
     @else
-        <p class="crypto-detail-note">Payment status changes after BTCPay confirms the invoice. A browser redirect alone never marks a payment as settled. You may safely use Check provider status if needed.</p>
+        <p class="crypto-detail-note">Payment status changes after NOWPayments confirms the invoice. A browser redirect alone never marks a payment as settled. You may safely use Check provider status if needed.</p>
     @endif
 </div></div>
 @endsection
