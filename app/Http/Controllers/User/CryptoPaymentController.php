@@ -4,7 +4,7 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Models\CryptoPayment;
-use App\Services\BTCPayClient;
+use App\Services\NOWPaymentsClient;
 use App\Services\CryptoPaymentReconciliation;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,7 +16,7 @@ use Throwable;
 
 class CryptoPaymentController extends Controller
 {
-    public function index(Request $request, BTCPayClient $client): View
+    public function index(Request $request, NOWPaymentsClient $client): View
     {
         $payments = CryptoPayment::query()
             ->where('user_id', $request->user()->id)
@@ -31,7 +31,7 @@ class CryptoPaymentController extends Controller
         ]);
     }
 
-    public function store(Request $request, BTCPayClient $client): RedirectResponse
+    public function store(Request $request, NOWPaymentsClient $client): RedirectResponse
     {
         if (! $client->configured()) {
             return back()->with('error', 'Crypto checkout is not yet enabled by the merchant.');
@@ -65,7 +65,7 @@ class CryptoPaymentController extends Controller
         $payment = CryptoPayment::query()->create([
             'reference' => (string) Str::uuid(),
             'user_id' => $request->user()->id,
-            'provider' => 'btcpay',
+            'provider' => 'nowpayments',
             'amount' => $amount,
             'currency' => config('crypto_payments.currency'),
             'status' => 'pending',
@@ -89,7 +89,7 @@ class CryptoPaymentController extends Controller
         }
 
         return redirect()->route('user.crypto.show', ['reference' => $payment->reference])
-            ->with('success', 'Crypto invoice created. Complete payment on the secure BTCPay checkout page.');
+            ->with('success', 'Crypto invoice created. Complete payment on the secure NOWPayments checkout page.');
     }
 
     public function show(Request $request, string $reference): View
@@ -112,7 +112,10 @@ class CryptoPaymentController extends Controller
         }
 
         try {
-            $reconciler->reconcile($payment);
+            if ($payment->provider_payment_id === null) {
+                return back()->with('error', 'Waiting for the provider payment notification.');
+            }
+            $reconciler->reconcile($payment, $payment->provider_payment_id);
         } catch (Throwable $e) {
             Log::warning('Crypto invoice refresh unsuccessful', [
                 'payment_id' => $payment->id,
