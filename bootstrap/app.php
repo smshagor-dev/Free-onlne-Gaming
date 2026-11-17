@@ -48,9 +48,9 @@ return Application::configure(basePath: dirname(__DIR__))
                 ? route('admin.login')
                 : route('login.form');
         });
-        // Only the signed BTCPay webhook bypasses browser CSRF.
+        // Only the signed NOWPayments webhook bypasses browser CSRF.
         $middleware->validateCsrfTokens(except: [
-            'payments/crypto/btcpay/webhook',
+            'payments/crypto/nowpayments/webhook',
         ]);
         $middleware->appendToGroup('web', RestrictDemoFinancialActions::class);
         $middleware->alias([
