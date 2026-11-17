@@ -11,6 +11,20 @@
     <a class="cms-button is-primary" href="{{ route('admin.gateways.create') }}">Add gateway configuration</a>
 </div>
 <div class="cms-card">
+    <div class="cms-card-head">
+        <div><h2>NOWPayments crypto checkout</h2><p>Custom amount invoice checkout and signed payment notification status.</p></div>
+        <span class="cms-badge {{ $nowPaymentsReady ? 'is-green' : 'is-amber' }}">
+            {{ $nowPaymentsReady ? 'Configured / enabled' : 'Disabled / missing keys' }}
+        </span>
+    </div>
+    <div class="cms-secret-hint">
+        This integration is configured only from private environment variables, not stored in gateway metadata.
+        A successful configuration check does not demonstrate merchant eligibility or a settled payment.
+        No casino wallet or betting balance is credited.
+    </div>
+    <a class="cms-button" href="{{ route('admin.crypto.index') }}">View crypto invoice records</a>
+</div>
+<div class="cms-card">
     <div class="cms-secret-hint">
         <strong>Not integrated:</strong> No provider-hosted checkout is connected yet.
         <strong>Provider eligibility first:</strong> A casino or wager-related merchant needs appropriate licensing and an explicit provider agreement before accepting payments. New records are stored inactive. An existing gateway's status is not changed by this configuration screen; an active database flag alone does not make it a working checkout.
