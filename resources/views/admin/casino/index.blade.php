@@ -113,6 +113,7 @@
                         @if($item->source === 'local' && $item->record_id)
                             <code class="casino-url" title="{{ $item->play_url }}">{{ \Illuminate\Support\Str::limit((string) $item->play_url, 30) }}</code>
                             <a class="casino-action" href="{{ route('games.open', ['id' => $item->record_id]) }}" target="_blank" rel="noopener noreferrer">Open play page</a>
+                            <a class="casino-action" href="{{ route('admin.games.edit', ['id' => $item->record_id]) }}">View / edit in CMS</a>
                         @else
                             <span title="Provider session table has no game URL">—</span>
                         @endif
