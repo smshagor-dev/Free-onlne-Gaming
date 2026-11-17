@@ -27,7 +27,7 @@
         <h1>Pay with crypto</h1>
         <p>Enter your preferred amount to create a crypto payment invoice. Complete payment securely on the NOWPayments checkout page.</p>
         @if(!$available)
-            <p role="status" class="crypto-note">Crypto checkout is currently unavailable. The merchant must configure and enable a NOWPayments store before payments can be accepted.</p>
+            <p role="status" class="crypto-note">Crypto checkout is currently unavailable. The merchant must configure and enable a NOWPayments merchant account before payments can be accepted.</p>
         @endif
         <form action="{{ route('user.crypto.store') }}" method="POST">
             @csrf
