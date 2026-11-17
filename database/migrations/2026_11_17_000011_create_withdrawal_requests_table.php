@@ -22,7 +22,7 @@ return new class extends Migration {
             $table->foreignId('reviewed_by')->nullable()->constrained('admins')->nullOnDelete();
             $table->timestamp('reviewed_at')->nullable();
             $table->string('rejection_reason', 500)->nullable();
-            $table->string('payout_txid', 160)->nullable();
+            $table->string('payout_txid', 160)->nullable()->unique();
             $table->timestamp('paid_at')->nullable();
             $table->timestamps();
             $table->index(['user_id', 'created_at']);
