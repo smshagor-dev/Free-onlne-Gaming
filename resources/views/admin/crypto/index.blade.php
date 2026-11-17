@@ -6,7 +6,7 @@
     <div>
         <span class="cms-badge">READ-ONLY PAYMENT RECORDS</span>
         <h1 style="margin-top:10px">Crypto payment invoices</h1>
-        <p>Review BTCPay invoices and verified states without changing casino balances, financial ledgers or payment status manually.</p>
+        <p>Review NOWPayments invoices and verified states without changing casino balances, financial ledgers or payment status manually.</p>
     </div>
 </div>
 <div class="cms-card">
