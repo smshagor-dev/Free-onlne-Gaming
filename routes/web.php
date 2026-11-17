@@ -58,10 +58,10 @@ Route::get('/private-files/{path}', [SecureFileController::class, 'show'])
     ->where('path', '.*')
     ->name('files.private');
 Route::get('/countries', [RegisterController::class, 'getCountries']);
-// BTCPay webhook authenticity is verified using raw-body HMAC and a provider
-// invoice lookup. This exact path is exempt from CSRF in bootstrap/app.php.
-Route::post('/payments/crypto/btcpay/webhook', CryptoPaymentWebhookController::class)
-    ->middleware('throttle:120,1')->name('crypto.btcpay.webhook');
+// NOWPayments IPN authenticity is verified using raw-body HMAC and a provider
+// payment lookup. This exact path is exempt from CSRF in bootstrap/app.php.
+Route::post('/payments/crypto/nowpayments/webhook', CryptoPaymentWebhookController::class)
+    ->middleware('throttle:120,1')->name('crypto.nowpayments.webhook');
 
 Route::get('/', [GameController::class, 'viewIndex'])->name('games.viewIndex')->middleware('2fa');
 Route::get('/play-games', [EmbeddableGameController::class, 'index'])->name('playable.index');
