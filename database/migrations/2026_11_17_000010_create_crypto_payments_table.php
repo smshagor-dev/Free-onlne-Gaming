@@ -11,8 +11,9 @@ return new class extends Migration {
             $table->id();
             $table->uuid('reference')->unique();
             $table->foreignId('user_id')->constrained()->restrictOnDelete();
-            $table->string('provider', 24)->default('btcpay');
+            $table->string('provider', 24)->default('nowpayments');
             $table->string('invoice_id', 160)->nullable()->unique();
+            $table->string('provider_payment_id', 160)->nullable()->unique();
             $table->string('checkout_url', 2048)->nullable();
             $table->decimal('amount', 15, 2);
             $table->char('currency', 3);
