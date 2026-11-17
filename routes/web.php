@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\UserActivityController;
 use App\Http\Controllers\Admin\CasinoReportController;
 use App\Http\Controllers\SiteManifestController;
 use App\Http\Controllers\Admin\FinanceOverviewController;
+use App\Http\Controllers\Admin\PaymentGatewayController;
 use App\Http\Controllers\GamesCategoryController;
 use App\Http\Controllers\TagController;
 use App\Http\Controllers\GameController;
@@ -175,6 +176,12 @@ Route::prefix('/sm-shagor/free-games/admin-main/control-back-office/')->name('ad
 
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
     Route::get('/finance', [FinanceOverviewController::class, 'index'])->name('finance.index');
+    // Admin-only configuration. These routes do not collect or settle money.
+    Route::get('/payment-gateways', [PaymentGatewayController::class, 'index'])->name('gateways.index');
+    Route::get('/payment-gateways/create', [PaymentGatewayController::class, 'create'])->name('gateways.create');
+    Route::post('/payment-gateways', [PaymentGatewayController::class, 'store'])->name('gateways.store');
+    Route::get('/payment-gateways/{gateway}/edit', [PaymentGatewayController::class, 'edit'])->name('gateways.edit');
+    Route::put('/payment-gateways/{gateway}', [PaymentGatewayController::class, 'update'])->name('gateways.update');
     Route::get('/site-builder', [SiteBuilderController::class, 'edit'])->name('site-builder.edit');
     Route::put('/site-builder/{section}', [SiteBuilderController::class, 'update'])->name('site-builder.update');
     Route::get('/user-activity', [UserActivityController::class, 'index'])->name('user-activity.index');
