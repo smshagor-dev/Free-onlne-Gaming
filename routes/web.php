@@ -16,6 +16,9 @@ use App\Http\Controllers\Admin\CasinoReportController;
 use App\Http\Controllers\SiteManifestController;
 use App\Http\Controllers\Admin\FinanceOverviewController;
 use App\Http\Controllers\Admin\PaymentGatewayController;
+use App\Http\Controllers\Admin\CryptoPaymentReportController;
+use App\Http\Controllers\User\CryptoPaymentController;
+use App\Http\Controllers\CryptoPaymentWebhookController;
 use App\Http\Controllers\GamesCategoryController;
 use App\Http\Controllers\TagController;
 use App\Http\Controllers\GameController;
@@ -55,6 +58,10 @@ Route::get('/private-files/{path}', [SecureFileController::class, 'show'])
     ->where('path', '.*')
     ->name('files.private');
 Route::get('/countries', [RegisterController::class, 'getCountries']);
+// BTCPay webhook authenticity is verified using raw-body HMAC and a provider
+// invoice lookup. This exact path is exempt from CSRF in bootstrap/app.php.
+Route::post('/payments/crypto/btcpay/webhook', CryptoPaymentWebhookController::class)
+    ->middleware('throttle:120,1')->name('crypto.btcpay.webhook');
 
 Route::get('/', [GameController::class, 'viewIndex'])->name('games.viewIndex')->middleware('2fa');
 Route::get('/play-games', [EmbeddableGameController::class, 'index'])->name('playable.index');
@@ -132,6 +139,13 @@ Route::get('/games/open/{id}', [GameController::class, 'open'])->name('games.ope
 Route::prefix('user')->name('user.')->middleware(['auth','2fa', 'ban'])->group(function () {
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/crypto-payments', [CryptoPaymentController::class, 'index'])->name('crypto.index');
+    Route::post('/crypto-payments', [CryptoPaymentController::class, 'store'])
+        ->middleware('throttle:5,1')->name('crypto.store');
+    Route::get('/crypto-payments/{reference}', [CryptoPaymentController::class, 'show'])
+        ->whereUuid('reference')->name('crypto.show');
+    Route::post('/crypto-payments/{reference}/refresh', [CryptoPaymentController::class, 'refresh'])
+        ->whereUuid('reference')->middleware('throttle:6,1')->name('crypto.refresh');
     Route::get('/casino/activity', [CasinoGameController::class, 'activity'])->name('casino.activity');
 
     // User Profile Management
@@ -176,6 +190,7 @@ Route::prefix('/sm-shagor/free-games/admin-main/control-back-office/')->name('ad
 
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
     Route::get('/finance', [FinanceOverviewController::class, 'index'])->name('finance.index');
+    Route::get('/crypto-payments', [CryptoPaymentReportController::class, 'index'])->name('crypto.index');
     // Admin-only configuration. These routes do not collect or settle money.
     Route::get('/payment-gateways', [PaymentGatewayController::class, 'index'])->name('gateways.index');
     Route::get('/payment-gateways/create', [PaymentGatewayController::class, 'create'])->name('gateways.create');
