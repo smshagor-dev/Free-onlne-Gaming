@@ -8,61 +8,62 @@ use RuntimeException;
 
 class CryptoPaymentReconciliation
 {
-    public function __construct(private readonly BTCPayClient $client) {}
+    public function __construct(private readonly NOWPaymentsClient $client) {}
 
     /**
-     * Provider GET is authoritative, not browser redirects or webhook JSON.
-     * No balance/deposit/wager ledger is credited by this reconciler.
+     * Verified API GET, never browser URL or unsigned IPN status, is authoritative.
+     * No wager, deposit, withdrawal or casino wallet balance is credited here.
      */
-    public function reconcile(CryptoPayment $record): CryptoPayment
+    public function reconcile(CryptoPayment $record, string $providerPaymentId): CryptoPayment
     {
-        if (blank($record->invoice_id)) {
-            throw new RuntimeException('This checkout has no provider invoice.');
+        $payment = $this->client->getPayment($providerPaymentId);
+        if ((string) ($payment['payment_id'] ?? '') !== $providerPaymentId
+            || (string) ($payment['invoice_id'] ?? '') !== (string) $record->invoice_id
+            || ($payment['order_id'] ?? null) !== $record->reference
+            || strtoupper((string) ($payment['price_currency'] ?? '')) !== $record->currency
+            || ! $this->sameAmount((string) $record->amount, $payment['price_amount'] ?? null)) {
+            throw new RuntimeException('Provider payment does not match local invoice amount, currency or order.');
         }
 
-        $invoice = $this->client->getInvoice($record->invoice_id);
-        if (($invoice['id'] ?? null) !== $record->invoice_id
-            || ($invoice['metadata']['orderId'] ?? null) !== $record->reference
-            || strtoupper((string) ($invoice['currency'] ?? '')) !== $record->currency
-            || ! $this->sameAmount($record->amount, $invoice['amount'] ?? null)
-            || (isset($invoice['storeId']) && $invoice['storeId'] !== config('crypto_payments.store_id'))) {
-            throw new RuntimeException('Provider invoice fields do not match the locally recorded order.');
-        }
-
-        $state = (string) ($invoice['status'] ?? '');
-        $additional = (string) ($invoice['additionalStatus'] ?? 'None');
-        $valid = ['New', 'Processing', 'Settled', 'Expired', 'Invalid'];
-        if (! in_array($state, $valid, true)) {
-            throw new RuntimeException('Provider returned an unknown invoice status.');
-        }
-
-        $newState = match (true) {
-            $additional !== 'None' => 'review', // late/partial/over/marked requires investigation
-            $state === 'Settled' => 'settled',
-            $state === 'Processing' => 'processing',
-            $state === 'Expired' => 'expired',
-            $state === 'Invalid' => 'invalid',
-            default => 'pending',
+        $status = strtolower((string) ($payment['payment_status'] ?? ''));
+        $newState = match ($status) {
+            'waiting' => 'pending',
+            'confirming', 'confirmed', 'sending' => 'processing',
+            'finished' => 'settled',
+            'failed' => 'invalid',
+            'expired' => 'expired',
+            'partially_paid', 'refunded' => 'review',
+            default => throw new RuntimeException('Unrecognized NOWPayments status.'),
         };
 
-        return DB::transaction(function () use ($record, $newState, $additional): CryptoPayment {
-            $payment = CryptoPayment::query()->lockForUpdate()->findOrFail($record->id);
-            // Old delayed callbacks cannot revert an already settled invoice.
-            if ($payment->status === 'settled' && $newState !== 'review') {
-                $payment->last_checked_at = now();
-                $payment->save();
-                return $payment;
+        return DB::transaction(function () use ($record, $providerPaymentId, $status, $newState): CryptoPayment {
+            $row = CryptoPayment::query()->lockForUpdate()->findOrFail($record->id);
+            if ($row->provider_payment_id !== null && $row->provider_payment_id !== $providerPaymentId) {
+                // One invoice can produce multiple payments/partial receipts.
+                // Do not attribute a second payment to the first's settlement.
+                $row->status = 'review';
+                $row->additional_status = 'multiple_payments';
+                $row->last_checked_at = now();
+                $row->save();
+                return $row;
             }
 
-            $payment->status = $newState;
-            $payment->additional_status = $additional;
-            $payment->last_checked_at = now();
-            if ($newState === 'settled' && $payment->settled_at === null) {
-                $payment->settled_at = now();
+            $row->provider_payment_id = $providerPaymentId;
+            if ($row->status === 'settled' && $newState !== 'review') {
+                $row->last_checked_at = now();
+                $row->save();
+                return $row;
             }
-            $payment->save();
 
-            return $payment;
+            $row->status = $newState;
+            $row->additional_status = $status;
+            $row->last_checked_at = now();
+            if ($newState === 'settled' && $row->settled_at === null) {
+                $row->settled_at = now();
+            }
+            $row->save();
+
+            return $row;
         }, 3);
     }
 
@@ -71,15 +72,16 @@ class CryptoPaymentReconciliation
         if (! is_string($actual) && ! is_int($actual) && ! is_float($actual)) {
             return false;
         }
+
         $amount = (string) $actual;
         if (! preg_match('/^\d{1,12}(?:\.\d{1,2})?$/D', $amount)) {
             return false;
         }
-        [$whole, $fraction] = array_pad(explode('.', $amount, 2), 2, '');
-        $cents = ((int) $whole) * 100 + (int) str_pad($fraction, 2, '0');
-        [$recordWhole, $recordFraction] = array_pad(explode('.', $expected, 2), 2, '');
-        $recordCents = ((int) $recordWhole) * 100 + (int) str_pad($recordFraction, 2, '0');
 
-        return $recordCents === $cents;
+        [$whole, $cents] = array_pad(explode('.', $amount, 2), 2, '');
+        [$owed, $owedCents] = array_pad(explode('.', $expected, 2), 2, '');
+
+        return ((int) $whole) * 100 + (int) str_pad($cents, 2, '0')
+            === ((int) $owed) * 100 + (int) str_pad($owedCents, 2, '0');
     }
 }
