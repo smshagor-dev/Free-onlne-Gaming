@@ -19,6 +19,7 @@ use App\Http\Controllers\GamesCategoryController;
 use App\Http\Controllers\TagController;
 use App\Http\Controllers\GameController;
 use App\Http\Controllers\EmbeddableGameController;
+use App\Http\Controllers\CasinoGameController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\User\GameManagementController;
 use App\Http\Controllers\Admin\PointManagementController;
@@ -60,6 +61,7 @@ Route::get('/play-games/suggest', [EmbeddableGameController::class, 'suggestions
 Route::get('/play-games/load', [EmbeddableGameController::class, 'homeBatch'])->name('playable.load');
 Route::get('/play-games/{id}', [EmbeddableGameController::class, 'play'])->where('id', '[A-Za-z0-9_-]+')->name('playable.play');
 Route::get('/free-games', [GameController::class, 'viewfreegames'])->name('free.games.index')->middleware('2fa');
+Route::get('/casino-games', [CasinoGameController::class, 'index'])->name('casino.games.index');
 
 // Google Authentication
 Route::get('auth/google', [GoogleController::class, 'redirectToGoogle'])->name('google.login');
@@ -129,6 +131,7 @@ Route::get('/games/open/{id}', [GameController::class, 'open'])->name('games.ope
 Route::prefix('user')->name('user.')->middleware(['auth','2fa', 'ban'])->group(function () {
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/casino/activity', [CasinoGameController::class, 'activity'])->name('casino.activity');
 
     // User Profile Management
     Route::get('profile', [ProfileController::class, 'index'])->name('profile');

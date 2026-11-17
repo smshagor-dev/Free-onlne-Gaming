@@ -1,6 +1,21 @@
 @extends('layouts.admin')
 @section('title', 'Casino game activity')
 @section('page_title', 'Casino reports')
+@section('styles')
+<style>
+.casino-game-thumb {width:56px;height:48px;object-fit:cover;border-radius:9px;background:#172c44}
+.casino-game-placeholder {display:grid;place-items:center;width:56px;height:48px;background:#172c44;color:#88a6c7;border-radius:9px}
+.casino-source {display:block;margin-top:4px;font-size:11px;color:#859bb5}
+.casino-url {display:block;max-width:215px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-size:11px;color:#8db9e3}
+.casino-action {display:block;margin-top:5px;font-size:12px}
+.casino-net {font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
+.casino-net.is-positive {color:#15803d}
+.casino-net.is-negative {color:#dc2626}
+.casino-net.is-neutral {color:#7893ac}
+.casino-table th,.casino-table td {white-space:nowrap;vertical-align:middle}
+.casino-table td.casino-game-name {white-space:normal;min-width:140px}
+</style>
+@endsection
 @section('content')
 <div class="cms-page-heading">
     <div>
@@ -64,41 +79,76 @@
 
 <section class="cms-card">
     <div class="cms-card-head">
-        <div><h2>Casino game table</h2><p>One row per game name in the existing casino session ledger.</p></div>
-        <span class="cms-badge">{{ number_format($games->total()) }} games</span>
+        <div>
+            <h2>Casino game table</h2>
+            <p>Image, game, play URL, open/launch count, verified bet/win events and gross totals. Separate source rows prevent name-based misattribution.</p>
+        </div>
+        <span class="cms-badge">{{ number_format($gameList->total()) }} game records</span>
     </div>
     <div class="cms-table-wrap">
-        <table class="cms-table">
-            <thead><tr><th>Game</th><th>Views / players</th><th>Times played / launched</th><th>Total bet</th><th>Total win</th></tr></thead>
-            <tbody>
-            @forelse($games as $game)
+        <table class="cms-table casino-table">
+            <thead>
                 <tr>
-                    <td><strong>{{ $game->game_name }}</strong></td>
-                    <td style="font-variant-numeric:tabular-nums">{{ number_format($game->players) }} <small style="color:#7d94ad">(unique)</small></td>
-                    <td style="font-variant-numeric:tabular-nums">{{ number_format($game->launches) }}</td>
-                    <td style="font-variant-numeric:tabular-nums">
-                        @if($game->audited_events)
-                            {{ number_format((float) $game->total_bet, 2) }}
+                    <th>Image</th><th>Game name</th><th>Play URL</th><th>Play time</th>
+                    <th>Bet</th><th>Win</th><th>Total bet</th><th>Total win</th>
+                    <th>Admin win / lose</th>
+                </tr>
+            </thead>
+            <tbody>
+            @forelse($gameList as $item)
+                <tr>
+                    <td>
+                        @php($imageUrl = $item->image && filter_var($item->image, FILTER_VALIDATE_URL) && in_array(parse_url($item->image, PHP_URL_SCHEME), ['http', 'https'], true) ? $item->image : null)
+                        @if($imageUrl)
+                            <img class="casino-game-thumb" src="{{ $imageUrl }}" alt="" width="56" height="48" loading="lazy">
                         @else
-                            <span title="No confirmed provider bet/win records">—</span>
+                            <span class="casino-game-placeholder" title="No game image available"><i class="fa-solid fa-gamepad" aria-hidden="true"></i></span>
                         @endif
                     </td>
-                    <td style="font-variant-numeric:tabular-nums">
-                        @if($game->audited_events)
-                            {{ number_format((float) $game->total_win, 2) }}
+                    <td class="casino-game-name">
+                        <strong>{{ $item->game_name }}</strong>
+                        <span class="casino-source">{{ $item->source === 'local' ? 'Locally managed game' : 'Recorded provider session' }} · {{ number_format($item->players ?? 0) }} <small>(unique)</small></span>
+                    </td>
+                    <td>
+                        @if($item->source === 'local' && $item->record_id)
+                            <code class="casino-url" title="{{ $item->play_url }}">{{ \Illuminate\Support\Str::limit((string) $item->play_url, 30) }}</code>
+                            <a class="casino-action" href="{{ route('games.open', ['id' => $item->record_id]) }}" target="_blank" rel="noopener noreferrer">Open play page</a>
+                            <a class="casino-action" href="{{ route('admin.games.edit', ['id' => $item->record_id]) }}">View / edit in CMS</a>
                         @else
-                            <span title="No confirmed provider bet/win records">—</span>
+                            <span title="Provider session table has no game URL">—</span>
+                        @endif
+                    </td>
+                    <td style="font-variant-numeric:tabular-nums">{{ number_format($item->play_time ?? 0) }}</td>
+                    <td style="font-variant-numeric:tabular-nums">{{ $item->audited_events ? number_format($item->bet_count ?? 0) : '—' }}</td>
+                    <td style="font-variant-numeric:tabular-nums">{{ $item->audited_events ? number_format($item->win_count ?? 0) : '—' }}</td>
+                    <td style="font-variant-numeric:tabular-nums">{{ $item->audited_events ? number_format((float) $item->total_bet, 2) : '—' }}</td>
+                    <td style="font-variant-numeric:tabular-nums">{{ $item->audited_events ? number_format((float) $item->total_win, 2) : '—' }}</td>
+                    <td>
+                        @if($item->audited_events)
+                            @php($net = round((float) $item->total_bet - (float) $item->total_win, 2))
+                            <span class="casino-net {{ $net > 0 ? 'is-positive' : ($net < 0 ? 'is-negative' : 'is-neutral') }}">
+                                {{ $net > 0 ? '+' : '' }}{{ number_format($net, 2) }}
+                            </span>
+                        @else
+                            <span class="casino-net is-neutral" title="No qualifying provider bet/win records">—</span>
                         @endif
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="5" class="cms-empty">No casino sessions recorded yet. Games cannot be counted without provider session data.</td></tr>
+                <tr><td colspan="9" class="cms-empty">No casino sessions recorded yet. No locally managed casino-style games match. Add approved games via Games Management.</td></tr>
             @endforelse
             </tbody>
         </table>
     </div>
-    <div style="margin-top:14px">{{ $games->links() }}</div>
-    <div class="cms-secret-hint">“Views / players” means distinct user IDs observed in sessions, not anonymous page views. “Times played” means recorded session launches, not completed casino rounds.</div>
+    <div style="margin-top:15px">{{ $gameList->links() }}</div>
+    <div class="cms-secret-hint">
+        <strong>Play time</strong> is page opens for local games or recorded launches for session rows, not time in minutes.
+        <strong>Bet / Win</strong> are qualifying transaction event counts; <strong>Total bet / Total win</strong> are gross recorded amounts.
+        <strong>Admin win / lose</strong> = gross bets − gross wins: green + means a positive gross difference, red − means a negative difference.
+        This is not verified operator profit: transaction currency, costs, reversals, and complete settlement data are unavailable.
+        Locally managed casino-style games are not linked to provider settlement sessions, so their wager fields are shown as —.
+        Session-only records have no authoritative image or play URL in the current schema.
+    </div>
 </section>
 
 <section class="cms-card">
@@ -134,31 +184,4 @@
     <div style="margin-top:14px">{{ $players->links() }}</div>
 </section>
 
-<section class="cms-card">
-    <div class="cms-card-head">
-        <div><h2>Locally managed casino-style games</h2><p>Games added in the regular CMS that match casino, slot, roulette, poker, blackjack or baccarat categories/names.</p></div>
-        <span class="cms-badge">{{ number_format($localGames->total()) }} managed games</span>
-    </div>
-    <div class="cms-table-wrap">
-        <table class="cms-table">
-            <thead><tr><th>Game</th><th>Category</th><th>Recorded page opens</th><th>Known players</th><th>Total bet</th><th>Total win</th><th>Manage</th></tr></thead>
-            <tbody>
-            @forelse($localGames as $game)
-                <tr>
-                    <td><strong>{{ $game->name }}</strong></td>
-                    <td>{{ $game->category?->name ?: 'Uncategorized' }}</td>
-                    <td style="font-variant-numeric:tabular-nums">{{ number_format($game->play_time ?? 0) }}</td>
-                    <td style="font-variant-numeric:tabular-nums">{{ number_format($game->game_opens_count) }}</td>
-                    <td>—</td><td>—</td>
-                    <td><a class="cms-button" href="{{ route('admin.games.edit', $game->id) }}">View / edit</a></td>
-                </tr>
-            @empty
-                <tr><td colspan="7" class="cms-empty">No locally managed casino-style games found.</td></tr>
-            @endforelse
-            </tbody>
-        </table>
-    </div>
-    <div style="margin-top:14px">{{ $localGames->links() }}</div>
-    <div class="cms-secret-hint">Local games are not linked to provider settlement sessions. Their bet and win totals remain unavailable. The regular public GameMonetize catalog still excludes casino titles; this admin report does not change that filtering.</div>
-</section>
 @endsection

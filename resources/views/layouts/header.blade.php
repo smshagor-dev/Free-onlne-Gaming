@@ -38,6 +38,9 @@
                 <div class="fg-nav-links" id="fg-menu">
                     @if($navCms['show_home'])<a class="fg-nav-link {{ request()->routeIs('games.viewIndex') ? 'is-active' : '' }}" @if(request()->routeIs('games.viewIndex')) aria-current="page" @endif href="{{ route('games.viewIndex') }}">{{ $navCms['home_label'] }}</a>@endif
                     @if($navCms['show_games'])<a class="fg-nav-link {{ request()->routeIs('playable.*', 'catalog.*') ? 'is-active' : '' }}" href="{{ route('playable.index') }}">{{ $navCms['games_label'] }}</a>@endif
+                    <a class="fg-nav-link {{ request()->routeIs('casino.games.index') ? 'is-active' : '' }}"
+                       @if(request()->routeIs('casino.games.index')) aria-current="page" @endif
+                       href="{{ route('casino.games.index') }}">Casino games</a>
                     @if($navCms['show_categories'])
                     <details class="fg-category-menu">
                         <summary class="fg-nav-link"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" aria-hidden="true"><rect x="2" y="2" width="6" height="6" rx="1"/><rect x="12" y="2" width="6" height="6" rx="1"/><rect x="2" y="12" width="6" height="6" rx="1"/><rect x="12" y="12" width="6" height="6" rx="1"/></svg> {{ $navCms['categories_label'] }} <span class="fg-chevron" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="m4 6 4 4 4-4"/></svg></span></summary>
