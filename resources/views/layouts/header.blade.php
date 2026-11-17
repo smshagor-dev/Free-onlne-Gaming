@@ -85,6 +85,7 @@
                         <a class="fg-auth fg-auth-ghost" href="{{ route('register.form') }}" data-auth-open="register" aria-haspopup="dialog" aria-controls="fg-auth-dialog">Sign Up</a>
                     @else
                         <a class="fg-auth fg-auth-primary" href="{{ route('user.dashboard') }}">Account</a>
+                        <a class="fg-auth fg-auth-ghost" href="{{ route('user.withdrawals.index') }}">Withdraw</a>
                         <a class="fg-auth fg-auth-ghost" href="{{ route('user.games.viewFavorites') }}">Favorites</a>
                     @endguest
                 </div>

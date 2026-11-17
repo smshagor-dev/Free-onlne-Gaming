@@ -19,6 +19,9 @@
             ['Achievements', 'user.achievement', 'user.achievement', '♜'],
             ['My levels', 'user.levels', 'user.levels', '⬡'],
         ],
+        'Wallet & requests' => [
+            ['Withdraw funds', 'user.withdrawals.index', 'user.withdrawals.*', '↗'],
+        ],
         'My account' => [
             ['Profile', 'user.profile', 'user.profile', '♙'],
             ['Edit profile', 'user.profile.edit', 'user.profile.edit', '✎'],
