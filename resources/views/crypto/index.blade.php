@@ -25,9 +25,9 @@
 <div class="crypto-page">
     <div class="crypto-panel">
         <h1>Pay with crypto</h1>
-        <p>Enter your preferred amount to create a Bitcoin / Lightning payment invoice. Complete payment securely on the BTCPay checkout page.</p>
+        <p>Enter your preferred amount to create a crypto payment invoice. Complete payment securely on the NOWPayments checkout page.</p>
         @if(!$available)
-            <p role="status" class="crypto-note">Crypto checkout is currently unavailable. The merchant must configure and enable a BTCPay store before payments can be accepted.</p>
+            <p role="status" class="crypto-note">Crypto checkout is currently unavailable. The merchant must configure and enable a NOWPayments store before payments can be accepted.</p>
         @endif
         <form action="{{ route('user.crypto.store') }}" method="POST">
             @csrf
@@ -68,7 +68,7 @@
         </div>
         <div style="margin-top:15px">{{ $payments->links() }}</div>
     </div>
-    <p class="crypto-note">Payments are tracked separately from casino deposits and wagering balances. A confirmed crypto invoice does not automatically increase your withdrawable or betting balance. Network fees, available coins and confirmations are shown on BTCPay checkout.</p>
+    <p class="crypto-note">Payments are tracked separately from casino deposits and wagering balances. A confirmed crypto invoice does not automatically increase your withdrawable or betting balance. Network fees, available coins and confirmations are shown on NOWPayments checkout.</p>
 </div>
 <script>
 document.querySelectorAll('[data-crypto-amount]').forEach(button => {
