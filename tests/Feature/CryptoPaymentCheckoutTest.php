@@ -195,6 +195,26 @@ class CryptoPaymentCheckoutTest extends TestCase
         $this->assertSame('failed', CryptoPayment::query()->firstOrFail()->status);
     }
 
+    public function test_hosted_invoice_with_wrong_quoted_amount_is_rejected_before_user_can_pay(): void
+    {
+        $this->actingAs($this->user());
+        Http::fake(['https://api.nowpayments.io/v1/invoice' => Http::response([
+            'id' => '4522625843',
+            'invoice_url' => 'https://nowpayments.io/payment/?iid=4522625843',
+            'price_amount' => '100.00',
+            'price_currency' => 'usd',
+        ])]);
+
+        $this->post(route('user.crypto.store'), ['amount' => '10'])
+            ->assertRedirect(route('user.crypto.index'))
+            ->assertSessionHas('error');
+
+        $record = CryptoPayment::query()->firstOrFail();
+        $this->assertSame('failed', $record->status);
+        $this->assertNull($record->checkout_url);
+        $this->assertDatabaseCount('user_deposits', 0);
+    }
+
     public function test_signed_finished_payment_is_settled_once_and_never_credits_casino_balance(): void
     {
         $user = $this->user();
