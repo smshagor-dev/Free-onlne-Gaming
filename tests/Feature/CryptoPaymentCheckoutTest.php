@@ -165,7 +165,9 @@ class CryptoPaymentCheckoutTest extends TestCase
 
     public function test_checkout_cannot_be_used_by_demo_users_or_redirected_to_untrusted_host(): void
     {
-        $this->actingAs($this->user()->forceFill(['registration_type' => 'demo'])->tap(fn ($u) => $u->save()));
+        $demo = $this->user();
+        $demo->update(['registration_type' => 'demo']);
+        $this->actingAs($demo);
         $this->post(route('user.crypto.store'), ['amount' => '10'])->assertForbidden();
         $this->assertDatabaseCount('crypto_payments', 0);
 
