@@ -85,7 +85,7 @@ class CryptoPaymentController extends Controller
             ]);
 
             return redirect()->route('user.crypto.index')
-                ->with('error', 'The payment provider could not create an invoice. No charge was made.');
+                ->with('error', 'The payment provider could not create an invoice. No payment was confirmed.');
         }
 
         return redirect()->route('user.crypto.show', ['reference' => $payment->reference])
