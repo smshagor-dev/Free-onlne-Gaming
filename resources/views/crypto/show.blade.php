@@ -18,7 +18,7 @@
     <dl>
         <dt>Payment reference</dt><dd>{{ $payment->reference }}</dd>
         <dt>Amount</dt><dd><strong>{{ $payment->amount }} {{ $payment->currency }}</strong></dd>
-        <dt>Provider</dt><dd>NOWPayments Server</dd>
+        <dt>Provider</dt><dd>NOWPayments</dd>
         <dt>Status</dt><dd><strong style="text-transform:capitalize">{{ $payment->status }}</strong></dd>
         <dt>Last checked</dt><dd>{{ $payment->last_checked_at?->format('Y-m-d H:i') ?: 'Not checked yet' }}</dd>
     </dl>
