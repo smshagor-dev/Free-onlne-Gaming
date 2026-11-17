@@ -72,8 +72,8 @@ class PaymentGatewayManagementTest extends TestCase
         $gateway = Gateway::query()->firstOrFail();
         $this->assertSame('EUR', $gateway->currency);
         $this->assertSame('€', $gateway->symbol);
-        $this->assertSame('10.00', (string) $gateway->min_amount);
-        $this->assertSame('300.00', (string) $gateway->max_amount);
+        $this->assertEquals(10.0, (float) $gateway->min_amount);
+        $this->assertEquals(300.0, (float) $gateway->max_amount);
         $this->assertFalse($gateway->status);
         $this->assertDatabaseCount('user_deposits', 0);
         $this->assertDatabaseCount('transactions', 0);
