@@ -47,6 +47,7 @@
         ],
         'Finance' => [
             ['Financial records', 'admin.finance.index', 'admin.finance.*', '¤'],
+            ['Payment gateways', 'admin.gateways.index', 'admin.gateways.*', '◇'],
         ],
         'Management' => [
             ['Countries & currencies', 'admin.countries.index', 'admin.countries.*', '◎'],
