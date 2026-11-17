@@ -16,6 +16,8 @@ use App\Http\Controllers\Admin\CasinoReportController;
 use App\Http\Controllers\SiteManifestController;
 use App\Http\Controllers\Admin\FinanceOverviewController;
 use App\Http\Controllers\Admin\PaymentGatewayController;
+use App\Http\Controllers\Admin\WithdrawalApprovalController;
+use App\Http\Controllers\User\WithdrawalRequestController;
 use App\Http\Controllers\GamesCategoryController;
 use App\Http\Controllers\TagController;
 use App\Http\Controllers\GameController;
@@ -132,6 +134,12 @@ Route::get('/games/open/{id}', [GameController::class, 'open'])->name('games.ope
 Route::prefix('user')->name('user.')->middleware(['auth','2fa', 'ban'])->group(function () {
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    // KYC + available funds are checked again inside locked transactions.
+    Route::get('/withdrawals', [WithdrawalRequestController::class, 'index'])->name('withdrawals.index');
+    Route::post('/withdrawals', [WithdrawalRequestController::class, 'store'])
+        ->middleware('throttle:3,1')->name('withdrawals.store');
+    Route::post('/withdrawals/{reference}/cancel', [WithdrawalRequestController::class, 'cancel'])
+        ->whereUuid('reference')->middleware('throttle:5,1')->name('withdrawals.cancel');
     Route::get('/casino/activity', [CasinoGameController::class, 'activity'])->name('casino.activity');
 
     // User Profile Management
@@ -176,6 +184,14 @@ Route::prefix('/sm-shagor/free-games/admin-main/control-back-office/')->name('ad
 
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
     Route::get('/finance', [FinanceOverviewController::class, 'index'])->name('finance.index');
+    Route::get('/withdrawal-requests', [WithdrawalApprovalController::class, 'index'])->name('withdrawals.index');
+    Route::get('/withdrawal-requests/{withdrawal}', [WithdrawalApprovalController::class, 'show'])->name('withdrawals.show');
+    Route::post('/withdrawal-requests/{withdrawal}/approve', [WithdrawalApprovalController::class, 'approve'])
+        ->middleware('throttle:10,1')->name('withdrawals.approve');
+    Route::post('/withdrawal-requests/{withdrawal}/reject', [WithdrawalApprovalController::class, 'reject'])
+        ->middleware('throttle:10,1')->name('withdrawals.reject');
+    Route::post('/withdrawal-requests/{withdrawal}/record-paid', [WithdrawalApprovalController::class, 'markPaid'])
+        ->middleware('throttle:10,1')->name('withdrawals.paid');
     // Admin-only configuration. These routes do not collect or settle money.
     Route::get('/payment-gateways', [PaymentGatewayController::class, 'index'])->name('gateways.index');
     Route::get('/payment-gateways/create', [PaymentGatewayController::class, 'create'])->name('gateways.create');
