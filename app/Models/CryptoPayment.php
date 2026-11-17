@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class CryptoPayment extends Model
 {
     protected $fillable = [
-        'reference', 'user_id', 'provider', 'invoice_id', 'checkout_url',
+        'reference', 'user_id', 'provider', 'invoice_id', 'provider_payment_id', 'checkout_url',
         'amount', 'currency', 'status', 'additional_status',
         'settled_at', 'last_checked_at',
     ];
