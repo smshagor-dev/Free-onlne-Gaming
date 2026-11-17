@@ -22,6 +22,7 @@ final class RestrictDemoFinancialActions
         $blocked = [
             'user/deposit*',
             'user/withdrew*',
+            'user/withdrawals*',
             'lottaries/*/buy',
             'user/bonus/claim/*',
             'user/cashback/claim',
