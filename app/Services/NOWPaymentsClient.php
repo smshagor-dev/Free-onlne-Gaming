@@ -81,7 +81,9 @@ class NOWPaymentsClient
             throw new RuntimeException('Invalid NOWPayments payment reference.');
         }
 
-        $response = $this->api()->get($this->endpoint('payment/'.$paymentId));
+        // Provider IPN endpoints should respond promptly; retry on timeout.
+        $response = $this->api()->timeout(2.5)->connectTimeout(1.4)
+            ->get($this->endpoint('payment/'.$paymentId));
         if (! $response->successful() || ! is_array($response->json())) {
             throw new RuntimeException('NOWPayments could not verify the payment.');
         }
