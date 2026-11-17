@@ -39,6 +39,13 @@ class WithdrawalRequestController extends Controller
             ],
         ]);
 
+        $validPair = ($data['asset'] === 'BTC' && $data['network'] === 'bitcoin')
+            || ($data['asset'] === 'USDT' && in_array($data['network'], ['trc20', 'erc20'], true));
+        if (! $validPair) {
+            return back()->withErrors(['network' => 'Selected network is not supported for this asset.'])
+                ->withInput($request->except('destination'));
+        }
+
         $user = $request->user();
         // Sanity-check the crypto address network family, without claiming
         // to validate full chain checksums or prevent irreversible mistakes.
