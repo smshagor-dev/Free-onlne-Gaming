@@ -26,7 +26,7 @@
             <tbody>
                 @forelse($requests as $item)
                     <tr>
-                        <td>{{ Str::limit($item->reference,15) }}</td>
+                        <td style="overflow-wrap:anywhere">{{ $item->reference }}</td>
                         <td>{{ $item->user?->name ?: $item->user?->email ?: 'Unknown user' }}</td>
                         <td>{{ $item->amount }} {{ $item->currency }}</td>
                         <td>{{ $item->asset }} / {{ $item->network }}</td>
