@@ -157,7 +157,9 @@ class WithdrawalService
             throw ValidationException::withMessages(['kyc' => 'This account cannot request withdrawals.']);
         }
         $currency = strtoupper((string) ($user->currency ?? ''));
-        if ($currency !== '' && $currency !== config('withdrawals.currency')) {
+        // Never withdraw a legacy balance whose fiat denomination is
+        // missing or differs from the operator's configured payout unit.
+        if ($currency !== config('withdrawals.currency')) {
             throw ValidationException::withMessages(['amount' => 'Account currency differs from the payout currency.']);
         }
     }
