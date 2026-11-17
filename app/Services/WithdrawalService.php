@@ -20,8 +20,8 @@ class WithdrawalService
             $requested = $this->cents($amount);
             $this->validateAmount($requested);
 
-            if ($asset === 'BTC' && $network !== 'bitcoin'
-                || $asset === 'USDT' && ! in_array($network, ['trc20', 'erc20'], true)) {
+            if (($asset === 'BTC' && $network !== 'bitcoin')
+                || ($asset === 'USDT' && ! in_array($network, ['trc20', 'erc20'], true))) {
                 throw ValidationException::withMessages(['network' => 'Unsupported asset/network combination.']);
             }
 
@@ -117,7 +117,7 @@ class WithdrawalService
             if ($this->cents($user->balance) < $this->cents($record->amount)) {
                 throw ValidationException::withMessages(['status' => 'Account balance changed; cannot finalize the transfer.']);
             }
-            if (WithdrawalRequest::query()->where('payout_txid', $txid)->whereKeyNot($record->id)->exists()) {
+            if (WithdrawalRequest::query()->where('payout_txid', $txid)->where('id', '!=', $record->id)->exists()) {
                 throw ValidationException::withMessages(['txid' => 'That transfer reference has already been recorded.']);
             }
 
