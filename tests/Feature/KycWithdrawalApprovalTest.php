@@ -256,6 +256,10 @@ class KycWithdrawalApprovalTest extends TestCase
         $this->actingAs($user)->post(route('user.withdrawals.store'), $this->requestData())
             ->assertSessionHasErrors('amount');
 
+        $user->update(['currency' => null]);
+        $this->post(route('user.withdrawals.store'), $this->requestData())
+            ->assertSessionHasErrors('amount');
+
         $user->update(['currency' => 'USD']);
         $this->post(route('user.withdrawals.store'), [
             ...$this->requestData(),
