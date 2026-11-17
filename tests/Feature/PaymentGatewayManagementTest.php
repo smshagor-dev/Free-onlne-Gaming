@@ -149,6 +149,10 @@ class PaymentGatewayManagementTest extends TestCase
         $this->get(route('admin.gateways.create'))->assertOk()
             ->assertSee('No API keys, card data, deposits, or payouts are processed.');
 
-        $this->post(route('admin.gateways.index'))->assertStatus(405);
+        // The collection URI also accepts POST for gateway metadata creation,
+        // but invalid requests cannot create a working payment method.
+        $this->post(route('admin.gateways.store'), [])
+            ->assertSessionHasErrors(['name', 'currency', 'symbol', 'min_amount', 'max_amount']);
+        $this->assertDatabaseCount('gateways', 0);
     }
 }
