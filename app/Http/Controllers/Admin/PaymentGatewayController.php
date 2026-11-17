@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Gateway;
+use App\Services\NOWPaymentsClient;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -15,11 +16,12 @@ class PaymentGatewayController extends Controller
      * Configuration inventory only. This does NOT initiate charges,
      * accept deposits, process callbacks or settle casino wagers.
      */
-    public function index(): View
+    public function index(NOWPaymentsClient $client): View
     {
         $gateways = Gateway::query()->orderBy('name')->paginate(20);
+        $nowPaymentsReady = $client->configured();
 
-        return view('admin.gateways.index', compact('gateways'));
+        return view('admin.gateways.index', compact('gateways', 'nowPaymentsReady'));
     }
 
     public function create(): View
