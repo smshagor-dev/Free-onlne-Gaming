@@ -23,6 +23,10 @@ class KycWithdrawalApprovalTest extends TestCase
         parent::setUp();
         config(['cache.default' => 'array']);
         Cache::flush();
+        // Feature tests issue multiple requests in one process; keep business
+        // tests isolated from a shared throttle bucket while leaving the
+        // production route throttle enabled.
+        $this->withoutMiddleware(\Illuminate\Routing\Middleware\ThrottleRequests::class);
         config(['withdrawals' => [
             'enabled' => true,
             'currency' => 'USD',
@@ -89,7 +93,7 @@ class KycWithdrawalApprovalTest extends TestCase
             ->assertSessionHasErrors('kyc');
 
         $this->assertDatabaseCount('withdrawal_requests', 0);
-        $this->assertSame('180.00', (string) $user->fresh()->available_balance);
+        $this->assertEquals(180.00, (float) $user->fresh()->available_balance);
     }
 
     public function test_approved_kyc_reserves_available_money_and_encrypts_wallet_destination(): void
@@ -103,8 +107,8 @@ class KycWithdrawalApprovalTest extends TestCase
         $this->assertSame('erc20', $record->network);
         $this->assertSame('USD', $record->currency);
         $this->assertSame(self::ETH, $record->destination);
-        $this->assertSame('124.75', (string) $user->fresh()->available_balance);
-        $this->assertSame('200.00', (string) $user->fresh()->balance);
+        $this->assertEquals(124.75, (float) $user->fresh()->available_balance);
+        $this->assertEquals(200.00, (float) $user->fresh()->balance);
         $this->assertNotEquals(self::ETH, DB::table('withdrawal_requests')->value('destination'));
 
         $this->get(route('user.withdrawals.index'))
@@ -123,12 +127,12 @@ class KycWithdrawalApprovalTest extends TestCase
             ->assertRedirect(route('user.withdrawals.index'));
 
         $this->assertSame('cancelled', $record->fresh()->status);
-        $this->assertSame('180.00', (string) $user->fresh()->available_balance);
+        $this->assertEquals(180.00, (float) $user->fresh()->available_balance);
 
         $this->post(route('user.withdrawals.cancel', ['reference' => $record->reference]))
             ->assertSessionHasErrors('status');
 
-        $this->assertSame('180.00', (string) $user->fresh()->available_balance);
+        $this->assertEquals(180.00, (float) $user->fresh()->available_balance);
     }
 
     public function test_second_active_request_or_overdraft_is_rejected(): void
@@ -139,13 +143,13 @@ class KycWithdrawalApprovalTest extends TestCase
             ->assertSessionHasErrors('amount');
 
         $this->assertDatabaseCount('withdrawal_requests', 1);
-        $this->assertSame('30.00', (string) $user->fresh()->available_balance);
+        $this->assertEquals(30.00, (float) $user->fresh()->available_balance);
 
         $other = $this->user(true, '40.00', '35.00');
         $this->actingAs($other)
             ->post(route('user.withdrawals.store'), $this->requestData('55.25'))
             ->assertSessionHasErrors('amount');
-        $this->assertSame('35.00', (string) $other->fresh()->available_balance);
+        $this->assertEquals(35.00, (float) $other->fresh()->available_balance);
     }
 
     public function test_admin_can_approve_but_only_record_an_external_payout_after_approval(): void
@@ -172,8 +176,8 @@ class KycWithdrawalApprovalTest extends TestCase
             ->assertRedirect(route('admin.withdrawals.show', $record))
             ->assertSessionHas('success');
         $this->assertSame('approved', $record->fresh()->status);
-        $this->assertSame('124.75', (string) $user->fresh()->available_balance);
-        $this->assertSame('200.00', (string) $user->fresh()->balance);
+        $this->assertEquals(124.75, (float) $user->fresh()->available_balance);
+        $this->assertEquals(200.00, (float) $user->fresh()->balance);
 
         $this->post(route('admin.withdrawals.paid', $record), [
             'txid' => $txid, 'confirm_external_transfer' => '1',
@@ -182,13 +186,13 @@ class KycWithdrawalApprovalTest extends TestCase
         $this->assertSame('paid_recorded', $record->fresh()->status);
         $this->assertSame($txid, $record->fresh()->payout_txid);
         $this->assertNotNull($record->fresh()->paid_at);
-        $this->assertSame('124.75', (string) $user->fresh()->available_balance);
-        $this->assertSame('144.75', (string) $user->fresh()->balance);
+        $this->assertEquals(124.75, (float) $user->fresh()->available_balance);
+        $this->assertEquals(144.75, (float) $user->fresh()->balance);
 
         $this->post(route('admin.withdrawals.paid', $record), [
             'txid' => $txid, 'confirm_external_transfer' => '1',
         ])->assertSessionHasErrors('status');
-        $this->assertSame('144.75', (string) $user->fresh()->balance);
+        $this->assertEquals(144.75, (float) $user->fresh()->balance);
     }
 
     public function test_admin_rejection_restores_reservation_and_requires_reason(): void
@@ -204,14 +208,14 @@ class KycWithdrawalApprovalTest extends TestCase
         ])->assertRedirect(route('admin.withdrawals.show', $record));
 
         $this->assertSame('rejected', $record->fresh()->status);
-        $this->assertSame('180.00', (string) $user->fresh()->available_balance);
-        $this->assertSame('200.00', (string) $user->fresh()->balance);
+        $this->assertEquals(180.00, (float) $user->fresh()->available_balance);
+        $this->assertEquals(200.00, (float) $user->fresh()->balance);
 
         $this->post(route('admin.withdrawals.reject', $record), [
             'reason' => 'Repeated rejection attempt',
         ])->assertSessionHasErrors('status');
 
-        $this->assertSame('180.00', (string) $user->fresh()->available_balance);
+        $this->assertEquals(180.00, (float) $user->fresh()->available_balance);
     }
 
     public function test_approval_rechecks_kyc_and_reject_remains_available_after_kyc_revocation(): void
@@ -230,7 +234,7 @@ class KycWithdrawalApprovalTest extends TestCase
             'reason' => 'KYC revoked and transfers paused.',
         ])->assertRedirect(route('admin.withdrawals.show', $record));
 
-        $this->assertSame('180.00', (string) $user->fresh()->available_balance);
+        $this->assertEquals(180.00, (float) $user->fresh()->available_balance);
     }
 
     public function test_disabled_demo_banned_currency_and_invalid_chain_are_rejected(): void
@@ -277,7 +281,7 @@ class KycWithdrawalApprovalTest extends TestCase
         ]))->assertNotFound();
 
         $this->assertSame('pending', $record->fresh()->status);
-        $this->assertSame('124.75', (string) $owner->fresh()->available_balance);
+        $this->assertEquals(124.75, (float) $owner->fresh()->available_balance);
     }
 
     public function test_admin_cannot_record_payout_without_explicit_confirmation(): void
@@ -292,6 +296,6 @@ class KycWithdrawalApprovalTest extends TestCase
             ->assertSessionHasErrors('confirm_external_transfer');
 
         $this->assertSame('approved', $record->fresh()->status);
-        $this->assertSame('200.00', (string) $user->fresh()->balance);
+        $this->assertEquals(200.00, (float) $user->fresh()->balance);
     }
 }
