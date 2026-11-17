@@ -19,6 +19,9 @@
             ['Achievements', 'user.achievement', 'user.achievement', '♜'],
             ['My levels', 'user.levels', 'user.levels', '⬡'],
         ],
+        'Payments' => [
+            ['Pay with crypto', 'user.crypto.index', 'user.crypto.*', '₿'],
+        ],
         'My account' => [
             ['Profile', 'user.profile', 'user.profile', '♙'],
             ['Edit profile', 'user.profile.edit', 'user.profile.edit', '✎'],
